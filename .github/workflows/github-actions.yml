@@ -4,3 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Build Disassembler Executable
+        run: ./build.sh
