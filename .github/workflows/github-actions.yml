@@ -1,0 +1,6 @@
+name: Space Invaders Disassembler and Emulator
+
+on: [push, pull_request]
+
+jobs:
+  build:
