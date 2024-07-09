@@ -7,4 +7,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build Disassembler Executable
-        run: ./build.sh
+        run: ${{ github.workspace }}/build.sh
