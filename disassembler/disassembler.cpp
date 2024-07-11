@@ -14,6 +14,59 @@ int Disassemble(char *codebuffer, int pc) {
         case 0x00: 
             cout << "NOP" << endl; 
             break;
+        case 0x10:
+            cout << "NOP" << endl;
+            break;
+        case 0x11:
+            cout << "LXI D" << endl;
+            opbytes = 3;
+            break;
+        case 0x12:
+            cout << "STAX D" << endl;
+            break;
+        case 0x13:
+            cout << "INX D" << endl;
+            break;
+        case 0x14:
+            cout << "INR D" << endl;
+            break;
+        case 0x15:
+            cout << "DEC D" << endl;
+            break;
+        case 0x16:
+            cout << "MVI D, $" << hex << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 2;
+            break;
+        case 0x17:
+            cout << "RAL" << endl;
+            break;
+        case 0x18:
+            cout << "NOP" << endl;
+            break;
+        case 0x19:
+            cout << "DAD D" << endl;
+            break;
+        case 0x1a:
+            cout << "LDAX D" << endl;
+            break;
+        case 0x1b:
+            cout << "DCX D" << endl;
+            break;
+        case 0x1c:
+            cout << "INR E" << endl;
+            break;
+        case 0x1d:
+            cout << "DEC E" << endl;
+            break;
+        case 0x1e:
+            cout << "MVI E, $" << hex << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 2;
+            break;
+        case 0x1f:
+            cout << "RAR" << endl;
+            break;
         case 0xc3: 
             cout << "JMP $" << hex << setfill('0') << setw(2)
             << static_cast<unsigned>((unsigned char)code[2]) 
@@ -21,7 +74,6 @@ int Disassemble(char *codebuffer, int pc) {
             << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes=3;
             break;
-
         case 0x30: 
             cout << "NOP" << endl; 
             break;
