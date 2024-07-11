@@ -184,6 +184,79 @@ int Disassemble(char *codebuffer, int pc) {
 		case 0xbf: 
             cout << "CMP A" << endl; 
             break;
+        
+        case 0xf0: 
+            cout << "RP" << endl;  
+            break;
+		case 0xf1: 
+            cout << "POP PSW" << endl; 
+            break;
+		case 0xf2: 
+            cout << "JP $" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[2]) 
+            << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 3; 
+            break;
+		case 0xf3: 
+            cout << "DI" << endl;  
+            break;
+		case 0xf4: 
+            cout << "CP $" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[2]) 
+            << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 3; 
+            break;
+		case 0xf5: 
+            cout << "PUSH PSW" << endl;
+            break;
+		case 0xf6: 
+            cout << "ORI #$" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 2; 
+            break;
+		case 0xf7: 
+            cout << "RST 6" << endl;
+            break;
+		case 0xf8: 
+            cout << "RM" << endl;
+            break;
+		case 0xf9: 
+            cout << "SPHL" << endl;
+            break;
+		case 0xfa: 
+            cout << "JM $" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[2]) 
+            << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 3; 
+            break;
+		case 0xfb: 
+            cout << "EI" << endl;
+            break;
+		case 0xfc: 
+            cout << "CM $" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[2]) 
+            << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 3; 
+            break;
+		case 0xfd: 
+            cout << "CALL $" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[2]) 
+            << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 3; 
+            break;
+		case 0xfe: 
+            cout << "CPI #$" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 2;
+            break;
+		case 0xff: 
+            cout << "RST 7" << endl;
+            break;
         default: 
             cout << "NOT IMPLEMENTED YET" << endl; 
     }
@@ -197,8 +270,7 @@ int main (int argc, char**argv) {
     char * memblock;
 
     ifstream file (argv[1], ios::in|ios::binary|ios::ate);
-    if (file.is_open())
-    {
+    if (file.is_open()) {
         size = file.tellg();
         memblock = new char [size];
         file.seekg (0, ios::beg);
@@ -214,7 +286,7 @@ int main (int argc, char**argv) {
 
     int pc = 0;
 
-    while (pc < 100) {
+    while (pc < size) {
         pc += Disassemble(memblock, pc);
     }
 
