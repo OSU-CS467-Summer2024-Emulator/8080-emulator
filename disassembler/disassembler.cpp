@@ -9,11 +9,14 @@ int Disassemble(char *codebuffer, int pc) {
     char *code = &codebuffer[pc];
     int opbytes = 1;
 
-    cout << setfill('0') << setw(4) << pc << ' ';
+    cout << setfill('0') << setw(4) << pc << ' ' 
+         << hex << setfill('0') << setw(2) << static_cast<unsigned>((unsigned char) *code)<< ' ';
     switch ((unsigned char)*code) {    
         case 0x00: 
             cout << "NOP" << endl; 
             break;
+
+        // 0x10 - 0x1f
         case 0x10:
             cout << "NOP" << endl;
             break;
@@ -67,6 +70,7 @@ int Disassemble(char *codebuffer, int pc) {
         case 0x1f:
             cout << "RAR" << endl;
             break;
+
         case 0xc3: 
             cout << "JMP $" << hex << setfill('0') << setw(2)
             << static_cast<unsigned>((unsigned char)code[2]) 
@@ -139,6 +143,56 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "CMC" << endl;
             break;
 
+        // 0x50 - 0x5f
+        case 0x50:
+            cout << "MOV D, B" << endl;
+            break;
+        case 0x51:
+            cout << "MOV D, C" << endl;
+            break;
+        case 0x52:
+            cout << "MOV D, D (NOP)" << endl;
+            break;
+        case 0x53:
+            cout << "MOV D, E" << endl;
+            break;
+        case 0x54:
+            cout << "MOV D, H" << endl;
+            break;
+        case 0x55:
+            cout << "MOV D, L" << endl;
+            break;
+        case 0x56:
+            cout << "MOV D, M" << endl;
+            break;
+        case 0x57:
+            cout << "MOV D, A" << endl;
+            break;
+        case 0x58:
+            cout << "MOV E, B" << endl;
+            break;
+        case 0x59:
+            cout << "MOV E, C" << endl;
+            break;
+        case 0x5a:
+            cout << "MOV E, D" << endl;
+            break;
+        case 0x5b:
+            cout << "MOV E, E (NOP)" << endl;
+            break;
+        case 0x5c:
+            cout << "MOV E, H" << endl;
+            break;
+        case 0x5d:
+            cout << "MOV E, L" << endl;
+            break;
+        case 0x5e:
+            cout << "MOV E, M" << endl;
+            break;
+        case 0x5f:
+            cout << "MOV E, A" << endl;
+            break;
+        
         case 0x70: 
             cout << "MOV M,B" << endl; 
             break;
@@ -186,6 +240,56 @@ int Disassemble(char *codebuffer, int pc) {
             break;
 		case 0x7f: 
             cout << "MOV A,A" << endl; 
+            break;
+
+        // 0x90 - 0x9f
+        case 0x90:
+            cout << "SUB B" << endl;
+            break;
+        case 0x91:
+            cout << "SUB C" << endl;
+            break;
+        case 0x92:
+            cout << "SUB D" << endl;
+            break;
+        case 0x93:
+            cout << "SUB E" << endl;
+            break;
+        case 0x94:
+            cout << "SUB H" << endl;
+            break;
+        case 0x95:
+            cout << "SUB L" << endl;
+            break;
+        case 0x96:
+            cout << "SUB M" << endl;
+            break;
+        case 0x97:
+            cout << "SUB A" << endl;
+            break;
+        case 0x98:
+            cout << "SBB B" << endl;
+            break;
+        case 0x99:
+            cout << "SUB C" << endl;
+            break;
+        case 0x9a:
+            cout << "SUB D" << endl;
+            break;
+        case 0x9b:
+            cout << "SUB E" << endl;
+            break;
+        case 0x9c:
+            cout << "SUB H" << endl;
+            break;
+        case 0x9d:
+            cout << "SUB L" << endl;
+            break;
+        case 0x9e:
+            cout << "SUB M" << endl;
+            break;
+        case 0x9f:
+            cout << "SUB A" << endl;
             break;
 
         case 0xb0: 
@@ -237,6 +341,80 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "CMP A" << endl; 
             break;
         
+        // 0xd0 - 0xdf
+        case 0xd0:
+            cout << "RNC" << endl;
+            break;
+        case 0xd1:
+            cout << "POP D" << endl;
+            break;
+        case 0xd2:
+            cout << "JNC $" << hex << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes=3;
+            break;
+        case 0xd3:
+            cout << "OUT $" << hex << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes=2;
+            break;
+        case 0xd4:
+            cout << "CNC $" << hex << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes=3;
+            break;
+        case 0xd5:
+            cout << "PUSH D" << endl;
+            break;
+        case 0xd6:
+            cout << "SUI $" << hex << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes=2;
+            break;
+        case 0xd7:
+            cout << "RST 2 (CALL $0010)" << endl;
+            break;
+        case 0xd8:
+            cout << "RC" << endl;
+            break;
+        case 0xd9:
+            cout << "NOP" << endl;
+            break;
+        case 0xda:
+            cout << "JC $" << hex << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes=3;
+            break;
+        case 0xdb:
+            cout << "IN $" << hex << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes=2;
+            break;
+        case 0xdc:
+            cout << "CC $" << hex << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes=3;
+            break;
+        case 0xdd:
+            cout << "NOP" << endl;
+            break;
+        case 0xde:
+            cout << "SBI $" << hex << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes=2;
+            break;
+        case 0xdf:
+            cout << "RST 3 (CALL $0018)" << endl;
+            break;
+
         case 0xf0: 
             cout << "RP" << endl;  
             break;
