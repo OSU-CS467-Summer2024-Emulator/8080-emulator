@@ -9,8 +9,7 @@ int Disassemble(char *codebuffer, int pc) {
     char *code = &codebuffer[pc];
     int opbytes = 1;
 
-    cout << setfill('0') << setw(4) << pc << ' ' 
-         << hex << setfill('0') << setw(2) << static_cast<unsigned>((unsigned char) *code)<< ' ';
+    cout << setfill('0') << setw(4) << pc << ' ';
     switch ((unsigned char)*code) {    
         case 0x00: 
             cout << "NOP" << endl; 
@@ -78,6 +77,7 @@ int Disassemble(char *codebuffer, int pc) {
             << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes=3;
             break;
+        
         case 0x30: 
             cout << "NOP" << endl; 
             break;
@@ -151,7 +151,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "MOV D, C" << endl;
             break;
         case 0x52:
-            cout << "MOV D, D (NOP)" << endl;
+            cout << "MOV D, D" << endl;
             break;
         case 0x53:
             cout << "MOV D, E" << endl;
@@ -178,7 +178,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "MOV E, D" << endl;
             break;
         case 0x5b:
-            cout << "MOV E, E (NOP)" << endl;
+            cout << "MOV E, E" << endl;
             break;
         case 0x5c:
             cout << "MOV E, H" << endl;
