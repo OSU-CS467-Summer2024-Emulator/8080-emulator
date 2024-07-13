@@ -78,6 +78,7 @@ int Disassemble(char *codebuffer, int pc) {
             opbytes=3;
             break;
         
+        // 0x20 - 0x2f
         case 0x20:
             cout << "NOP" << endl;
             break;
@@ -142,7 +143,8 @@ int Disassemble(char *codebuffer, int pc) {
         case 0x2f:
             cout << "CMA" << endl;
             break;
-
+        
+        // 0x30 - 0x3f
         case 0x30: 
             cout << "NOP" << endl; 
             break;
@@ -258,6 +260,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "MOV E, A" << endl;
             break;
         
+        // 0x60 - 0x6f
         case 0x60: 
             cout << "MOV H,B" << endl; 
             break;
@@ -306,7 +309,8 @@ int Disassemble(char *codebuffer, int pc) {
         case 0x6f: 
             cout << "MOV L,A" << endl; 
             break;
-
+            
+        // 0x70 - 0x7f
         case 0x70: 
             cout << "MOV M,B" << endl; 
             break;
@@ -406,6 +410,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "SUB A" << endl;
             break;
 
+        // 0xa0 - 0xaf
         case 0xa0: 
             cout << "ANA B" << endl; 
             break;
@@ -454,7 +459,8 @@ int Disassemble(char *codebuffer, int pc) {
         case 0xaf: 
             cout << "XRA A" << endl; 
             break;
-
+        
+        // 0xb0 - 0xbf
         case 0xb0: 
             cout << "ORA B" << endl; 
             break;
@@ -578,6 +584,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "RST 3 (CALL $0018)" << endl;
             break;
 
+        // 0xe0 - 0xef
         case 0xe0: 
             cout << "RPO" << endl;  
             break;
@@ -651,6 +658,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "RST 5" << endl;
             break;
         
+        // 0xf0 - 0xff
         case 0xf0: 
             cout << "RP" << endl;  
             break;
@@ -727,6 +735,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "NOT IMPLEMENTED YET" << endl;
             break;
     }
+    
     return opbytes;
 }
 
