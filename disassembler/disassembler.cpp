@@ -22,6 +22,60 @@ int Disassemble(char *codebuffer, int pc) {
             opbytes=3;
             break;
 
+        case 0x20:
+            cout << "NOP" << endl;
+        case 0x21:
+            cout << "LXI H,#$" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[2]) 
+            << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes=3; 
+            break;
+		case 0x22:  
+            cout << "SHLD $" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[2]) 
+            << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes=3; 
+            break;
+        case 0x23:
+            cout << "INX H" << endl;
+        case 0x24:
+            cout << "INR H" << endl;
+        case 0x25:
+            cout << "DCR H" << endl;
+        case 0x26:
+            cout << "MVI H,#$" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl; 
+            opbytes=2; 
+            break;
+        case 0x27:
+            cout << "DAA" << endl;
+        case 0x28:
+            cout << "NOP" << endl;
+        case 0x29:
+            cout << "DAD H" << endl;
+        case 0x2a:
+            cout << "LHLD $" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[2]) 
+            << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes=3; 
+            break;
+        case 0x2b:
+            cout << "DCX H" << endl;
+        case 0x2c:
+            cout << "INR L" << endl;
+        case 0x2d:
+            cout << "DCR L" << endl;
+        case 0x2e:
+            cout << "MVI L,#$" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl; 
+            opbytes=2; 
+            break;
+        case 0x2f:
+            cout << "CMA" << endl;
+
         case 0x30: 
             cout << "NOP" << endl; 
             break;
@@ -87,6 +141,55 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "CMC" << endl;
             break;
 
+        case 0x60: 
+            cout << "MOV H,B" << endl; 
+            break;
+		case 0x61: 
+            cout << "MOV H,C" << endl; 
+            break;
+		case 0x62: 
+            cout << "MOV H,D" << endl; 
+            break;
+		case 0x63: 
+            cout << "MOV H,E" << endl; 
+            break;
+		case 0x64: 
+            cout << "MOV H,H" << endl; 
+            break;
+		case 0x65: 
+            cout << "MOV H,L" << endl; 
+            break;
+		case 0x66: 
+            cout << "MOV H,M" << endl;
+            break;
+		case 0x67: 
+            cout << "MOV H,A" << endl; 
+            break;
+		case 0x68: 
+            cout << "MOV L,B" << endl; 
+            break;
+		case 0x69: 
+            cout << "MOV L,C" << endl; 
+            break;
+		case 0x6a: 
+            cout << "MOV L,D" << endl; 
+            break;
+		case 0x6b: 
+            cout << "MOV L,E" << endl; 
+            break;
+		case 0x6c: 
+            cout << "MOV L,H" << endl; 
+            break;
+		case 0x6d: 
+            cout << "MOV L,L" << endl; 
+            break;
+		case 0x6e: 
+            cout << "MOV L,M" << endl; 
+            break;
+		case 0x6f: 
+            cout << "MOV L,A" << endl; 
+            break;
+
         case 0x70: 
             cout << "MOV M,B" << endl; 
             break;
@@ -136,6 +239,55 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "MOV A,A" << endl; 
             break;
 
+        case 0xa0: 
+            cout << "ANA B" << endl; 
+            break;
+		case 0xa1: 
+            cout << "ANA C" << endl; 
+            break;
+		case 0xa2: 
+            cout << "ANA D" << endl; 
+            break;
+		case 0xa3: 
+            cout << "ANA E" << endl; 
+            break;
+		case 0xa4: 
+            cout << "ANA H" << endl; 
+            break;
+		case 0xa5: 
+            cout << "ANA L" << endl; 
+            break;
+		case 0xa6: 
+            cout << "ANA M" << endl; 
+            break;
+		case 0xa7: 
+            cout << "ANA A" << endl; 
+            break;
+		case 0xa8: 
+            cout << "XRA B" << endl; 
+            break;
+		case 0xa9: 
+            cout << "XRA C" << endl; 
+            break;
+		case 0xaa: 
+            cout << "XRA D" << endl; 
+            break;
+		case 0xab: 
+            cout << "XRA E" << endl; 
+            break;
+		case 0xac: 
+            cout << "XRA H" << endl; 
+            break;
+		case 0xad: 
+            cout << "XRA L" << endl; 
+            break;
+		case 0xae: 
+            cout << "XRA M" << endl; 
+            break;
+		case 0xaf: 
+            cout << "XRA A" << endl; 
+            break;
+
         case 0xb0: 
             cout << "ORA B" << endl; 
             break;
@@ -183,6 +335,79 @@ int Disassemble(char *codebuffer, int pc) {
             break;
 		case 0xbf: 
             cout << "CMP A" << endl; 
+            break;
+        
+        case 0xe0: 
+            cout << "RPO" << endl;  
+            break;
+		case 0xe1: 
+            cout << "POP H" << endl; 
+            break;
+		case 0xe2: 
+            cout << "JPO $" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[2]) 
+            << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 3; 
+            break;
+		case 0xe3: 
+            cout << "XTHL" << endl;  
+            break;
+		case 0xe4: 
+            cout << "CPO $" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[2]) 
+            << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 3; 
+            break;
+		case 0xe5: 
+            cout << "PUSH H" << endl;
+            break;
+		case 0xe6: 
+            cout << "ANI #$" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 2; 
+            break;
+		case 0xe7: 
+            cout << "RST 4" << endl;
+            break;
+		case 0xe8: 
+            cout << "RPE" << endl;
+            break;
+		case 0xe9: 
+            cout << "PCHL" << endl;
+            break;
+		case 0xea: 
+            cout << "JPE $" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[2]) 
+            << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 3; 
+            break;
+		case 0xeb: 
+            cout << "XCHG" << endl;
+            break;
+		case 0xec: 
+            cout << "CPE $" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[2]) 
+            << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 3; 
+            break;
+		case 0xed: 
+            cout << "CALL $" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[2]) 
+            << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 3; 
+            break;
+		case 0xee: 
+            cout << "XRI #$" << hex << setfill('0') << setw(2)
+            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+            opbytes = 2;
+            break;
+		case 0xef: 
+            cout << "RST 5" << endl;
             break;
         
         case 0xf0: 
