@@ -83,7 +83,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "NOP" << endl;
             break;
         case 0x21:
-            cout << "LXI H,#$" << hex << setfill('0') << setw(2)
+            cout << "LXI H, #$" << hex << setfill('0') << setw(2)
                  << static_cast<unsigned>((unsigned char)code[2]) 
                  << setfill('0') << setw(2)
                  << static_cast<unsigned>((unsigned char)code[1]) << endl;
@@ -106,7 +106,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "DCR H" << endl;
             break;
         case 0x26:
-            cout << "MVI H,#$" << hex << setfill('0') << setw(2)
+            cout << "MVI H, #$" << hex << setfill('0') << setw(2)
                  << static_cast<unsigned>((unsigned char)code[1]) << endl; 
             opbytes=2; 
             break;
@@ -136,7 +136,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "DCR L" << endl;
             break;
         case 0x2e:
-            cout << "MVI L,#$" << hex << setfill('0') << setw(2)
+            cout << "MVI L, #$" << hex << setfill('0') << setw(2)
                  << static_cast<unsigned>((unsigned char)code[1]) << endl; 
             opbytes=2; 
             break;
@@ -149,7 +149,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "NOP" << endl; 
             break;
         case 0x31: 
-            cout << "LXI SP,#$" << hex << setfill('0') << setw(2)
+            cout << "LXI SP, #$" << hex << setfill('0') << setw(2)
                  << static_cast<unsigned>((unsigned char)code[2]) 
                  << setfill('0') << setw(2)
                  << static_cast<unsigned>((unsigned char)code[1]) << endl;
@@ -172,7 +172,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "DCR M" << endl;
             break;
         case 0x36: 
-            cout << "MVI M,#$" << hex << setfill('0') << setw(2)
+            cout << "MVI M, #$" << hex << setfill('0') << setw(2)
                  << static_cast<unsigned>((unsigned char)code[1]) << endl; 
             opbytes=2; 
             break;
@@ -202,7 +202,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "DCR A" << endl;
             break;
         case 0x3e:  
-            cout << "MVI A,#$" << hex 
+            cout << "MVI A, #$" << hex 
                  << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 2; 
             break;
@@ -262,34 +262,34 @@ int Disassemble(char *codebuffer, int pc) {
         
         // 0x60 - 0x6f
         case 0x60: 
-            cout << "MOV H,B" << endl; 
+            cout << "MOV H, B" << endl; 
             break;
         case 0x61: 
-            cout << "MOV H,C" << endl; 
+            cout << "MOV H, C" << endl; 
             break;
         case 0x62: 
-            cout << "MOV H,D" << endl; 
+            cout << "MOV H, D" << endl; 
             break;
         case 0x63: 
-            cout << "MOV H,E" << endl; 
+            cout << "MOV H, E" << endl; 
             break;
         case 0x64: 
-            cout << "MOV H,H" << endl; 
+            cout << "MOV H, H" << endl; 
             break;
         case 0x65: 
-            cout << "MOV H,L" << endl; 
+            cout << "MOV H, L" << endl; 
             break;
         case 0x66: 
-            cout << "MOV H,M" << endl;
+            cout << "MOV H, M" << endl;
             break;
         case 0x67: 
-            cout << "MOV H,A" << endl; 
+            cout << "MOV H, A" << endl; 
             break;
         case 0x68: 
-            cout << "MOV L,B" << endl; 
+            cout << "MOV L, B" << endl; 
             break;
         case 0x69: 
-            cout << "MOV L,C" << endl; 
+            cout << "MOV L, C" << endl; 
             break;
         case 0x6a: 
             cout << "MOV L,D" << endl; 
@@ -298,60 +298,60 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "MOV L,E" << endl; 
             break;
         case 0x6c: 
-            cout << "MOV L,H" << endl; 
+            cout << "MOV L, H" << endl; 
             break;
         case 0x6d: 
-            cout << "MOV L,L" << endl; 
+            cout << "MOV L, L" << endl; 
             break;
         case 0x6e: 
-            cout << "MOV L,M" << endl; 
+            cout << "MOV L, M" << endl; 
             break;
         case 0x6f: 
-            cout << "MOV L,A" << endl; 
+            cout << "MOV L, A" << endl; 
             break;
             
         // 0x70 - 0x7f
         case 0x70: 
-            cout << "MOV M,B" << endl; 
+            cout << "MOV M, B" << endl; 
             break;
         case 0x71: 
-            cout << "MOV M,C" << endl; 
+            cout << "MOV M, C" << endl; 
             break;
         case 0x72: 
-            cout << "MOV M,D" << endl; 
+            cout << "MOV M, D" << endl; 
             break;
         case 0x73: 
-            cout << "MOV M,E" << endl; 
+            cout << "MOV M, E" << endl; 
             break;
         case 0x74: 
-            cout << "MOV M,H" << endl; 
+            cout << "MOV M, H" << endl; 
             break;
         case 0x75: 
-            cout << "MOV M,L" << endl; 
+            cout << "MOV M, L" << endl; 
             break;
         case 0x76: 
             cout << "HLT" << endl;
             break;
         case 0x77: 
-            cout << "MOV M,A" << endl; 
+            cout << "MOV M, A" << endl; 
             break;
         case 0x78: 
-            cout << "MOV A,B" << endl; 
+            cout << "MOV A, B" << endl; 
             break;
         case 0x79: 
-            cout << "MOV A,C" << endl; 
+            cout << "MOV A, C" << endl; 
             break;
         case 0x7a: 
-            cout << "MOV A,D" << endl; 
+            cout << "MOV A, D" << endl; 
             break;
         case 0x7b: 
-            cout << "MOV A,E" << endl; 
+            cout << "MOV A, E" << endl; 
             break;
         case 0x7c: 
-            cout << "MOV A,H" << endl; 
+            cout << "MOV A, H" << endl; 
             break;
         case 0x7d: 
-            cout << "MOV A,L" << endl; 
+            cout << "MOV A, L" << endl; 
             break;
         case 0x7e: 
             cout << "MOV A,M" << endl; 
@@ -735,7 +735,7 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "NOT IMPLEMENTED YET" << endl;
             break;
     }
-    
+
     return opbytes;
 }
 
