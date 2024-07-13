@@ -80,26 +80,30 @@ int Disassemble(char *codebuffer, int pc) {
         
         case 0x20:
             cout << "NOP" << endl;
+            break;
         case 0x21:
             cout << "LXI H,#$" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes=3; 
             break;
 		case 0x22:  
             cout << "SHLD $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes=3; 
             break;
         case 0x23:
             cout << "INX H" << endl;
+            break;
         case 0x24:
             cout << "INR H" << endl;
+            break;
         case 0x25:
             cout << "DCR H" << endl;
+            break;
         case 0x26:
             cout << "MVI H,#$" << hex << setfill('0') << setw(2)
             << static_cast<unsigned>((unsigned char)code[1]) << endl; 
@@ -107,10 +111,13 @@ int Disassemble(char *codebuffer, int pc) {
             break;
         case 0x27:
             cout << "DAA" << endl;
+            break;
         case 0x28:
             cout << "NOP" << endl;
+            break;
         case 0x29:
             cout << "DAD H" << endl;
+            break;
         case 0x2a:
             cout << "LHLD $" << hex << setfill('0') << setw(2)
             << static_cast<unsigned>((unsigned char)code[2]) 
@@ -120,10 +127,13 @@ int Disassemble(char *codebuffer, int pc) {
             break;
         case 0x2b:
             cout << "DCX H" << endl;
+            break;
         case 0x2c:
             cout << "INR L" << endl;
+            break;
         case 0x2d:
             cout << "DCR L" << endl;
+            break;
         case 0x2e:
             cout << "MVI L,#$" << hex << setfill('0') << setw(2)
             << static_cast<unsigned>((unsigned char)code[1]) << endl; 
@@ -131,11 +141,12 @@ int Disassemble(char *codebuffer, int pc) {
             break;
         case 0x2f:
             cout << "CMA" << endl;
+            break;
 
         case 0x30: 
             cout << "NOP" << endl; 
             break;
-		case 0x31: 
+        case 0x31: 
             cout << "LXI SP,#$" << hex << setfill('0') << setw(2)
             << static_cast<unsigned>((unsigned char)code[2]) 
             << setfill('0') << setw(2)
@@ -713,7 +724,8 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "RST 7" << endl;
             break;
         default: 
-            cout << "NOT IMPLEMENTED YET" << endl; 
+            cout << "NOT IMPLEMENTED YET" << endl;
+            break;
     }
     return opbytes;
 }
