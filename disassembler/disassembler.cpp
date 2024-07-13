@@ -292,10 +292,10 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "MOV L, C" << endl; 
             break;
         case 0x6a: 
-            cout << "MOV L,D" << endl; 
+            cout << "MOV L, D" << endl; 
             break;
         case 0x6b: 
-            cout << "MOV L,E" << endl; 
+            cout << "MOV L, E" << endl; 
             break;
         case 0x6c: 
             cout << "MOV L, H" << endl; 
@@ -354,10 +354,10 @@ int Disassemble(char *codebuffer, int pc) {
             cout << "MOV A, L" << endl; 
             break;
         case 0x7e: 
-            cout << "MOV A,M" << endl; 
+            cout << "MOV A, M" << endl; 
             break;
         case 0x7f: 
-            cout << "MOV A,A" << endl; 
+            cout << "MOV A, A" << endl; 
             break;
 
         // 0x90 - 0x9f
