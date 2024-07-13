@@ -72,9 +72,9 @@ int Disassemble(char *codebuffer, int pc) {
 
         case 0xc3: 
             cout << "JMP $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes=3;
             break;
         
@@ -106,7 +106,7 @@ int Disassemble(char *codebuffer, int pc) {
             break;
         case 0x26:
             cout << "MVI H,#$" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl; 
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl; 
             opbytes=2; 
             break;
         case 0x27:
@@ -120,9 +120,9 @@ int Disassemble(char *codebuffer, int pc) {
             break;
         case 0x2a:
             cout << "LHLD $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes=3; 
             break;
         case 0x2b:
@@ -136,7 +136,7 @@ int Disassemble(char *codebuffer, int pc) {
             break;
         case 0x2e:
             cout << "MVI L,#$" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl; 
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl; 
             opbytes=2; 
             break;
         case 0x2f:
@@ -148,16 +148,16 @@ int Disassemble(char *codebuffer, int pc) {
             break;
         case 0x31: 
             cout << "LXI SP,#$" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes=3; 
             break;
 		case 0x32:  
             cout << "STA $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes=3; 
             break;
 		case 0x33: 
@@ -171,7 +171,7 @@ int Disassemble(char *codebuffer, int pc) {
             break;
         case 0x36: 
             cout << "MVI M,#$" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl; 
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl; 
             opbytes=2; 
             break;
         case 0x37: 
@@ -185,9 +185,9 @@ int Disassemble(char *codebuffer, int pc) {
             break;
         case 0x3a: 
             cout << "LDA $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes=3; 
             break;
         case 0x3b: 
@@ -201,7 +201,7 @@ int Disassemble(char *codebuffer, int pc) {
             break;
         case 0x3e:  
             cout << "MVI A,#$" << hex 
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 2; 
             break;
 		case 0x3f: 
@@ -586,9 +586,9 @@ int Disassemble(char *codebuffer, int pc) {
             break;
 		case 0xe2: 
             cout << "JPO $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 3; 
             break;
 		case 0xe3: 
@@ -596,9 +596,9 @@ int Disassemble(char *codebuffer, int pc) {
             break;
 		case 0xe4: 
             cout << "CPO $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 3; 
             break;
 		case 0xe5: 
@@ -606,7 +606,7 @@ int Disassemble(char *codebuffer, int pc) {
             break;
 		case 0xe6: 
             cout << "ANI #$" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 2; 
             break;
 		case 0xe7: 
@@ -620,9 +620,9 @@ int Disassemble(char *codebuffer, int pc) {
             break;
 		case 0xea: 
             cout << "JPE $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 3; 
             break;
 		case 0xeb: 
@@ -630,21 +630,21 @@ int Disassemble(char *codebuffer, int pc) {
             break;
 		case 0xec: 
             cout << "CPE $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 3; 
             break;
 		case 0xed: 
             cout << "CALL $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 3; 
             break;
 		case 0xee: 
             cout << "XRI #$" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 2;
             break;
 		case 0xef: 
@@ -659,9 +659,9 @@ int Disassemble(char *codebuffer, int pc) {
             break;
 		case 0xf2: 
             cout << "JP $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 3; 
             break;
 		case 0xf3: 
@@ -669,9 +669,9 @@ int Disassemble(char *codebuffer, int pc) {
             break;
 		case 0xf4: 
             cout << "CP $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 3; 
             break;
 		case 0xf5: 
@@ -679,7 +679,7 @@ int Disassemble(char *codebuffer, int pc) {
             break;
 		case 0xf6: 
             cout << "ORI #$" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 2; 
             break;
 		case 0xf7: 
@@ -693,9 +693,9 @@ int Disassemble(char *codebuffer, int pc) {
             break;
 		case 0xfa: 
             cout << "JM $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 3; 
             break;
 		case 0xfb: 
@@ -703,21 +703,21 @@ int Disassemble(char *codebuffer, int pc) {
             break;
 		case 0xfc: 
             cout << "CM $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 3; 
             break;
 		case 0xfd: 
             cout << "CALL $" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[2]) 
-            << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[2]) 
+                 << setfill('0') << setw(2)
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 3; 
             break;
 		case 0xfe: 
             cout << "CPI #$" << hex << setfill('0') << setw(2)
-            << static_cast<unsigned>((unsigned char)code[1]) << endl;
+                 << static_cast<unsigned>((unsigned char)code[1]) << endl;
             opbytes = 2;
             break;
 		case 0xff: 
