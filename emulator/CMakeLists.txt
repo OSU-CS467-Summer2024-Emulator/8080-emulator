@@ -1,0 +1,1 @@
+add_executable(Emulator main.cpp emulator.cpp) 

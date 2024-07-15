@@ -4,3 +4,4 @@ project(Disassembler)  # Project name
 
 # Add subdirectories to the project
 add_subdirectory(disassembler) 
+add_subdirectory(emulator)
