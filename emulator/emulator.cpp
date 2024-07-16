@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <fstream>
 #include "emulator.h"
+#include "../disassembler/disassembler.h"
 
 using namespace std;
 
@@ -46,14 +47,17 @@ int Emulator::LoadRom(string file_path){
 
 void Emulator::Emulate(){
     int count = 0;
+    pc = 0;
 
-    while (count < 100){
+    while (count < 50){
         int opbytes = 1;
-        unsigned char opcode = memory[pc];
+        unsigned char *opcode = &memory[pc];
 
-        switch (opcode){
+        opbytes = Disassemble((char*)memory, pc);
+
+        switch (*opcode){
             case 0x00:
-                // NOP
+                registers.A++;
                 break;
             case 0x01:
                 // Option 1: 
@@ -66,12 +70,48 @@ void Emulator::Emulate(){
                 // Option 2:
                 opbytes = _0x02();
                 break;
+
+            case 0x31:
+                    {
+                        sp = (opcode[2]<<8) | opcode[1];
+                        pc += 2;
+                    }
+                    break;
+
+            case 0x77:
+                    {
+                        unsigned short offset = (registers.H<<8) | (registers.L);
+                        memory[offset] = registers.A;
+                    }
+                    break;
+            case 0x7a:
+                    {
+                        registers.A = registers.D;
+                    }
+                    break;
+            case 0x7b:
+                    {
+                        registers.A = registers.E;
+                    }
+                    break;
+            case 0x7c:
+                    {
+                        registers.A = registers.H;
+                    }
+                    break;
+            case 0x7e:
+                    {
+                        unsigned short offset = (registers.H<<8) | (registers.L);
+                        registers.A = memory[offset];
+                    }
+                    break;
             // ...
             default:
                 // unknown instruction
                 break;
         }
         pc += opbytes;
+        count++;
     }
 }
 
