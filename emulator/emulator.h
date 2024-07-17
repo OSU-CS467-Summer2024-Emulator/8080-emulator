@@ -7,6 +7,7 @@ class Emulator{
         ~Emulator();
 
         int LoadRom(std::string);
+        int parity(int, int);
 
         void Emulate();
 

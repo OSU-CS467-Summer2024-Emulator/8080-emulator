@@ -44,6 +44,18 @@ int Emulator::LoadRom(string file_path){
     }
 }
 
+int Emulator::parity(int x, int size=8){
+    int p = 0;
+    x = (x & ((1<<size)-1));
+    for (int i = 0; i<size; i++)
+	{
+		if (x & 0x1){ 
+            p++;
+        }
+		x = x >> 1;
+	}
+	return (0 == (p & 0x1));
+}
 
 void Emulator::Emulate(){
     int count = 0;
@@ -51,13 +63,12 @@ void Emulator::Emulate(){
 
     while (count < 50){
         int opbytes = 1;
-        unsigned char *opcode = &memory[pc];
+        unsigned char opcode = memory[pc];
 
         opbytes = Disassemble((char*)memory, pc);
 
-        switch (*opcode){
-            case 0x00:
-                registers.A++;
+        switch (opcode){
+            case 0x00: // NOP
                 break;
             case 0x01:
                 // Option 1: 
@@ -71,38 +82,102 @@ void Emulator::Emulate(){
                 opbytes = _0x02();
                 break;
 
-            case 0x31:
+            case 0x31: //LXI	SP,word
                     {
-                        sp = (opcode[2]<<8) | opcode[1];
-                        pc += 2;
+                        sp = (memory[pc + 2] << 8) | memory[pc + 1];
+                        // pc += 2; increment pc here or in dissasembler?
                     }
                     break;
-
-            case 0x77:
+            case 0x32: //STA    (word)
+                    {
+                        unsigned short offset = (memory[pc + 2] << 8) | memory[pc + 1];
+                        memory[offset] = registers.A;
+                        // pc += 2;
+                    }
+                    break;
+            case 0x36: //MVI	M,byte
+                    {
+                        unsigned short offset = (registers.H<<8) | (registers.L);
+                        memory[offset] = memory[pc + 1];
+                        // pc++;
+                    }
+            case 0x3a: //LDA    (word)
+                    {
+                        unsigned short offset = (memory[pc + 2] << 8) | memory[pc + 1];
+                        registers.A = memory[offset];
+                        // pc += 2:
+                    }
+                    break;
+            case 0x3e: //MVI    A,byte
+                    {
+                        registers.A = memory[pc + 1];
+                        // pc++;
+                    }
+                    break;
+            
+            
+            case 0x77: //MOV    M,A
                     {
                         unsigned short offset = (registers.H<<8) | (registers.L);
                         memory[offset] = registers.A;
                     }
                     break;
-            case 0x7a:
+            case 0x7a: //MOV A,D
                     {
                         registers.A = registers.D;
                     }
                     break;
-            case 0x7b:
+            case 0x7b: //MOV A,E
                     {
                         registers.A = registers.E;
                     }
                     break;
-            case 0x7c:
+            case 0x7c: //MOV A,H
                     {
                         registers.A = registers.H;
                     }
                     break;
-            case 0x7e:
+            case 0x7e: //MOV A,HL
                     {
                         unsigned short offset = (registers.H<<8) | (registers.L);
                         registers.A = memory[offset];
+                    }
+                    break;
+            
+            
+            case 0xf1: //POP PSW
+                    {
+                        registers.A = memory[sp + 1];
+                        uint8_t psw = memory[sp];
+                        flags.z = (0x01 == (psw & 0x01));
+                        flags.s = (0x02 == (psw & 0x02));
+                        flags.p = (0x04 == (psw & 0x04));
+                        flags.cy = (0x08 == (psw & 0x08)); // (0x05 == (psw & 0x08)) in reference. Typo? Equates to always false
+                        flags.ac = (0x10 == (psw & 0x10));
+                        sp += 2;
+                    }
+                    break;
+            case 0xf5: //PUSH PSW
+                    {
+                        memory[sp - 1] = registers.A;
+                        uint8_t psw = (flags.z | flags.s << 1 | flags.p << 2 | flags.cy << 3 | flags.ac << 4 );
+                        memory[sp - 2] = psw;
+                        sp -= 2;
+                    }
+                    break;
+            case 0xfb: //EI
+                    {
+                        //interupt_enable = 1; Interupt enable variable not established in Emulator class yet
+                    }
+                    break;
+            case 0xfe: //CPI  byte
+                    {
+                        uint8_t mem = registers.A - memory[pc + 1];
+                        flags.z = (mem == 0);
+                        flags.s = (0x80 == (mem & 0x80));
+                        flags.p = parity(mem);
+                        flags.cy = registers.A < memory[pc + 1];
+                        // pc++;
                     }
                     break;
             // ...
