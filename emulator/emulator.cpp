@@ -56,17 +56,108 @@ void Emulator::Emulate(){
                 // NOP
                 break;
             case 0x01:
-                // Option 1: 
-                // put 
-                // code 
-                // here
-                opbytes = 2;
+
                 break;
             case 0x02:
-                // Option 2:
-                opbytes = _0x02();
+
                 break;
-            // ...
+            
+            // 0x50 - 0x5f
+            case 0x50:
+                // MOV D, B
+                {
+                    registers.D = registers.B;
+                }
+                break;
+            case 0x51:
+                // MOV D, C
+                {
+                    registers.D = registers.C;
+                }
+                break;
+            case 0x52:
+                // MOV D, D
+                break;
+            case 0x53:
+                // MOV D, E
+                {
+                    registers.D = registers.E;
+                }
+                break;
+            case 0x54:
+                // MOV D, H
+                {
+                    registers.D = registers.H;
+                }
+                break;
+            case 0x55:
+                // MOV D, L
+                {
+                    registers.D = registers.L;
+                }
+                break;
+            case 0x56:
+                // MOV D, M
+                {
+                    int mem_addr = (registers.H << 8) | (registers.L);
+                    registers.D = memory[mem_addr];
+                }
+                break;
+            case 0x57:
+                // MOV D, A
+                {
+                    registers.D = registers.A;
+                }
+                break;
+
+             // 0x50 - 0x5f
+            case 0x58:
+                // MOV E, B
+                {
+                    registers.E = registers.B;
+                }
+                break;
+            case 0x59:
+                // MOV E, C
+                {
+                    registers.E = registers.C;
+                }
+                break;
+            case 0x5a:
+                // MOV E, D
+                {
+                    registers.E = registers.D;
+                }
+                break;
+            case 0x5b:
+                // MOV E, E
+                break;
+            case 0x5c:
+                // MOV E, H
+                {
+                    registers.E = registers.H;
+                }
+                break;
+            case 0x5d:
+                // MOV E, L
+                {
+                    registers.E = registers.L;
+                }
+                break;
+            case 0x5e:
+                // MOV E, M
+                {
+                    int mem_addr = (registers.H << 8) | (registers.L);
+                    registers.E = memory[mem_addr];
+                }
+                break;
+            case 0x5f:
+                // MOV E, A
+                {
+                    registers.E = registers.A;
+                }
+                break;
+
             default:
                 // unknown instruction
                 break;
@@ -102,11 +193,4 @@ void Emulator::PrintFlags(){
     cout << "Parity Flag:    " << flags.p  << endl;
     cout << "Carry Flag:     " << flags.cy << endl;
     cout << "Aux Carry Flag: " << flags.ac << endl;
-}
-
-int Emulator::_0x02(){
-    // put
-    // code
-    // here
-    return 1; // opbytes
 }

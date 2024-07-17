@@ -41,6 +41,5 @@ class Emulator{
         // array for memory
         unsigned char* memory;
 
-        int _0x02();
 };
 
