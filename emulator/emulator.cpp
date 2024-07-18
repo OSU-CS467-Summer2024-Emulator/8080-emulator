@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include "./emulator.h"
+#include "./emulator.hpp"
 
 using namespace std;
 

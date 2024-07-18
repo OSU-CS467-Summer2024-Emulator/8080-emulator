@@ -1,1 +1,3 @@
-add_executable(Emulator main.cpp emulator.cpp) 
+add_library(Emulator emulator.cpp)
+add_executable(Main main.cpp)
+target_link_libraries(Main Emulator) 
