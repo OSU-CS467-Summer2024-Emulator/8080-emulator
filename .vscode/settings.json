@@ -1,0 +1,7 @@
+{
+  "editor.defaultFormatter": "jbenden.c-cpp-flylint",
+  "editor.formatOnSave": true,
+  "files.associations": {
+    "ostream": "cpp"
+  }
+}

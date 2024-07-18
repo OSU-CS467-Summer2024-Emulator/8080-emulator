@@ -2,7 +2,8 @@
 *.zip
 *.log
 /build
-.vscode
+*.dSYM
+build
 
 # Prerequisites
 *.d
