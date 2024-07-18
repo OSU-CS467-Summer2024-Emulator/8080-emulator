@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include "emulator.h"
+#include "./emulator.h"
 
 using namespace std;
 
@@ -34,7 +34,7 @@ int Emulator::LoadRom(string file_path)
         memory = new unsigned char[size];
 
         file.seekg(0, ios::beg);
-        file.read((char *)memory, size);
+        file.read(reinterpret_cast<char *>(memory), size);
         file.close();
 
         return size;
