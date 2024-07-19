@@ -116,7 +116,7 @@ uint8_t Emulator::ReadFromHL()
 void Emulator::Push(uint8_t high, uint8_t low)
 {
     WriteToMem(sp - 1, high);
-    WriteToMem(sp - 1, low);
+    WriteToMem(sp - 2, low);
     sp -= 2;
 }
 
@@ -149,6 +149,7 @@ void Emulator::Emulate()
         switch (opcode)
         {
             case 0x00: // NOP
+                pc += 1;
                 break;
             case 0x01:
                 // Option 1: 
@@ -432,69 +433,104 @@ void Emulator::Emulate()
                     break;
             
             // 0xf0 - 0xff
-            case 0xf0:
+            case 0xf0: //RP
+                    if (flags.s == 0)
                     {
-                        
+                        pc = memory[sp] | (memory[sp + 1] << 8);
+                        sp += 2;
                     }
                     break;
             case 0xf1: //POP PSW
                     {
-                        registers.A = memory[sp + 1];
-                        uint8_t psw = memory[sp];
-                        flags.z = (0x01 == (psw & 0x01));
-                        flags.s = (0x02 == (psw & 0x02));
-                        flags.p = (0x04 == (psw & 0x04));
-                        flags.cy = (0x08 == (psw & 0x08)); // (0x05 == (psw & 0x08)) in reference. Typo? Equates to always false
-                        flags.ac = (0x10 == (psw & 0x10));
+                        // registers.A = memory[sp + 1];
+                        // uint8_t psw = memory[sp];
+                        // flags.z = (0x01 == (psw & 0x01));
+                        // flags.s = (0x02 == (psw & 0x02));
+                        // flags.p = (0x04 == (psw & 0x04));
+                        // flags.cy = (0x08 == (psw & 0x08)); // (0x05 == (psw & 0x08)) in reference. Typo? Equates to always false
+                        // flags.ac = (0x10 == (psw & 0x10));
+
+                        Pop(&registers.A, (uint8_t*)&flags);
                         sp += 2;
                     }
                     break;
             case 0xf2:
+                    if (flags.s == 0)
                     {
-                        
+                        pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                    }
+                    else
+                    {
+                        pc += 2;
                     }
                     break;
             case 0xf3:
                     {
-                        
+                        //interupt_enable = 0;
                     }
                     break;
-            case 0xf4:
+            case 0xf4: //CP
+                    if (flags.s == 0)
                     {
-                        
+                        uint16_t ret = pc+2;
+                        WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                        WriteToMem(sp - 2, (ret & 0xff));
+                        sp -= 2;
+                        pc = (memory[pc + 2]) | memory[pc + 1];
+                    }
+                    else
+                    {
+                        pc += 2;
                     }
                     break;
             case 0xf5: //PUSH PSW
                     {
-                        memory[sp - 1] = registers.A;
-                        uint8_t psw = (flags.z | flags.s << 1 | flags.p << 2 | flags.cy << 3 | flags.ac << 4 );
-                        memory[sp - 2] = psw;
+                        // memory[sp - 1] = registers.A;
+                        // uint8_t psw = (flags.z | flags.s << 1 | flags.p << 2 | flags.cy << 3 | flags.ac << 4 );
+                        // memory[sp - 2] = psw;
+                        // sp -= 2;
+
+                        Push(registers.A, *(uint8_t*)&flags);
+                    }
+                    break;
+            case 0xf6: //ORI byte
+                    {
+                        uint8_t x = registers.A | memory[pc + 1];
+                        FlagsZSP(x);
+                        flags.cy = 0;
+                        registers.A = x;
+                        pc++;
+                    }
+                    break;
+            case 0xf7: // RST 6
+                    {
+                        uint16_t ret = pc + 2;
+                        WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                        WriteToMem(sp - 2, (ret & 0xff));
                         sp -= 2;
+                        pc = 0x30;
                     }
                     break;
-            case 0xf6:
+            case 0xf8: //RM
+                    if (flags.s != 0)
                     {
-                        
+                        pc = memory[sp] | (memory[sp + 1] << 8);
+                        sp += 2;
                     }
                     break;
-            case 0xf7:
+            case 0xf9: //SPHL
                     {
-                        
+                        sp = registers.L | (registers.H << 8);
                     }
                     break;
-            case 0xf8:
+            case 0xfa: //JM
+                    if (flags.s != 0)
                     {
-                        
+                        pc = (memory[pc + 2] << 8) | memory[pc + 1];
                     }
-                    break;
-            case 0xf9:
+                    else
                     {
-                        
-                    }
-                    break;
-            case 0xfa:
-                    {
-                        
+                        pc += 2;
                     }
                     break;
             case 0xfb: //EI
@@ -502,28 +538,39 @@ void Emulator::Emulate()
                         //interupt_enable = 1; Interupt enable variable not established in Emulator class yet
                     }
                     break;
-            case 0xfc:
+            case 0xfc: //CM
+                    if (flags.s != 0)
                     {
-                        
+                        uint16_t ret = pc + 2;
+                        WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                        WriteToMem(sp - 2, (ret & 0xff));
+                        sp -= 2;
+                        pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                    }
+                    else
+                    {
+                        pc += 2;
                     }
                     break;
-            case 0xfd:
+            case 0xfd: 
                     {
-                        
+                        UnimplementedInsruction();
                     }
                     break;
             case 0xfe: //CPI  byte
                     {
                         uint8_t mem = registers.A - memory[pc + 1];
-                        flags.z = (mem == 0);
-                        flags.s = (0x80 == (mem & 0x80));
-                        flags.p = parity(mem);
+                        FlagsZSP(mem);
                         flags.cy = registers.A < memory[pc + 1];
                         pc++;
                     }
-            case 0xff:
+            case 0xff: //RST 7
                     {
-                        
+                        uint16_t ret = pc + 2;
+                        WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                        WriteToMem(sp - 2, (ret & 0xff));
+                        sp -= 2;
+                        pc = 0x38;
                     }
                     break;
             // ...
