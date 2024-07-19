@@ -336,82 +336,98 @@ void Emulator::Emulate()
             // 0xb0 - 0xbf
             case 0xb0:
                     {
-                        
+                        registers.A = registers.A | registers.B;
+                        LogicFlagsA();
                     }
                     break;
             case 0xb1:
                     {
-                        
+                        registers.A = registers.A | registers.C;
+                        LogicFlagsA();
                     }
                     break;
             case 0xb2:
                     {
-                        
+                        registers.A = registers.A | registers.D;
+                        LogicFlagsA();
                     }
                     break;
             case 0xb3:
                     {
-                        
+                        registers.A = registers.A | registers.E;
+                        LogicFlagsA();
                     }
                     break;
             case 0xb4:
                     {
-                        
+                        registers.A = registers.A | registers.H;
+                        LogicFlagsA();
                     }
                     break;
             case 0xb5:
                     {
-                        
+                        registers.A = registers.A | registers.L;
+                        LogicFlagsA();
                     }
                     break;
             case 0xb6:
                     {
-                        
+                        registers.A = registers.A | ReadFromHL();
+                        LogicFlagsA();
                     }
                     break;
             case 0xb7:
                     {
-                        
+                        registers.A = registers.A | registers.A;
+                        LogicFlagsA();
                     }
                     break;
-            case 0xb8:
+            case 0xb8: //CMP B
                     {
-                        
+                        uint16_t res = (uint16_t) registers.A - (uint16_t) registers.B;
+                        ArithFlagsA(res);
                     }
                     break;
-            case 0xb9:
+            case 0xb9: //CMP C
                     {
-                        
+                        uint16_t res = (uint16_t) registers.A - (uint16_t) registers.C;
+                        ArithFlagsA(res);
                     }
                     break;
-            case 0xba:
+            case 0xba: //CMP D
                     {
-                        
+                        uint16_t res = (uint16_t) registers.A - (uint16_t) registers.D;
+                        ArithFlagsA(res);
                     }
                     break;
-            case 0xbb:
+            case 0xbb: //CMP E
                     {
-                        
+                        uint16_t res = (uint16_t) registers.A - (uint16_t) registers.E;
+                        ArithFlagsA(res);
                     }
                     break;
-            case 0xbc:
+            case 0xbc: //CMP H
                     {
-                        
+                        uint16_t res = (uint16_t) registers.A - (uint16_t) registers.H;
+                        ArithFlagsA(res);
                     }
                     break;
-            case 0xbd:
+            case 0xbd: //CMP L
                     {
-                        
+                        uint16_t res = (uint16_t) registers.A - (uint16_t) registers.L;
+                        ArithFlagsA(res);
                     }
                     break;
-            case 0xbe:
+            case 0xbe: //CMP HL
                     {
-                        
+                        uint16_t res = (uint16_t) registers.A - (uint16_t) ReadFromHL();
+                        ArithFlagsA(res);
                     }
                     break;
-            case 0xbf:
+            case 0xbf: //CMP A
                     {
-                        
+                        uint16_t res = (uint16_t) registers.A - (uint16_t) registers.A;
+                        ArithFlagsA(res);
                     }
                     break;
             
