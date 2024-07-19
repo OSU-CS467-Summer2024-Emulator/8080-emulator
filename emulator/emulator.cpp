@@ -1,8 +1,8 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include "emulator.h"
-#include "../disassembler/disassembler.h"
+#include "emulator.hpp"
+#include "../disassembler/disassembler.hpp"
 
 using namespace std;
 
@@ -156,10 +156,12 @@ void Emulator::Emulate()
                 // put 
                 // code 
                 // here
+                pc += 1;
                 opbytes = 2;
                 break;
             case 0x02:
                 // Option 2:
+                pc += 1;
                 opbytes = _0x02();
                 break;
 
@@ -431,6 +433,12 @@ void Emulator::Emulate()
                         ArithFlagsA(res);
                     }
                     break;
+
+            case 0xc3://jmp
+                    {
+                        pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                    }
+                    break;
             
             // 0xf0 - 0xff
             case 0xf0: //RP
@@ -576,8 +584,12 @@ void Emulator::Emulate()
             // ...
             default:
                 // unknown instruction
+                pc+=1;
                 break;
         }
+        PrintRegisters();
+        PrintFlags();
+        cout << endl;
         count++;
     }
 }
