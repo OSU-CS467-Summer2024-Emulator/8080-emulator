@@ -7,13 +7,15 @@
 using namespace std;
 
 // Constructor
-Emulator::Emulator(){
+Emulator::Emulator()
+{
 
 }
 
 
 // Destructor
-Emulator::~Emulator(){
+Emulator::~Emulator()
+{
     // deallocate memory if necessary
     if (memory != nullptr){
         delete [] memory;
@@ -23,12 +25,14 @@ Emulator::~Emulator(){
 
 // Copy contents of file specified by file_path into memory
 // Returns number of bytes read
-int Emulator::LoadRom(string file_path){
+int Emulator::LoadRom(string file_path)
+{
     streampos size;
     char * mem_buffer;
 
     ifstream file (file_path, ios::in|ios::binary|ios::ate);
-    if (file.is_open()) {
+    if (file.is_open()) 
+    {
         size = file.tellg();
         memory = new unsigned char [size];
 
@@ -38,36 +42,100 @@ int Emulator::LoadRom(string file_path){
 
         return size;
     }
-    else {
+    else 
+    {
         cout << "Unable to open file" << file_path << endl;
         return 0;
     }
 }
 
-int Emulator::parity(int x, int size=8){
+// Determines parity flag
+int Emulator::parity(int x, int size=8)
+{
     int p = 0;
     x = (x & ((1<<size)-1));
     for (int i = 0; i<size; i++)
 	{
-		if (x & 0x1){ 
+        if (x & 0x1)
+        { 
             p++;
         }
-		x = x >> 1;
+        x = x >> 1;
 	}
 	return (0 == (p & 0x1));
 }
 
-void Emulator::Emulate(){
+void Emulator::LogicFlagsA()
+{
+    flags.cy = (flags.ac = 0);
+    flags.z = (registers.A == 0);
+    flags.s = (0x80 == (registers.A & 0x80));
+    flags.p = parity(registers.A);
+}
+
+void Emulator::ArithFlagsA(uint16_t res)
+{
+    flags.cy = (res > 0xff);
+    flags.z = ((res&0xff) == 0);
+    flags.s = (0x80 == (res & 0x80));
+    flags.p = parity(res&0xff);
+}
+
+void Emulator::UnimplementedInsruction()
+{
+    cout << "Instruction not implemented" << endl;
+    pc--;
+    Disassemble((char*)memory, pc);
+    cout << "";
+    exit(1);
+}
+
+void Emulator::WriteToMem(uint16_t address, uint8_t value) 
+{
+    if (address < 0x2000 || address >=0x4000)
+    {
+        cout << "Invalid write location " << value << endl;
+        return;
+    }
+    
+    memory[address] = value;
+}
+
+void Emulator::Push(uint8_t high, uint8_t low)
+{
+    WriteToMem(sp - 1, high);
+    WriteToMem(sp - 1, low);
+    sp -= 2;
+}
+
+void Emulator::Pop(uint8_t *high, uint8_t *low)
+{
+    *low = memory[sp];
+    *high = memory[sp + 1];
+    sp -= 2;
+}
+
+void Emulator::FlagsZSP(uint8_t value)
+{
+    flags.z = (value == 0);
+    flags.s =(0x80 == (value & 0x80));
+    flags.p = parity(value);
+}
+
+void Emulator::Emulate()
+{
     int count = 0;
     pc = 0;
 
-    while (count < 50){
+    while (count < 50)
+    {
         int opbytes = 1;
         unsigned char opcode = memory[pc];
 
-        opbytes = Disassemble((char*)memory, pc);
+        Disassemble((char*)memory, pc);
 
-        switch (opcode){
+        switch (opcode)
+        {
             case 0x00: // NOP
                 break;
             case 0x01:
@@ -85,40 +153,40 @@ void Emulator::Emulate(){
             case 0x31: //LXI	SP,word
                     {
                         sp = (memory[pc + 2] << 8) | memory[pc + 1];
-                        // pc += 2; increment pc here or in dissasembler?
+                        pc += 2;
                     }
                     break;
             case 0x32: //STA    (word)
                     {
-                        unsigned short offset = (memory[pc + 2] << 8) | memory[pc + 1];
+                        uint16_t offset = (memory[pc + 2] << 8) | memory[pc + 1];
                         memory[offset] = registers.A;
-                        // pc += 2;
+                        pc += 2;
                     }
                     break;
             case 0x36: //MVI	M,byte
                     {
-                        unsigned short offset = (registers.H<<8) | (registers.L);
+                        uint16_t offset = (registers.H<<8) | (registers.L);
                         memory[offset] = memory[pc + 1];
-                        // pc++;
+                        pc++;
                     }
             case 0x3a: //LDA    (word)
                     {
-                        unsigned short offset = (memory[pc + 2] << 8) | memory[pc + 1];
+                        uint16_t offset = (memory[pc + 2] << 8) | memory[pc + 1];
                         registers.A = memory[offset];
-                        // pc += 2:
+                        pc += 2;
                     }
                     break;
             case 0x3e: //MVI    A,byte
                     {
                         registers.A = memory[pc + 1];
-                        // pc++;
+                        pc++;
                     }
                     break;
             
             
             case 0x77: //MOV    M,A
                     {
-                        unsigned short offset = (registers.H<<8) | (registers.L);
+                        uint16_t offset = (registers.H<<8) | (registers.L);
                         memory[offset] = registers.A;
                     }
                     break;
@@ -139,7 +207,7 @@ void Emulator::Emulate(){
                     break;
             case 0x7e: //MOV A,HL
                     {
-                        unsigned short offset = (registers.H<<8) | (registers.L);
+                        uint16_t offset = (registers.H<<8) | (registers.L);
                         registers.A = memory[offset];
                     }
                     break;
@@ -177,7 +245,7 @@ void Emulator::Emulate(){
                         flags.s = (0x80 == (mem & 0x80));
                         flags.p = parity(mem);
                         flags.cy = registers.A < memory[pc + 1];
-                        // pc++;
+                        pc++;
                     }
                     break;
             // ...
@@ -185,7 +253,6 @@ void Emulator::Emulate(){
                 // unknown instruction
                 break;
         }
-        pc += opbytes;
         count++;
     }
 }
@@ -193,7 +260,8 @@ void Emulator::Emulate(){
 
 
 // Print contents of all registers
-void Emulator::PrintRegisters(){
+void Emulator::PrintRegisters()
+{
     cout << "Register A: " << hex << setfill('0') << setw(2)
          << static_cast<unsigned>((unsigned char) registers.A) << endl;
     cout << "Register B: " << hex << setfill('0') << setw(2)
@@ -211,7 +279,8 @@ void Emulator::PrintRegisters(){
 }
 
 // Print current state of all condition codes
-void Emulator::PrintFlags(){
+void Emulator::PrintFlags()
+{
     cout << "Zero Flag:      " << flags.z  << endl;
     cout << "Sign Flag:      " << flags.s  << endl;
     cout << "Parity Flag:    " << flags.p  << endl;
@@ -219,7 +288,8 @@ void Emulator::PrintFlags(){
     cout << "Aux Carry Flag: " << flags.ac << endl;
 }
 
-int Emulator::_0x02(){
+int Emulator::_0x02()
+{
     // put
     // code
     // here

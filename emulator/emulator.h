@@ -8,6 +8,15 @@ class Emulator{
 
         int LoadRom(std::string);
         int parity(int, int);
+        void LogicFlagsA();
+        void ArithFlagsA(uint16_t res);
+        void UnimplementedInsruction();
+        void WriteToMem(uint16_t address, uint8_t value);
+        uint8_t ReadFromHL();
+        void WriteToHL(uint8_t value);
+        void Push(uint8_t high, uint8_t low);
+        void Pop(uint8_t *high, uint8_t *low);
+        void FlagsZSP(uint8_t value);
 
         void Emulate();
 
