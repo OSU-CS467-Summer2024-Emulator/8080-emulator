@@ -101,6 +101,18 @@ void Emulator::WriteToMem(uint16_t address, uint8_t value)
     memory[address] = value;
 }
 
+void Emulator::WriteToHL(uint8_t value)
+{
+    uint16_t offset = (registers.H << 8) | registers.L;
+    WriteToMem(offset, value);
+}
+
+uint8_t Emulator::ReadFromHL()
+{
+    uint16_t offset = (registers.H << 8) | registers.L;
+    return memory[offset];
+}
+
 void Emulator::Push(uint8_t high, uint8_t low)
 {
     WriteToMem(sp - 1, high);
@@ -150,6 +162,9 @@ void Emulator::Emulate()
                 opbytes = _0x02();
                 break;
 
+            case 0x30:
+                    UnimplementedInsruction();
+                    break;
             case 0x31: //LXI	SP,word
                     {
                         sp = (memory[pc + 2] << 8) | memory[pc + 1];
@@ -159,16 +174,50 @@ void Emulator::Emulate()
             case 0x32: //STA    (word)
                     {
                         uint16_t offset = (memory[pc + 2] << 8) | memory[pc + 1];
-                        memory[offset] = registers.A;
+                        WriteToMem(offset, registers.A);
                         pc += 2;
+                    }
+                    break;
+            case 0x33: //INX    SP
+                    sp++;
+                    break;
+            case 0x34: //INR	M
+                    {
+                        uint8_t res = ReadFromHL() + 1;
+                        FlagsZSP(res);
+                        WriteToHL(res);
+                    }
+                    break;
+            case 0x35: //DCR	M
+                    {
+                        uint8_t res = ReadFromHL() - 1;
+                        FlagsZSP(res);
+                        WriteToHL(res);
                     }
                     break;
             case 0x36: //MVI	M,byte
                     {
-                        uint16_t offset = (registers.H<<8) | (registers.L);
-                        memory[offset] = memory[pc + 1];
+                        WriteToHL(memory[pc + 1]);
                         pc++;
                     }
+                    break;
+            case 0x37: //STC
+                    {
+                        flags.cy = 1;
+                    }
+                    break;
+            case 0x38:
+                    UnimplementedInsruction();
+                    break;
+            case 0x39: //DAD SP
+                    {
+                        uint32_t hl = (registers.H << 8) | registers.L;
+                        uint32_t res = hl + sp;
+                        registers.H = (res & 0xff00) >> 8;
+                        registers.L = res & 0xff;
+                        flags.cy = ((res & 0xffff0000) > 0);
+                    }
+                    break;
             case 0x3a: //LDA    (word)
                     {
                         uint16_t offset = (memory[pc + 2] << 8) | memory[pc + 1];
@@ -176,10 +225,32 @@ void Emulator::Emulate()
                         pc += 2;
                     }
                     break;
+            case 0x3b: //DCX SP
+                    {
+                        sp -= 1;
+                    }
+                    break;
+            case 0x3c: //INR A
+                    { 
+                        registers.A++;
+                        FlagsZSP(registers.A);
+                    }
+                    break;
+            case 0x3d: //DCR A
+                    {
+                        registers.A--;
+                        FlagsZSP(registers.A);
+                    }
+                    break;
             case 0x3e: //MVI    A,byte
                     {
                         registers.A = memory[pc + 1];
                         pc++;
+                    }
+                    break;
+             case 0x3f:
+                    {
+                        flags.cy = 0;
                     }
                     break;
             
