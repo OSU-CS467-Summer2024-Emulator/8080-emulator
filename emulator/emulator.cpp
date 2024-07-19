@@ -162,6 +162,7 @@ void Emulator::Emulate()
                 opbytes = _0x02();
                 break;
 
+            // 0x30 - 0x3f
             case 0x30:
                     UnimplementedInsruction();
                     break;
@@ -179,7 +180,9 @@ void Emulator::Emulate()
                     }
                     break;
             case 0x33: //INX    SP
-                    sp++;
+                    {
+                        sp++;
+                    }
                     break;
             case 0x34: //INR	M
                     {
@@ -254,11 +257,52 @@ void Emulator::Emulate()
                     }
                     break;
             
-            
+            // 0x70 - 0x7f
+            case 0x70: //MOV    M,B
+                    {
+                        WriteToHL(registers.B);
+                    }
+                    break;
+            case 0x71: //MOV    M,C
+                    {
+                        WriteToHL(registers.C);
+                    }
+                    break;
+            case 0x72: //MOV    M,D
+                    {
+                        WriteToHL(registers.D);
+                    }
+                    break;
+            case 0x73: //MOV    M,E
+                    {
+                        WriteToHL(registers.E);
+                    }
+                    break;
+            case 0x74: //MOV    M,H
+                    {
+                        WriteToHL(registers.H);
+                    }
+                    break;
+            case 0x75: //MOV    M,L
+                    {
+                        WriteToHL(registers.L);
+                    }
+                    break;
+            case 0x76: //HLT
+                    break;
             case 0x77: //MOV    M,A
                     {
-                        uint16_t offset = (registers.H<<8) | (registers.L);
-                        memory[offset] = registers.A;
+                        WriteToHL(registers.A);
+                    }
+                    break;
+            case 0x78:
+                    {
+                        registers.A = registers.B;
+                    }
+                    break;
+            case 0x79:
+                    {
+                        registers.A = registers.C;
                     }
                     break;
             case 0x7a: //MOV A,D
@@ -276,14 +320,107 @@ void Emulator::Emulate()
                         registers.A = registers.H;
                     }
                     break;
+            case 0x7d: //MOV A,L
+                    {
+                        registers.A = registers.L;
+                    }
+                    break;
             case 0x7e: //MOV A,HL
                     {
-                        uint16_t offset = (registers.H<<8) | (registers.L);
-                        registers.A = memory[offset];
+                        registers.A = ReadFromHL();
+                    }
+                    break;
+            case 0x7f:
+                    break;
+
+            // 0xb0 - 0xbf
+            case 0xb0:
+                    {
+                        
+                    }
+                    break;
+            case 0xb1:
+                    {
+                        
+                    }
+                    break;
+            case 0xb2:
+                    {
+                        
+                    }
+                    break;
+            case 0xb3:
+                    {
+                        
+                    }
+                    break;
+            case 0xb4:
+                    {
+                        
+                    }
+                    break;
+            case 0xb5:
+                    {
+                        
+                    }
+                    break;
+            case 0xb6:
+                    {
+                        
+                    }
+                    break;
+            case 0xb7:
+                    {
+                        
+                    }
+                    break;
+            case 0xb8:
+                    {
+                        
+                    }
+                    break;
+            case 0xb9:
+                    {
+                        
+                    }
+                    break;
+            case 0xba:
+                    {
+                        
+                    }
+                    break;
+            case 0xbb:
+                    {
+                        
+                    }
+                    break;
+            case 0xbc:
+                    {
+                        
+                    }
+                    break;
+            case 0xbd:
+                    {
+                        
+                    }
+                    break;
+            case 0xbe:
+                    {
+                        
+                    }
+                    break;
+            case 0xbf:
+                    {
+                        
                     }
                     break;
             
-            
+            // 0xf0 - 0xff
+            case 0xf0:
+                    {
+                        
+                    }
+                    break;
             case 0xf1: //POP PSW
                     {
                         registers.A = memory[sp + 1];
@@ -296,6 +433,21 @@ void Emulator::Emulate()
                         sp += 2;
                     }
                     break;
+            case 0xf2:
+                    {
+                        
+                    }
+                    break;
+            case 0xf3:
+                    {
+                        
+                    }
+                    break;
+            case 0xf4:
+                    {
+                        
+                    }
+                    break;
             case 0xf5: //PUSH PSW
                     {
                         memory[sp - 1] = registers.A;
@@ -304,9 +456,44 @@ void Emulator::Emulate()
                         sp -= 2;
                     }
                     break;
+            case 0xf6:
+                    {
+                        
+                    }
+                    break;
+            case 0xf7:
+                    {
+                        
+                    }
+                    break;
+            case 0xf8:
+                    {
+                        
+                    }
+                    break;
+            case 0xf9:
+                    {
+                        
+                    }
+                    break;
+            case 0xfa:
+                    {
+                        
+                    }
+                    break;
             case 0xfb: //EI
                     {
                         //interupt_enable = 1; Interupt enable variable not established in Emulator class yet
+                    }
+                    break;
+            case 0xfc:
+                    {
+                        
+                    }
+                    break;
+            case 0xfd:
+                    {
+                        
                     }
                     break;
             case 0xfe: //CPI  byte
@@ -317,6 +504,10 @@ void Emulator::Emulate()
                         flags.p = parity(mem);
                         flags.cy = registers.A < memory[pc + 1];
                         pc++;
+                    }
+            case 0xff:
+                    {
+                        
                     }
                     break;
             // ...
