@@ -1,8 +1,8 @@
 #include <iostream>
 #include "./emulator.hpp"
 
-int main(){
-    
+int main()
+{
     Emulator e;
 
     e.LoadRom("./space_invaders_rom/invaders");
