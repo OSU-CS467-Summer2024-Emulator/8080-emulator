@@ -1,7 +1,8 @@
 #include <string>
 
 
-class Emulator{
+class Emulator
+{
     public:
         Emulator();
         ~Emulator();
@@ -24,7 +25,8 @@ class Emulator{
         void PrintFlags();
 
     private:
-        struct Registers {
+        struct Registers 
+        {
             unsigned char A = 0;
             unsigned char B = 0;
             unsigned char C = 0;
@@ -34,7 +36,8 @@ class Emulator{
             unsigned char L = 0;
         } registers;
 
-        struct Flags {
+        struct Flags 
+        {
             bool z = 0;  // zero
             bool s = 0;  // sign
             bool p = 0;  // parity
