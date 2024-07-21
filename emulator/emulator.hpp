@@ -12,6 +12,11 @@ public:
 
     void PrintRegisters();
     void PrintFlags();
+    void WriteToMem(uint16_t address, uint8_t value);
+    void FlagsZSP(uint8_t value);
+    void SetArithFlags(uint8_t value);
+    void SetLogicFlags(uint8_t value);
+    int parity(int x, int size);
 
 private:
     struct Registers

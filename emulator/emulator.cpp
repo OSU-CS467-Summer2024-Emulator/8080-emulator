@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <fstream>
 #include "./emulator.hpp"
+#include "../disassembler/disassembler.hpp"
 
 using namespace std;
 
@@ -46,26 +47,209 @@ int Emulator::LoadRom(string file_path)
     }
 }
 
+void Emulator::WriteToMem(uint16_t address, uint8_t value)
+{
+    if (address < 0x2000 || address >= 0x4000)
+    {
+        cout << "Invalid write location" << value << endl;
+        return;
+    }
+    memory[address] = value;
+}
+
+void Emulator::SetArithFlags(uint8_t value)
+{
+    flags.z = ((0xff & value) == 0);
+    flags.s = ((0x80 & value) == 0x80);
+    flags.p = parity(value & 0xff);
+}
+
+void Emulator::SetLogicFlags(uint8_t value)
+{
+    flags.cy = ((0x80 & value) == 0x80);
+}
+
+void Emulator::FlagsZSP(uint8_t value)
+{
+    flags.z = (value == 0);
+    flags.s = ((0x80 & value) == 0x80);
+    flags.p = parity(value);
+}
+
+int Emulator::parity(int x, int size=8)
+{
+    int p = 0;
+    x = (x & ((1<<size)-1));
+    for (int i = 0; i<size; i++)
+	{
+        if (x & 0x1)
+        { 
+            p++;
+        }
+        x = x >> 1;
+	}
+	return (0 == (p & 0x1));
+}
+
 void Emulator::Emulate()
 {
     int count = 0;
+    pc = 0;
 
     while (count < 100)
     {
-        int opbytes = 1;
         unsigned char opcode = memory[pc];
+        Disassemble((char *)memory, pc);
 
         switch (opcode)
         {
+        // 0x00 - 0x0f
         case 0x00:
             // NOP
+            pc++;
             break;
         case 0x01:
-
+            // LXI B,D16
+            {
+                registers.B = memory[pc + 2];
+                registers.C = memory[pc + 1];
+                pc += 3;
+            }
             break;
         case 0x02:
-
+            // STAX B
+            {
+                uint16_t offset = (registers.B << 8) | registers.C;
+                WriteToMem(offset, registers.A);
+                pc += 1;
+            }
             break;
+        case 0x03:
+            // INX B
+            {
+                registers.C++;
+                if (registers.C == 0) 
+                {
+                    registers.B++;
+                }
+                pc++;
+            }
+            break;
+        
+        case 0x04:
+            // INR B
+            {
+                registers.B++;
+                FlagsZSP(registers.B);
+                pc++;
+            }
+            break;
+
+        case 0x05:
+            // DCR B
+            {
+                registers.B--;
+                FlagsZSP(registers.B);
+                pc++;
+            }
+            break;
+        
+        case 0x06:
+            // MVI B, D8
+            {
+                registers.B = memory[pc + 1];
+                pc += 2;
+            }
+            break;
+        
+        case 0x07:
+            // RLC
+            {
+                flags.cy = (0x80 == (0x80 & registers.A));
+                registers.A << 1;
+                if (flags.cy == 1)
+                {
+                    registers.A++;
+                }
+                pc++;
+            }
+            break;
+        
+        case 0x08:
+            // NOP
+            pc++;
+            break;
+        
+        case 0x09:
+            // DAD B
+            {
+                uint32_t bc = (registers.B << 8) | registers.C;
+                uint32_t hl = (registers.H << 8) | registers.L;
+                uint32_t ans = bc + hl;
+                registers.H = (ans & 0xff00) >> 8;
+                registers.L = (ans & 0xff);
+                flags.cy = ((ans & 0xffff0000) != 0);
+                pc++;
+            }
+            break;
+
+        case 0x0a:
+            // LDAX B
+            {
+                uint16_t offset = (registers.B << 8) | registers.C;
+                registers.A = memory[offset];
+                pc++;
+            }
+            break;
+        
+        case 0x0b:
+            // DCX B
+            {
+                registers.C--;
+                if (registers.C == 0xff)
+                {
+                    registers.B--;
+                }
+                pc++;
+            }
+            break;
+        
+        case 0x0c:
+            // INR C
+            {
+                registers.C++;
+                FlagsZSP(registers.C);
+                pc++;
+            }
+            break;
+        
+        case 0x0d:
+            // DCR C
+            {
+                registers.C--;
+                FlagsZSP(registers.C);
+                pc++;
+            }
+            break;
+        
+        case 0x0e:
+            // MVI C, D8
+            {
+                registers.C = memory[pc + 1];
+                pc +=2 ;
+            }
+            break;
+        
+        case 0x0f:
+            // RRC
+            {
+                flags.cy = (0x01 == (registers.A & 0x01));
+                registers.A >> 1;
+                if (flags.cy == 1)
+                {
+                    registers.A = (registers.A | 0x80);
+                }
+            }
 
         // 0x50 - 0x5f
         case 0x50:
@@ -167,7 +351,7 @@ void Emulator::Emulate()
             // unknown instruction
             break;
         }
-        pc += opbytes;
+        count += 1;
     }
 }
 
