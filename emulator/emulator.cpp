@@ -59,6 +59,7 @@ void Emulator::WriteToMem(uint16_t address, uint8_t value)
 
 void Emulator::SetArithFlags(uint8_t value)
 {
+    flags.cy = (value > 0xff);
     flags.z = ((0xff & value) == 0);
     flags.s = ((0x80 & value) == 0x80);
     flags.p = parity(value & 0xff);
@@ -76,19 +77,19 @@ void Emulator::FlagsZSP(uint8_t value)
     flags.p = parity(value);
 }
 
-int Emulator::parity(int x, int size=8)
+int Emulator::parity(int x, int size = 8)
 {
     int p = 0;
-    x = (x & ((1<<size)-1));
-    for (int i = 0; i<size; i++)
-	{
+    x = (x & ((1 << size) - 1));
+    for (int i = 0; i < size; i++)
+    {
         if (x & 0x1)
-        { 
+        {
             p++;
         }
         x = x >> 1;
-	}
-	return (0 == (p & 0x1));
+    }
+    return (0 == (p & 0x1));
 }
 
 void Emulator::Emulate()
@@ -128,14 +129,14 @@ void Emulator::Emulate()
             // INX B
             {
                 registers.C++;
-                if (registers.C == 0) 
+                if (registers.C == 0)
                 {
                     registers.B++;
                 }
                 pc++;
             }
             break;
-        
+
         case 0x04:
             // INR B
             {
@@ -153,7 +154,7 @@ void Emulator::Emulate()
                 pc++;
             }
             break;
-        
+
         case 0x06:
             // MVI B, D8
             {
@@ -161,7 +162,7 @@ void Emulator::Emulate()
                 pc += 2;
             }
             break;
-        
+
         case 0x07:
             // RLC
             {
@@ -174,12 +175,12 @@ void Emulator::Emulate()
                 pc++;
             }
             break;
-        
+
         case 0x08:
             // NOP
             pc++;
             break;
-        
+
         case 0x09:
             // DAD B
             {
@@ -201,7 +202,7 @@ void Emulator::Emulate()
                 pc++;
             }
             break;
-        
+
         case 0x0b:
             // DCX B
             {
@@ -213,7 +214,7 @@ void Emulator::Emulate()
                 pc++;
             }
             break;
-        
+
         case 0x0c:
             // INR C
             {
@@ -222,7 +223,7 @@ void Emulator::Emulate()
                 pc++;
             }
             break;
-        
+
         case 0x0d:
             // DCR C
             {
@@ -231,15 +232,15 @@ void Emulator::Emulate()
                 pc++;
             }
             break;
-        
+
         case 0x0e:
             // MVI C, D8
             {
                 registers.C = memory[pc + 1];
-                pc +=2 ;
+                pc += 2;
             }
             break;
-        
+
         case 0x0f:
             // RRC
             {
@@ -249,7 +250,136 @@ void Emulator::Emulate()
                 {
                     registers.A = (registers.A | 0x80);
                 }
+                pc++;
             }
+            break;
+
+        // 0x40 - 0x4f
+        case 0x40:
+            // MOV B,B
+            pc++;
+            break;
+
+        case 0x41:
+            // MOV B,C
+            {
+                registers.B = registers.C;
+                pc++;
+            }
+            break;
+
+        case 0x42:
+            // MOV B,D
+            {
+                registers.B = registers.D;
+                pc++;
+            }
+            break;
+
+        case 0x43:
+            // MOV B,E
+            {
+                registers.B = registers.E;
+                pc++;
+            }
+            break;
+        
+        case 0x44:
+            // MOV B,H
+            {
+                registers.B = registers.H;
+                pc++;
+            }
+            break;
+        
+        case 0x45:
+            // MOV B,L
+            {
+                registers.B = registers.L;
+                pc++;
+            }
+            break;
+        
+        case 0x46:
+            // MOV B,M
+            {
+                uint16_t offset = (registers.H << 8) | registers.L;
+                registers.B = memory[offset];
+                pc++;
+            }
+            break;
+        
+        case 0x47:
+            // MOV B,A
+            {
+                registers.B = registers.A;
+                pc++;
+            }
+            break;
+
+        case 0x48:
+            // MOV C,B
+            {
+                registers.C = registers.B;
+                pc++;
+            }
+            break;
+            
+        case 0x49:
+            // MOV C,C
+            {
+                pc++;
+            }
+            break;
+
+        case 0x4a:
+            // MOV C,D
+            {
+                registers.C = registers.D;
+                pc++;
+            }
+            break;
+
+        case 0x4b:
+            // MOV C,E
+            {
+                registers.C = registers.E;
+                pc++;
+            }
+            break;
+
+        case 0x4c:
+            // MOV C,H
+            {
+                registers.C = registers.H;
+                pc++;
+            }
+            break;
+        
+        case 0x4d:
+            // MOV C,L
+            {
+                registers.C = registers.L;
+                pc++;
+            }
+            break;
+
+        case 0x4e:
+            // MOV C,M
+            {
+                uint16_t offset = (registers.H << 8) | registers.L;
+                registers.C = memory[offset];
+                pc++;
+            }
+            break;
+        
+        case 0x4f:
+            // MOV C,A
+            {
+                registers.C = registers.A;
+                pc++;
+            }
+            break;
 
         // 0x50 - 0x5f
         case 0x50:
@@ -344,6 +474,169 @@ void Emulator::Emulate()
             // MOV E, A
             {
                 registers.E = registers.A;
+            }
+            break;
+        
+        // 0x80 - 0x8f
+        case 0x80:
+            // ADD B
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.B;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+        
+        case 0x81:
+            // ADD C
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.C;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+        
+        case 0x82:
+            // ADD D
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.D;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+        
+        case 0x83:
+            // ADD E
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.E;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+        
+        case 0x84:
+            // ADD H
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.H;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+        
+        case 0x85:
+            // ADD L
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.L;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+        
+        case 0x86:
+            // ADD M
+            {
+                uint16_t offset = (registers.H << 8) | registers.L;
+                uint32_t res = (uint16_t) registers.A + offset;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+        
+        case 0x87:
+            // ADD A
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.A;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+        
+        case 0x88:
+            // ADC B
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.B + flags.cy;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+
+        case 0x89:
+            // ADC C
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.C + flags.cy;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+        
+        case 0x8a:
+            // ADC D
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.D + flags.cy;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+        
+        case 0x8b:
+            // ADC E
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.E + flags.cy;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+        
+        case 0x8c:
+            // ADC H
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.H + flags.cy;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+
+        case 0x8d:
+            // ADC L
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.L + flags.cy;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+        
+        case 0x8e:
+            // ADC M
+            {
+                uint16_t offset = (registers.H << 8) | registers.L;
+                uint32_t res = (uint16_t) registers.A + offset + flags.cy;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
+            }
+            break;
+        
+        case 0x8f:
+            // ADC A
+            {
+                uint16_t res = (uint16_t) registers.A + (uint16_t) registers.A + flags.cy;
+                SetArithFlags(res);
+                registers.A = (res & 0xff);
+                pc++;
             }
             break;
 
