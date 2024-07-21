@@ -4,8 +4,6 @@
 /build
 *.dSYM
 build
-/.vscode/tasks.json
-/.gitignore
 
 # Prerequisites
 *.d

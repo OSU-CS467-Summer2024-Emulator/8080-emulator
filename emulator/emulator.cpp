@@ -59,7 +59,7 @@ int Emulator::parity(int x, int size=8)
             p++;
         }
         x = x >> 1;
-        }
+    }
         return (0 == (p & 0x1));
 }
 
