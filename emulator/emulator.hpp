@@ -16,6 +16,8 @@ public:
     void FlagsZSP(uint8_t value);
     void SetArithFlags(uint8_t value);
     void SetLogicFlags(uint8_t value);
+    void Pop(uint8_t *high, uint8_t *low);
+    void Push(uint8_t high, uint8_t low);
     int parity(int x, int size);
 
 private:
