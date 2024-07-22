@@ -82,7 +82,7 @@ void Emulator::ArithFlagsA(uint16_t res)
 void Emulator::UnimplementedInsruction()
 {
     cout << "Instruction not implemented" << endl;
-    Disassemble((char *)memory, pc);
+    Disassemble(reinterpret_cast<char *>(memory), pc);
     cout << endl;
     exit(1);
 }
@@ -140,7 +140,7 @@ void Emulator::Emulate()
     {
         unsigned char opcode = memory[pc];
 
-        Disassemble((char *)memory, pc);
+        Disassemble(reinterpret_cast<char *>(memory), pc);
 
         switch (opcode)
         {
@@ -209,7 +209,7 @@ void Emulator::Emulate()
             // RLC
             {
                 flags.cy = (0x80 == (0x80 & registers.A));
-                registers.A << 1;
+                registers.A = registers.A << 1;
                 if (flags.cy == 1)
                 {
                     registers.A++;
@@ -289,7 +289,7 @@ void Emulator::Emulate()
             // RRC
             {
                 flags.cy = (0x01 == (registers.A & 0x01));
-                registers.A >> 1;
+                registers.A = registers.A >> 1;
                 if (flags.cy == 1)
                 {
                     registers.A = (registers.A | 0x80);
@@ -297,7 +297,7 @@ void Emulator::Emulate()
                 pc++;
             }
             break;
-        
+
         // 0x30 - 0x3f
         case 0x30:
             UnimplementedInsruction();
@@ -657,7 +657,7 @@ void Emulator::Emulate()
                 pc++;
             }
             break;
-        
+
         // 0x70 - 0x7f
         case 0x70:
             // MOV M, B
@@ -856,7 +856,8 @@ void Emulator::Emulate()
         case 0x88:
             // ADC B
             {
-                uint16_t res = (uint16_t)registers.A + (uint16_t)registers.B + flags.cy;
+                uint16_t res = (uint16_t)registers.A + 
+                               (uint16_t)registers.B + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
@@ -866,7 +867,8 @@ void Emulator::Emulate()
         case 0x89:
             // ADC C
             {
-                uint16_t res = (uint16_t)registers.A + (uint16_t)registers.C + flags.cy;
+                uint16_t res = (uint16_t)registers.A + 
+                               (uint16_t)registers.C + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
@@ -876,7 +878,8 @@ void Emulator::Emulate()
         case 0x8a:
             // ADC D
             {
-                uint16_t res = (uint16_t)registers.A + (uint16_t)registers.D + flags.cy;
+                uint16_t res = (uint16_t)registers.A + 
+                               (uint16_t)registers.D + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
@@ -886,7 +889,8 @@ void Emulator::Emulate()
         case 0x8b:
             // ADC E
             {
-                uint16_t res = (uint16_t)registers.A + (uint16_t)registers.E + flags.cy;
+                uint16_t res = (uint16_t)registers.A + 
+                               (uint16_t)registers.E + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
@@ -896,7 +900,8 @@ void Emulator::Emulate()
         case 0x8c:
             // ADC H
             {
-                uint16_t res = (uint16_t)registers.A + (uint16_t)registers.H + flags.cy;
+                uint16_t res = (uint16_t)registers.A + 
+                               (uint16_t)registers.H + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
@@ -906,7 +911,8 @@ void Emulator::Emulate()
         case 0x8d:
             // ADC L
             {
-                uint16_t res = (uint16_t)registers.A + (uint16_t)registers.L + flags.cy;
+                uint16_t res = (uint16_t)registers.A + 
+                               (uint16_t)registers.L + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
@@ -927,7 +933,8 @@ void Emulator::Emulate()
         case 0x8f:
             // ADC A
             {
-                uint16_t res = (uint16_t)registers.A + (uint16_t)registers.A + flags.cy;
+                uint16_t res = (uint16_t)registers.A + 
+                               (uint16_t)registers.A + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
@@ -1202,7 +1209,8 @@ void Emulator::Emulate()
         case 0xce:
             // ACI D8
             {
-                uint16_t res = (uint16_t)registers.A + (uint16_t)memory[pc + 1] + flags.cy;
+                uint16_t res = (uint16_t)registers.A + 
+                               (uint16_t)memory[pc + 1] + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (uint8_t)res;
                 pc++;
