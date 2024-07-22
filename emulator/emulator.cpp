@@ -47,41 +47,67 @@ int Emulator::LoadRom(string file_path)
     }
 }
 
-void Emulator::WriteToMem(uint16_t address, uint8_t value)
+// Determines parity flag
+int Emulator::parity(int x, int size=8)
 {
-    if (address < 0x2000 || address >= 0x4000)
+    int p = 0;
+    x = (x & ((1<<size)-1));
+    for (int i = 0; i<size; i++)
     {
-        cout << "Invalid write location" << value << endl;
+        if (x & 0x1)
+        { 
+            p++;
+        }
+        x = x >> 1;
+    }
+        return (0 == (p & 0x1));
+}
+
+void Emulator::LogicFlagsA()
+{
+    flags.cy = (flags.ac = 0);
+    flags.z = (registers.A == 0);
+    flags.s = (0x80 == (registers.A & 0x80));
+    flags.p = parity(registers.A);
+}
+
+void Emulator::ArithFlagsA(uint16_t res)
+{
+    flags.cy = (res > 0xff);
+    flags.z = ((res & 0xff) == 0);
+    flags.s = (0x80 == (res & 0x80));
+    flags.p = parity(res & 0xff);
+}
+
+void Emulator::UnimplementedInsruction()
+{
+    cout << "Instruction not implemented" << endl;
+    Disassemble((char*)memory, pc);
+    cout << endl;
+    exit(1);
+}
+
+void Emulator::WriteToMem(uint16_t address, uint8_t value) 
+{
+    if (address < 0x2000 || address >=0x4000)
+    {
+        cout << "Invalid write location " << address << endl;
         return;
     }
+    
     memory[address] = value;
 }
 
-void Emulator::SetArithFlags(uint8_t value)
+void Emulator::WriteToHL(uint8_t value)
 {
-    flags.cy = (value > 0xff);
-    flags.z = ((0xff & value) == 0);
-    flags.s = ((0x80 & value) == 0x80);
-    flags.p = parity(value & 0xff);
+    uint16_t offset = (registers.H << 8) | registers.L;
+    WriteToMem(offset, value);
 }
 
-void Emulator::SetLogicFlags(uint8_t value)
+uint8_t Emulator::ReadFromHL()
 {
-    flags.cy = ((0x80 & value) == 0x80);
-}
-
-void Emulator::FlagsZSP(uint8_t value)
-{
-    flags.z = (value == 0);
-    flags.s = ((0x80 & value) == 0x80);
-    flags.p = parity(value);
-}
-
-void Emulator::Pop(uint8_t *high, uint8_t *low)
-{
-    *low = memory[sp];
-    *high = memory[sp + 1];
-    sp += 2;
+    uint16_t offset = (registers.H << 8) | registers.L;
+    return memory[offset];
 }
 
 void Emulator::Push(uint8_t high, uint8_t low)
@@ -91,19 +117,18 @@ void Emulator::Push(uint8_t high, uint8_t low)
     sp -= 2;
 }
 
-int Emulator::parity(int x, int size = 8)
+void Emulator::Pop(uint8_t *high, uint8_t *low)
 {
-    int p = 0;
-    x = (x & ((1 << size) - 1));
-    for (int i = 0; i < size; i++)
-    {
-        if (x & 0x1)
-        {
-            p++;
-        }
-        x = x >> 1;
-    }
-    return (0 == (p & 0x1));
+    *low = memory[sp];
+    *high = memory[sp + 1];
+    sp -= 2;
+}
+
+void Emulator::ZSPFlags(uint8_t value)
+{
+    flags.z = (value == 0);
+    flags.s =(0x80 == (value & 0x80));
+    flags.p = parity(value);
 }
 
 void Emulator::Emulate()
@@ -114,6 +139,7 @@ void Emulator::Emulate()
     while (count < 100)
     {
         unsigned char opcode = memory[pc];
+
         Disassemble((char *)memory, pc);
 
         switch (opcode)
@@ -121,7 +147,9 @@ void Emulator::Emulate()
         // 0x00 - 0x0f
         case 0x00:
             // NOP
-            pc++;
+            {
+                pc++;
+            }
             break;
         case 0x01:
             // LXI B,D16
@@ -155,7 +183,7 @@ void Emulator::Emulate()
             // INR B
             {
                 registers.B++;
-                FlagsZSP(registers.B);
+                ZSPFlags(registers.B);
                 pc++;
             }
             break;
@@ -164,7 +192,7 @@ void Emulator::Emulate()
             // DCR B
             {
                 registers.B--;
-                FlagsZSP(registers.B);
+                ZSPFlags(registers.B);
                 pc++;
             }
             break;
@@ -192,7 +220,9 @@ void Emulator::Emulate()
 
         case 0x08:
             // NOP
-            pc++;
+            {
+                pc++;
+            }
             break;
 
         case 0x09:
@@ -233,7 +263,7 @@ void Emulator::Emulate()
             // INR C
             {
                 registers.C++;
-                FlagsZSP(registers.C);
+                ZSPFlags(registers.C);
                 pc++;
             }
             break;
@@ -242,7 +272,7 @@ void Emulator::Emulate()
             // DCR C
             {
                 registers.C--;
-                FlagsZSP(registers.C);
+                ZSPFlags(registers.C);
                 pc++;
             }
             break;
@@ -496,7 +526,7 @@ void Emulator::Emulate()
             // ADD B
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.B;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -506,7 +536,7 @@ void Emulator::Emulate()
             // ADD C
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.C;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -516,7 +546,7 @@ void Emulator::Emulate()
             // ADD D
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.D;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -526,7 +556,7 @@ void Emulator::Emulate()
             // ADD E
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.E;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -536,7 +566,7 @@ void Emulator::Emulate()
             // ADD H
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.H;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -546,7 +576,7 @@ void Emulator::Emulate()
             // ADD L
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.L;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -557,7 +587,7 @@ void Emulator::Emulate()
             {
                 uint16_t offset = (registers.H << 8) | registers.L;
                 uint32_t res = (uint16_t) registers.A + offset;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -567,7 +597,7 @@ void Emulator::Emulate()
             // ADD A
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.A;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -577,7 +607,7 @@ void Emulator::Emulate()
             // ADC B
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.B + flags.cy;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -587,7 +617,7 @@ void Emulator::Emulate()
             // ADC C
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.C + flags.cy;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -597,7 +627,7 @@ void Emulator::Emulate()
             // ADC D
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.D + flags.cy;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -607,7 +637,7 @@ void Emulator::Emulate()
             // ADC E
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.E + flags.cy;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -617,7 +647,7 @@ void Emulator::Emulate()
             // ADC H
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.H + flags.cy;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -627,7 +657,7 @@ void Emulator::Emulate()
             // ADC L
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.L + flags.cy;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -638,7 +668,7 @@ void Emulator::Emulate()
             {
                 uint16_t offset = (registers.H << 8) | registers.L;
                 uint32_t res = (uint16_t) registers.A + offset + flags.cy;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -648,7 +678,7 @@ void Emulator::Emulate()
             // ADC A
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) registers.A + flags.cy;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
             }
@@ -723,7 +753,7 @@ void Emulator::Emulate()
             // ADI D8
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) memory[pc+ 1];
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (uint8_t) res;
                 pc++;
             }
@@ -775,6 +805,9 @@ void Emulator::Emulate()
         
         case 0xcb:
             // NOP
+            {
+                pc++;
+            }
             break;
         
         case 0xcc:
@@ -806,7 +839,7 @@ void Emulator::Emulate()
             // ACI D8
             {
                 uint16_t res = (uint16_t) registers.A + (uint16_t) memory[pc+ 1] + flags.cy;
-                SetArithFlags(res);
+                ArithFlagsA(res);
                 registers.A = (uint8_t) res;
                 pc++;
             }
@@ -827,7 +860,7 @@ void Emulator::Emulate()
             // unknown instruction
             break;
         }
-        count += 1;
+        count++;
     }
 }
 
