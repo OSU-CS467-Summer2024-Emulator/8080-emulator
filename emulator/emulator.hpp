@@ -55,5 +55,5 @@ class Emulator
         int pc;
 
         // array for memory
-        unsigned char *memory;
+        unsigned char* memory;
 };
