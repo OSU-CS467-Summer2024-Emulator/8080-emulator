@@ -121,7 +121,7 @@ void Emulator::Pop(uint8_t *high, uint8_t *low)
 {
     *low = memory[sp];
     *high = memory[sp + 1];
-    sp -= 2;
+    sp += 2;
 }
 
 void Emulator::ZSPFlags(uint8_t value)
