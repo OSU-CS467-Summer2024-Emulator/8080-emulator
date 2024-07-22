@@ -122,7 +122,7 @@ void Emulator::Pop(uint8_t *high, uint8_t *low)
 {
     *low = memory[sp];
     *high = memory[sp + 1];
-    sp -= 2;
+    sp -= 2; // should increase stack pointer
 }
 
 void Emulator::ZSPFlags(uint8_t value)
@@ -132,12 +132,28 @@ void Emulator::ZSPFlags(uint8_t value)
     flags.p = parity(value);
 }
 
+void Emulator::SubtractFromA(unsigned char operand){
+    uint16_t num1 = registers.A;
+    uint16_t num2 = ~operand & 0x00ff;
+    uint16_t result = num1 + num2 + 0x0001;
+    registers.A = result & 0x00ff;
+
+    // Set flags
+    flags.z = (registers.A == 0);
+    flags.s = (registers.A & 0x80);
+    flags.p = parity(registers.A);
+    flags.cy = !(result & 0x0100);
+
+    pc++;
+}
+
+
 void Emulator::Emulate()
 {
     int count = 0;
     pc = 0;
 
-    while (count < 100)
+    while (count < 110)
     {
         unsigned char opcode = memory[pc];
 
@@ -147,12 +163,9 @@ void Emulator::Emulate()
         {
         case 0x00:
             // NOP
-            break;
-        case 0x01:
-
-            break;
-        case 0x02:
-
+            {
+                pc++;
+            }
             break;
 
         // 0x30 - 0x3f
@@ -301,8 +314,11 @@ void Emulator::Emulate()
             // INX D
             // Increment registers D and E, no flags affected
             {
-                registers.D++;
                 registers.E++;
+                if (registers.E == 0x00)
+                {
+                    registers.D++;
+                }
                 pc++;
             }
             break;
@@ -311,11 +327,7 @@ void Emulator::Emulate()
             // Increment D
             {
                 registers.D++;
-                // Set flags
-                flags.z = (registers.D == 0);
-                flags.s = (0x80 & registers.D);
-                // TODO: implement parity function
-                // flags.p = (parity(registers.D));
+                ZSPFlags(registers.D);
 
                 pc++;
             }
@@ -325,11 +337,7 @@ void Emulator::Emulate()
             // Decrement D
             {
                 registers.D--;
-                // Set flags
-                flags.z = (registers.D == 0);
-                flags.s = (0x80 & registers.D);
-                // TODO: implement parity function
-                // flags.p = (parity(registers.D));
+                ZSPFlags(registers.D);
 
                 pc++;
             }
@@ -389,10 +397,13 @@ void Emulator::Emulate()
             break;
         case 0x1b:
             // DCX D
-            // Decrement registers D and E, no flags affected
+            // Decrement registers D and E as a 16 bit number, no flags affected
             {
-                registers.D--;
                 registers.E--;
+                if (registers.E == 0xff)
+                {
+                    registers.D--;
+                }
                 pc++;
             }
             break;
@@ -401,7 +412,7 @@ void Emulator::Emulate()
             // Increment register E and
             {
                 registers.E++;
-                // set z, s, and p flags
+                ZSPFlags(registers.E);
                 pc++;
             }
             break;
@@ -410,7 +421,7 @@ void Emulator::Emulate()
             // Decrement register E and
             {
                 registers.E--;
-                // set z, s, and p flags
+                ZSPFlags(registers.E);
                 pc++;
             }
             break;
@@ -418,7 +429,7 @@ void Emulator::Emulate()
             // MVI E, byte
             // Load next byte into register E
             {
-                // code
+                registers.E = memory[pc + 1];
                 pc++;
             }
             break;
@@ -785,23 +796,188 @@ void Emulator::Emulate()
             // SUB B
             // Subtract register B from register A and store result in A
             {
-                uint16_t num1 = registers.A;
-                uint16_t num2 = ~registers.B & 0x00ff;
-                uint16_t result = num1 + num2 + 0x0001;
-                registers.A = result & 0x00ff;
-
-                // Set flags
-                flags.z = (registers.A == 0);
-                flags.s = (registers.A & 0x80);
-                // TODO: implement parity function
-                // flags.p = parity(registers.A);
-                // If there was a carryout, cy is *RESET*
-                flags.cy = !(result & 0x0100);
-
+                SubtractFromA(registers.B);
                 pc++;
             }
             break;
-            // cases 0x91-0x97 are also SUB instructions
+        case 0x91:
+            // SUB C
+            // Subtract register C from register A and store result in A
+            {
+                SubtractFromA(registers.C);
+                pc++;
+            }
+            break;
+        case 0x92:
+            // SUB D
+            // Subtract register D from register A and store result in A
+            {
+                SubtractFromA(registers.D);
+                pc++;
+            }
+            break;
+        case 0x93:
+            // SUB E
+            // Subtract register E from register A and store result in A
+            {
+                SubtractFromA(registers.E);
+                pc++;
+            }
+            break;
+        case 0x94:
+            // SUB H
+            // Subtract register H from register A and store result in A
+            {
+                SubtractFromA(registers.H);
+                pc++;
+            }
+            break;
+        case 0x95:
+            // SUB L
+            // Subtract register L from register A and store result in A
+            {
+                SubtractFromA(registers.L);
+                pc++;
+            }
+            break;
+        case 0x96:
+            // SUB M
+            // Subtract byte from memory at address stored in HL from register A and store result in A
+            {
+                unsigned char operand = memory[registers.H << 8 | registers.L];
+                SubtractFromA(operand);
+                pc++;
+            }
+            break;
+        case 0x97:
+            // SUB A
+            // Subtract register A from register A and store result in A
+            {
+                SubtractFromA(registers.A);
+                pc++;
+            }
+            break;
+        case 0x98:
+            // SBB B
+            // Subtract register B (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.B + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.B);
+                }
+                pc++;
+            }
+            break;
+        case 0x99:
+            // SBB C
+            // Subtract register C (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.C + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.C);
+                }
+                pc++;
+            }
+            break;
+        case 0x9a:
+            // SBB D
+            // Subtract register D (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.D + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.D);
+                }
+                pc++;
+            }
+            break;
+        case 0x9b:
+            // SBB E
+            // Subtract register E (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.E + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.E);
+                }
+                pc++;
+            }
+            break;
+        case 0x9c:
+            // SBB H
+            // Subtract register H (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.H + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.H);
+                }
+                pc++;
+            }
+            break;
+        case 0x9d:
+            // SBB L
+            // Subtract register L (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.L + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.L);
+                }
+                pc++;
+            }
+            break;
+        case 0x9e:
+            // SBB M
+            // Subtract byte in memory (location in HL) from register A and store result in A
+            {
+                unsigned char operand = memory[registers.H << 8 | registers.L];
+                if (flags.cy)
+                {
+                    SubtractFromA(operand + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(operand);
+                }
+                pc++;
+            }
+            break;
+        case 0x9f:
+            // SBB A
+            // Subtract register A (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.A + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.A);
+                }
+                pc++;
+            }
+            break;
 
         case 0xd0:
             // RNC
@@ -877,20 +1053,9 @@ void Emulator::Emulate()
             // SUI
             // Subtract immediate from A
             {
-                uint16_t num1 = registers.A;
-                uint16_t num2 = ~memory[pc + 1] & 0x00ff;
-                uint16_t result = num1 + num2 + 0x0001;
-                registers.A = result & 0x00ff;
-
-                // Set flags
-                flags.z = (registers.A == 0);
-                flags.s = (registers.A & 0x80);
-                // TODO: implement parity function
-                // flags.p = parity(registers.A);
-                // If there was a carryout, cy is *RESET*
-                flags.cy = !(result & 0x0100);
-
-                pc++;
+                unsigned char operand = memory[pc + 1];
+                SubtractFromA(operand);
+                pc += 2;
             }
             break;
         case 0xd7:
@@ -1144,6 +1309,9 @@ void Emulator::Emulate()
             break;
         default:
             // unknown instruction
+            {
+                pc++;
+            }
             break;
         }
         count++;

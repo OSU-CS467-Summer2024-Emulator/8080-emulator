@@ -1,4 +1,5 @@
 #include <string>
+#include <cstdint>
 
 
 class Emulator
@@ -27,6 +28,8 @@ class Emulator
 
         void PrintRegisters();
         void PrintFlags();
+
+        void SubtractFromA(uint8_t);
 
     private:
         struct Registers 
