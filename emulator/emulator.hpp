@@ -1,7 +1,6 @@
 #include <string>
 #include <cstdint>
 
-
 class Emulator
 {
     public:
@@ -9,21 +8,21 @@ class Emulator
         ~Emulator();
 
         int LoadRom(std::string);
-        
+
         int parity(int, int);
         void LogicFlagsA();
         void ArithFlagsA(uint16_t res);
         void ZSPFlags(uint8_t value);
-       
+
         void WriteToMem(uint16_t address, uint8_t value);
         uint8_t ReadFromHL();
         void WriteToHL(uint8_t value);
-        
+
         void Push(uint8_t high, uint8_t low);
         void Pop(uint8_t *high, uint8_t *low);
 
         void UnimplementedInsruction();
-       
+
         void Emulate();
 
         void PrintRegisters();
@@ -32,7 +31,7 @@ class Emulator
         void SubtractFromA(uint8_t);
 
     private:
-        struct Registers 
+        struct Registers
         {
             unsigned char A = 0;
             unsigned char B = 0;
@@ -43,7 +42,7 @@ class Emulator
             unsigned char L = 0;
         } registers;
 
-        struct Flags 
+        struct Flags
         {
             bool z = 0;  // zero
             bool s = 0;  // sign
