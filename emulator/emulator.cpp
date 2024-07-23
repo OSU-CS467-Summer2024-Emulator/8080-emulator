@@ -555,10 +555,10 @@ void Emulator::Emulate()
             // MOV C,A
             {
                 registers.C = registers.A;
-        {
-            flags.cy = 0;
-            pc++;
-        }
+        
+                flags.cy = 0;
+                pc++;
+            }
         break;
 
         // 0x10 - 0x1f
@@ -1414,74 +1414,9 @@ void Emulator::Emulate()
                 uint16_t ret = pc + 1;
                 Push((ret >> 8) & 0xff, ret & 0xff);
                 pc = 0x0008;
-        {
-            registers.A = registers.A | registers.A;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
-        case 0xb8:
-            // CMP B
-            {
-                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.B;
-                ArithFlagsA(res);
-                pc++;
-            }
-            break;
-        case 0xb9:
-            // CMP C
-            {
-                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.C;
-                ArithFlagsA(res);
-                pc++;
-            }
-            break;
-        case 0xba:
-            // CMP D
-            {
-                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.D;
-                ArithFlagsA(res);
-                pc++;
-            }
-            break;
-        case 0xbb:
-            // CMP E
-            {
-                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.E;
-                ArithFlagsA(res);
-                pc++;
-            }
-            break;
-        case 0xbc:
-            // CMP H
-            {
-                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.H;
-                ArithFlagsA(res);
-                pc++;
-            }
-            break;
-        case 0xbd:
-            // CMP L
-            {
-                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.L;
-                ArithFlagsA(res);
-                pc++;
-            }
-            break;
-        case 0xbe:
-            // CMP HL
-            {
-                uint16_t res = (uint16_t)registers.A - (uint16_t)ReadFromHL();
-                ArithFlagsA(res);
-                pc++;
-            }
-            break;
-        case 0xbf:
-            // CMP A
-            {
-                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.A;
-                ArithFlagsA(res);
-                pc++;
+        
+                registers.A = registers.A | registers.A;
+                LogicFlagsA();
                 pc++;
             }
             break;
