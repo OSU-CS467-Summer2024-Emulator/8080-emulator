@@ -315,6 +315,170 @@ void Emulator::Emulate()
             }
             break;
 
+        // 0x10 - 0x1f
+        case 0x10:
+            // no instruction
+            {
+                pc++;
+            }
+            break;
+        case 0x11:
+            // LXI D, word
+            // Load next two bytes into DE register pair
+            {
+                registers.D = memory[pc + 2];
+                registers.E = memory[pc + 1];
+                pc += 3;
+            }
+            break;
+        case 0x12:
+            // STAX D
+            // Store the value in register A at the memory address stored in the DE register pair
+            {
+                uint16_t mem_addr = (registers.D << 8) | registers.E;
+                memory[mem_addr] = registers.A;
+                pc++;
+            }
+            break;
+        case 0x13:
+            // INX D
+            // Increment registers D and E, no flags affected
+            {
+                registers.E++;
+                if (registers.E == 0x00)
+                {
+                    registers.D++;
+                }
+                pc++;
+            }
+            break;
+        case 0x14:
+            // INR D
+            // Increment D
+            {
+                registers.D++;
+                ZSPFlags(registers.D);
+
+                pc++;
+            }
+            break;
+        case 0x15:
+            // DCR D
+            // Decrement D
+            {
+                registers.D--;
+                ZSPFlags(registers.D);
+
+                pc++;
+            }
+            break;
+        case 0x16:
+            // MVI D, byte
+            // Load next byte into register D
+            {
+                registers.D = memory[pc + 1];
+                pc += 2;
+            }
+            break;
+        case 0x17:
+            // RAL
+            // Shift bits of A to the left, through carry (bit 0 = cy, cy = bit 7)
+            {
+                uint16_t temp = registers.A << 1;
+                if (flags.cy == 1)
+                {
+                    temp = temp | 0x0001;
+                }
+                flags.cy = (registers.A & 0x0080);
+                registers.A = temp & 0x00FF;
+
+                pc++;
+            }
+            break;
+        case 0x18:
+            // no instruction
+            {
+                pc++;
+            }
+            break;
+        case 0x19:
+            // DAD D
+            // 16 bit addition DE + HL is stored in HL, cy set accordingly
+            {
+                uint32_t num1 = (registers.D << 8) | registers.E;
+                uint32_t num2 = (registers.H << 8) | registers.L;
+                uint32_t sum = num1 + num2;
+                registers.H = (sum >> 8) & 0x000000FF;
+                registers.L = sum & 0x000000FF;
+                flags.cy = (sum & 0x00010000);
+
+                pc++;
+            }
+            break;
+        case 0x1a:
+            // LDAX D
+            // Load register A with byte at the memory address stored in the DE register pair
+            {
+                uint16_t mem_addr = (registers.D << 8) | registers.E;
+                registers.A = memory[mem_addr];
+
+                pc++;
+            }
+            break;
+        case 0x1b:
+            // DCX D
+            // Decrement registers D and E as a 16 bit number, no flags affected
+            {
+                registers.E--;
+                if (registers.E == 0xff)
+                {
+                    registers.D--;
+                }
+                pc++;
+            }
+            break;
+        case 0x1c:
+            // INC E
+            // Increment register E and
+            {
+                registers.E++;
+                ZSPFlags(registers.E);
+                pc++;
+            }
+            break;
+        case 0x1d:
+            // DEC E
+            // Decrement register E and
+            {
+                registers.E--;
+                ZSPFlags(registers.E);
+                pc++;
+            }
+            break;
+        case 0x1e:
+            // MVI E, byte
+            // Load next byte into register E
+            {
+                registers.E = memory[pc + 1];
+                pc++;
+            }
+            break;
+        case 0x1f:
+            // RAR
+            // Shift bits of A to the right, through carry (bit 7 = cy, cy = bit 0)
+            {
+                uint16_t temp = registers.A >> 1;
+                if (flags.cy == 1)
+                {
+                    temp = temp | 0x0080;
+                }
+                flags.cy = (registers.A & 0x0001);
+                registers.A = temp & 0x00FF;
+
+                pc++;
+            }
+            break;
+
         // 0x30 - 0x3f
         case 0x30:
             UnimplementedInsruction();
@@ -560,170 +724,6 @@ void Emulator::Emulate()
                 pc++;
             }
         break;
-
-        // 0x10 - 0x1f
-        case 0x10:
-            // no instruction
-            {
-                pc++;
-            }
-            break;
-        case 0x11:
-            // LXI D, word
-            // Load next two bytes into DE register pair
-            {
-                registers.D = memory[pc + 2];
-                registers.E = memory[pc + 1];
-                pc += 3;
-            }
-            break;
-        case 0x12:
-            // STAX D
-            // Store the value in register A at the memory address stored in the DE register pair
-            {
-                uint16_t mem_addr = (registers.D << 8) | registers.E;
-                memory[mem_addr] = registers.A;
-                pc++;
-            }
-            break;
-        case 0x13:
-            // INX D
-            // Increment registers D and E, no flags affected
-            {
-                registers.E++;
-                if (registers.E == 0x00)
-                {
-                    registers.D++;
-                }
-                pc++;
-            }
-            break;
-        case 0x14:
-            // INR D
-            // Increment D
-            {
-                registers.D++;
-                ZSPFlags(registers.D);
-
-                pc++;
-            }
-            break;
-        case 0x15:
-            // DCR D
-            // Decrement D
-            {
-                registers.D--;
-                ZSPFlags(registers.D);
-
-                pc++;
-            }
-            break;
-        case 0x16:
-            // MVI D, byte
-            // Load next byte into register D
-            {
-                registers.D = memory[pc + 1];
-                pc += 2;
-            }
-            break;
-        case 0x17:
-            // RAL
-            // Shift bits of A to the left, through carry (bit 0 = cy, cy = bit 7)
-            {
-                uint16_t temp = registers.A << 1;
-                if (flags.cy == 1)
-                {
-                    temp = temp | 0x0001;
-                }
-                flags.cy = (registers.A & 0x0080);
-                registers.A = temp & 0x00FF;
-
-                pc++;
-            }
-            break;
-        case 0x18:
-            // no instruction
-            {
-                pc++;
-            }
-            break;
-        case 0x19:
-            // DAD D
-            // 16 bit addition DE + HL is stored in HL, cy set accordingly
-            {
-                uint32_t num1 = (registers.D << 8) | registers.E;
-                uint32_t num2 = (registers.H << 8) | registers.L;
-                uint32_t sum = num1 + num2;
-                registers.H = (sum >> 8) & 0x000000FF;
-                registers.L = sum & 0x000000FF;
-                flags.cy = (sum & 0x00010000);
-
-                pc++;
-            }
-            break;
-        case 0x1a:
-            // LDAX D
-            // Load register A with byte at the memory address stored in the DE register pair
-            {
-                uint16_t mem_addr = (registers.D << 8) | registers.E;
-                registers.A = memory[mem_addr];
-
-                pc++;
-            }
-            break;
-        case 0x1b:
-            // DCX D
-            // Decrement registers D and E as a 16 bit number, no flags affected
-            {
-                registers.E--;
-                if (registers.E == 0xff)
-                {
-                    registers.D--;
-                }
-                pc++;
-            }
-            break;
-        case 0x1c:
-            // INC E
-            // Increment register E and
-            {
-                registers.E++;
-                ZSPFlags(registers.E);
-                pc++;
-            }
-            break;
-        case 0x1d:
-            // DEC E
-            // Decrement register E and
-            {
-                registers.E--;
-                ZSPFlags(registers.E);
-                pc++;
-            }
-            break;
-        case 0x1e:
-            // MVI E, byte
-            // Load next byte into register E
-            {
-                registers.E = memory[pc + 1];
-                pc++;
-            }
-            break;
-        case 0x1f:
-            // RAR
-            // Shift bits of A to the right, through carry (bit 7 = cy, cy = bit 0)
-            {
-                uint16_t temp = registers.A >> 1;
-                if (flags.cy == 1)
-                {
-                    temp = temp | 0x0080;
-                }
-                flags.cy = (registers.A & 0x0001);
-                registers.A = temp & 0x00FF;
-
-                pc++;
-            }
-            break;
 
         // 0x50 - 0x5f
         case 0x50:
@@ -1122,6 +1122,194 @@ void Emulator::Emulate()
             }
             break;
 
+        // 0x90 - 0x9f
+        case 0x90:
+            // SUB B
+            // Subtract register B from register A and store result in A
+            {
+                SubtractFromA(registers.B);
+                pc++;
+            }
+            break;
+        case 0x91:
+            // SUB C
+            // Subtract register C from register A and store result in A
+            {
+                SubtractFromA(registers.C);
+                pc++;
+            }
+            break;
+        case 0x92:
+            // SUB D
+            // Subtract register D from register A and store result in A
+            {
+                SubtractFromA(registers.D);
+                pc++;
+            }
+            break;
+        case 0x93:
+            // SUB E
+            // Subtract register E from register A and store result in A
+            {
+                SubtractFromA(registers.E);
+                pc++;
+            }
+            break;
+        case 0x94:
+            // SUB H
+            // Subtract register H from register A and store result in A
+            {
+                SubtractFromA(registers.H);
+                pc++;
+            }
+            break;
+        case 0x95:
+            // SUB L
+            // Subtract register L from register A and store result in A
+            {
+                SubtractFromA(registers.L);
+                pc++;
+            }
+            break;
+        case 0x96:
+            // SUB M
+            // Subtract byte from memory at address stored in HL from register A and store result in A
+            {
+                unsigned char operand = memory[registers.H << 8 | registers.L];
+                SubtractFromA(operand);
+                pc++;
+            }
+            break;
+        case 0x97:
+            // SUB A
+            // Subtract register A from register A and store result in A
+            {
+                SubtractFromA(registers.A);
+                pc++;
+            }
+            break;
+        case 0x98:
+            // SBB B
+            // Subtract register B (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.B + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.B);
+                }
+                pc++;
+            }
+            break;
+        case 0x99:
+            // SBB C
+            // Subtract register C (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.C + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.C);
+                }
+                pc++;
+            }
+            break;
+        case 0x9a:
+            // SBB D
+            // Subtract register D (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.D + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.D);
+                }
+                pc++;
+            }
+            break;
+        case 0x9b:
+            // SBB E
+            // Subtract register E (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.E + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.E);
+                }
+                pc++;
+            }
+            break;
+        case 0x9c:
+            // SBB H
+            // Subtract register H (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.H + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.H);
+                }
+                pc++;
+            }
+            break;
+        case 0x9d:
+            // SBB L
+            // Subtract register L (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.L + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.L);
+                }
+                pc++;
+            }
+            break;
+        case 0x9e:
+            // SBB M
+            // Subtract byte in memory (location in HL) from register A and store result in A
+            {
+                unsigned char operand = memory[registers.H << 8 | registers.L];
+                if (flags.cy)
+                {
+                    SubtractFromA(operand + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(operand);
+                }
+                pc++;
+            }
+            break;
+        case 0x9f:
+            // SBB A
+            // Subtract register A (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.A + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.A);
+                }
+                pc++;
+            }
+            break;
+
         // 0xb0 - 0xbf
         case 0xb0:
         {
@@ -1421,194 +1609,7 @@ void Emulator::Emulate()
             }
             break;
 
-        // 0x90 - 0x9f
-        case 0x90:
-            // SUB B
-            // Subtract register B from register A and store result in A
-            {
-                SubtractFromA(registers.B);
-                pc++;
-            }
-            break;
-        case 0x91:
-            // SUB C
-            // Subtract register C from register A and store result in A
-            {
-                SubtractFromA(registers.C);
-                pc++;
-            }
-            break;
-        case 0x92:
-            // SUB D
-            // Subtract register D from register A and store result in A
-            {
-                SubtractFromA(registers.D);
-                pc++;
-            }
-            break;
-        case 0x93:
-            // SUB E
-            // Subtract register E from register A and store result in A
-            {
-                SubtractFromA(registers.E);
-                pc++;
-            }
-            break;
-        case 0x94:
-            // SUB H
-            // Subtract register H from register A and store result in A
-            {
-                SubtractFromA(registers.H);
-                pc++;
-            }
-            break;
-        case 0x95:
-            // SUB L
-            // Subtract register L from register A and store result in A
-            {
-                SubtractFromA(registers.L);
-                pc++;
-            }
-            break;
-        case 0x96:
-            // SUB M
-            // Subtract byte from memory at address stored in HL from register A and store result in A
-            {
-                unsigned char operand = memory[registers.H << 8 | registers.L];
-                SubtractFromA(operand);
-                pc++;
-            }
-            break;
-        case 0x97:
-            // SUB A
-            // Subtract register A from register A and store result in A
-            {
-                SubtractFromA(registers.A);
-                pc++;
-            }
-            break;
-        case 0x98:
-            // SBB B
-            // Subtract register B (plus carry) from register A and store result in A
-            {
-                if (flags.cy)
-                {
-                    SubtractFromA(registers.B + 0x01);
-                }
-                else
-                {
-                    SubtractFromA(registers.B);
-                }
-                pc++;
-            }
-            break;
-        case 0x99:
-            // SBB C
-            // Subtract register C (plus carry) from register A and store result in A
-            {
-                if (flags.cy)
-                {
-                    SubtractFromA(registers.C + 0x01);
-                }
-                else
-                {
-                    SubtractFromA(registers.C);
-                }
-                pc++;
-            }
-            break;
-        case 0x9a:
-            // SBB D
-            // Subtract register D (plus carry) from register A and store result in A
-            {
-                if (flags.cy)
-                {
-                    SubtractFromA(registers.D + 0x01);
-                }
-                else
-                {
-                    SubtractFromA(registers.D);
-                }
-                pc++;
-            }
-            break;
-        case 0x9b:
-            // SBB E
-            // Subtract register E (plus carry) from register A and store result in A
-            {
-                if (flags.cy)
-                {
-                    SubtractFromA(registers.E + 0x01);
-                }
-                else
-                {
-                    SubtractFromA(registers.E);
-                }
-                pc++;
-            }
-            break;
-        case 0x9c:
-            // SBB H
-            // Subtract register H (plus carry) from register A and store result in A
-            {
-                if (flags.cy)
-                {
-                    SubtractFromA(registers.H + 0x01);
-                }
-                else
-                {
-                    SubtractFromA(registers.H);
-                }
-                pc++;
-            }
-            break;
-        case 0x9d:
-            // SBB L
-            // Subtract register L (plus carry) from register A and store result in A
-            {
-                if (flags.cy)
-                {
-                    SubtractFromA(registers.L + 0x01);
-                }
-                else
-                {
-                    SubtractFromA(registers.L);
-                }
-                pc++;
-            }
-            break;
-        case 0x9e:
-            // SBB M
-            // Subtract byte in memory (location in HL) from register A and store result in A
-            {
-                unsigned char operand = memory[registers.H << 8 | registers.L];
-                if (flags.cy)
-                {
-                    SubtractFromA(operand + 0x01);
-                }
-                else
-                {
-                    SubtractFromA(operand);
-                }
-                pc++;
-            }
-            break;
-        case 0x9f:
-            // SBB A
-            // Subtract register A (plus carry) from register A and store result in A
-            {
-                if (flags.cy)
-                {
-                    SubtractFromA(registers.A + 0x01);
-                }
-                else
-                {
-                    SubtractFromA(registers.A);
-                }
-                pc++;
-            }
-            break;
-
+        // 0xd0 - 0xdf
         case 0xd0:
             // RNC
             // Return if no carry
