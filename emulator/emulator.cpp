@@ -836,7 +836,7 @@ void Emulator::Emulate()
             // ADD M
             {
                 uint16_t offset = (registers.H << 8) | registers.L;
-                uint32_t res = (uint16_t)registers.A + offset;
+                uint32_t res = (uint16_t)registers.A + memory[offset];
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
@@ -923,7 +923,7 @@ void Emulator::Emulate()
             // ADC M
             {
                 uint16_t offset = (registers.H << 8) | registers.L;
-                uint32_t res = (uint16_t)registers.A + offset + flags.cy;
+                uint32_t res = (uint16_t)registers.A + memory[offset] + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
                 pc++;
@@ -1064,6 +1064,10 @@ void Emulator::Emulate()
                     pc = memory[sp] | (memory[sp + 1] << 8);
                     sp += 2;
                 }
+                else
+                {
+                    pc++;
+                }
             }
             break;
 
@@ -1148,6 +1152,10 @@ void Emulator::Emulate()
                 {
                     pc = memory[sp] | (memory[sp + 1] << 8);
                     sp += 2;
+                }
+                else 
+                {
+                    pc++;
                 }
             }
             break;
