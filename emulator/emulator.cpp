@@ -590,11 +590,12 @@ void Emulator::Emulate()
             }
             break;
         case 0x3f:
-        {
-            flags.cy = 0;
-            pc++;
-        }
-        break;
+            // CMC
+            {
+                flags.cy = 0;
+                pc++;
+            }
+            break;
 
         // 0x40 - 0x4f
         case 0x40:
@@ -719,11 +720,11 @@ void Emulator::Emulate()
             // MOV C,A
             {
                 registers.C = registers.A;
-        
+
                 flags.cy = 0;
                 pc++;
             }
-        break;
+            break;
 
         // 0x50 - 0x5f
         case 0x50:
@@ -1037,7 +1038,7 @@ void Emulator::Emulate()
         case 0x88:
             // ADC B
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.B + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -1048,7 +1049,7 @@ void Emulator::Emulate()
         case 0x89:
             // ADC C
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.C + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -1059,7 +1060,7 @@ void Emulator::Emulate()
         case 0x8a:
             // ADC D
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.D + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -1070,7 +1071,7 @@ void Emulator::Emulate()
         case 0x8b:
             // ADC E
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.E + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -1081,7 +1082,7 @@ void Emulator::Emulate()
         case 0x8c:
             // ADC H
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.H + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -1092,7 +1093,7 @@ void Emulator::Emulate()
         case 0x8d:
             // ADC L
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.L + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -1114,7 +1115,7 @@ void Emulator::Emulate()
         case 0x8f:
             // ADC A
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.A + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -1312,117 +1313,133 @@ void Emulator::Emulate()
 
         // 0xb0 - 0xbf
         case 0xb0:
-        {
-            registers.A = registers.A | registers.B;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA B
+            {
+                registers.A = registers.A | registers.B;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb1:
-        {
-            registers.A = registers.A | registers.C;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA C
+            {
+                registers.A = registers.A | registers.C;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb2:
-        {
-            registers.A = registers.A | registers.D;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA D
+            {
+                registers.A = registers.A | registers.D;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb3:
-        {
-            registers.A = registers.A | registers.E;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA E
+            {
+                registers.A = registers.A | registers.E;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb4:
-        {
-            registers.A = registers.A | registers.H;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA H
+            {
+                registers.A = registers.A | registers.H;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb5:
-        {
-            registers.A = registers.A | registers.L;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA L
+            {
+                registers.A = registers.A | registers.L;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb6:
-        {
-            registers.A = registers.A | ReadFromHL();
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA M
+            {
+                registers.A = registers.A | ReadFromHL();
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb7:
-        {
-            registers.A = registers.A | registers.A;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
-        case 0xb8: // CMP B
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.B;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xb9: // CMP C
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.C;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xba: // CMP D
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.D;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xbb: // CMP E
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.E;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xbc: // CMP H
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.H;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xbd: // CMP L
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.L;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xbe: // CMP HL
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)ReadFromHL();
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xbf: // CMP A
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.A;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
+            // ORA A
+            {
+                registers.A = registers.A | registers.A;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xb8:
+            // CMP B
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.B;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xb9:
+            // CMP C
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.C;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xba:
+            // CMP D
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.D;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xbb:
+            // CMP E
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.E;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xbc:
+            // CMP H
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.H;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xbd:
+            // CMP L
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.L;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xbe:
+            // CMP HL
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)ReadFromHL();
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xbf:
+            // CMP A
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.A;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
 
         // 0xc0 - 0xcf
         case 0xc0:
@@ -1522,7 +1539,7 @@ void Emulator::Emulate()
                     pc = memory[sp] | (memory[sp + 1] << 8);
                     sp += 2;
                 }
-                else 
+                else
                 {
                     pc++;
                 }
@@ -1586,7 +1603,7 @@ void Emulator::Emulate()
         case 0xce:
             // ACI D8
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)memory[pc + 1] + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (uint8_t)res;
@@ -1602,7 +1619,7 @@ void Emulator::Emulate()
                 uint16_t ret = pc + 1;
                 Push((ret >> 8) & 0xff, ret & 0xff);
                 pc = 0x0008;
-        
+
                 registers.A = registers.A | registers.A;
                 LogicFlagsA();
                 pc++;
@@ -1847,11 +1864,12 @@ void Emulator::Emulate()
             }
             break;
         case 0xf3:
-        {
-            // interupt_enable = 0;
-            pc++;
-        }
-        break;
+            // DI
+            {
+                // interupt_enable = 0;
+                pc++;
+            }
+            break;
         case 0xf4:
             // CP
             if (flags.s == 0)
