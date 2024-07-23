@@ -8,8 +8,12 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Build Disassembler Executable
+      - name: Build Executable
         run: ${{ github.workspace }}/build.sh
+      - name: Test
+        run: |
+          cd build
+          ctest -C Debug --output-on-failure --verbose
   cpplint:
     runs-on: ubuntu-latest
     steps:
