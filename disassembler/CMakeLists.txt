@@ -1,1 +1,1 @@
-add_executable(Disassembler disassembler.cpp)
+add_library(Disassembler disassembler.cpp disassembler.hpp)

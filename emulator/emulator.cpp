@@ -82,7 +82,7 @@ void Emulator::ArithFlagsA(uint16_t res)
 void Emulator::UnimplementedInstruction()
 {
     cout << "Instruction not implemented" << endl;
-    Disassemble(reinterpret_cast<char *>(memory), pc);
+    Disassembler::Disassemble((char *)memory, pc);
     cout << endl;
     exit(1);
 }
@@ -140,7 +140,7 @@ void Emulator::Emulate()
     {
         unsigned char opcode = memory[pc];
 
-        Disassemble(reinterpret_cast<char *>(memory), pc);
+        Disassembler::Disassemble((char *)memory, pc);
 
         switch (opcode)
         {
