@@ -1007,10 +1007,9 @@ void Emulator::Emulate()
             break;
         case 0xd1:
             // POP D
-            // Pop top of stack to register D
+            // Pop top two bytes of stack to registers D and E
             {
-                registers.D = memory[sp];
-                sp++;
+                Pop(&registers.D, &registers.E);
                 pc++;
             }
             break;
@@ -1062,9 +1061,9 @@ void Emulator::Emulate()
             break;
         case 0xd5:
             // PUSH D
+            // Push registers D and E to the stack
             {
-                memory[sp - 1] = registers.D;
-                sp--;
+                Push(registers.D, registers.E);
                 pc++;
             }
             break;
