@@ -313,31 +313,51 @@ void Emulator::Emulate()
         case 0x22:
             // SHLD $
             {
+                uint16_t address = (memory[pc + 2] << 8) | memory[pc + 1];
+                memory[address] = registers.L;
+                memory[address + 1] = registers.H;
+                pc += 3;
             }
             break;
         case 0x23:
             // INX H
             {
+                registers.L++;
+                // Carry if overflows
+                if (registers.L == 0)
+                {
+                    registers.H++;
+                }
+                pc++;
             }
             break;
         case 0x24:
             // INR H
             {
+                registers.H++;
+                ZSPFlags(registers.H);
+                pc++;
             }
             break;
         case 0x25:
             // DCR H
             {
+                registers.H--;
+                ZSPFlags(registers.H);
+                pc++;
             }
             break;
         case 0x26:
             // MVI H, #$
             {
+                registers.H = memory[pc + 1];
+                pc += 2;
             }
             break;
         case 0x27:
             // DAA
             {
+                // TODO
             }
             break;
         case 0x28:
@@ -346,36 +366,65 @@ void Emulator::Emulate()
         case 0x29:
             // DAD H
             {
+                // Combine H and L
+                uint32_t HL = (registers.H << 8) | registers.L;
+                // Double HL
+                HL <<= 1;
+                // Set carry flag if necessary
+                flags.cy = ((HL & 0xffff0000) != 0);
+                // Save to registers
+                registers.H = (HL & 0xff00) >> 8;
+                registers.L = (HL & 0xff);
             }
             break;
         case 0x2a:
             // LHLD $
             {
+                uint16_t address = (memory[pc + 2] << 8) | memory[pc + 1];
+                registers.L = memory[address];
+                registers.H = memory[address + 1];
+                pc += 3;
             }
             break;
         case 0x2b:
             // DCX H
             {
+                uint16_t HL = ((uint16_t)registers.H << 8) | registers.L;
+                HL--;
+                registers.H = (uint8_t)(HL >> 8);
+                registers.L = (uint8_t)HL;
+                pc++;
             }
             break;
         case 0x2c:
             // INR L
             {
+                registers.L++;
+                ZSPFlags(registers.L);
+                pc++;
             }
             break;
         case 0x2d:
             // DCR L
             {
+                registers.L--;
+                ZSPFlags(registers.L);
+                pc++;
             }
             break;
         case 0x2e:
             // MVI L, #$
             {
+                registers.L = memory[pc + 1];
+                pc += 2;
             }
             break;
         case 0x2f:
             // CMA
             {
+                // Bitwise NOT to get the complement of A
+                registers.A = ~registers.A;
+                pc++;
             }
             break;
 
