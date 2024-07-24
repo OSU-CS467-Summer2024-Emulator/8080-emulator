@@ -298,6 +298,87 @@ void Emulator::Emulate()
             }
             break;
 
+        // 0x20 - 0x2f
+        case 0x20:
+            /// NOP
+            UnimplementedInstruction();
+            break;
+        case 0x21:
+            // LXI H, #$
+            {
+                registers.H = (memory[pc + 2] << 8) | memory[pc + 1];
+                pc += 3;
+            }
+            break;
+        case 0x22:
+            // SHLD $
+            {
+            }
+            break;
+        case 0x23:
+            // INX H
+            {
+            }
+            break;
+        case 0x24:
+            // INR H
+            {
+            }
+            break;
+        case 0x25:
+            // DCR H
+            {
+            }
+            break;
+        case 0x26:
+            // MVI H, #$
+            {
+            }
+            break;
+        case 0x27:
+            // DAA
+            {
+            }
+            break;
+        case 0x28:
+            UnimplementedInstruction();
+            break;
+        case 0x29:
+            // DAD H
+            {
+            }
+            break;
+        case 0x2a:
+            // LHLD $
+            {
+            }
+            break;
+        case 0x2b:
+            // DCX H
+            {
+            }
+            break;
+        case 0x2c:
+            // INR L
+            {
+            }
+            break;
+        case 0x2d:
+            // DCR L
+            {
+            }
+            break;
+        case 0x2e:
+            // MVI L, #$
+            {
+            }
+            break;
+        case 0x2f:
+            // CMA
+            {
+            }
+            break;
+
         // 0x30 - 0x3f
         case 0x30:
             UnimplementedInstruction();
@@ -654,6 +735,122 @@ void Emulator::Emulate()
             // MOV E, A
             {
                 registers.E = registers.A;
+                pc++;
+            }
+            break;
+
+        // 0x60 - 0x6f
+        case 0x60:
+            // MOV H, B
+            {
+                registers.H = registers.B;
+                pc++;
+            }
+            break;
+        case 0x61:
+            // MOV H, C
+            {
+                registers.H = registers.C;
+                pc++;
+            }
+            break;
+        case 0x62:
+            // MOV H, D
+            {
+                registers.H = registers.D;
+                pc++;
+            }
+            break;
+        case 0x63:
+            // MOV H, E
+            {
+                registers.H = registers.E;
+                pc++;
+            }
+            break;
+        case 0x64:
+            // MOV H, H
+            {
+                registers.H = registers.H;
+                pc++;
+            }
+            break;
+        case 0x65:
+            // "MOV H, L
+            {
+                registers.H = registers.L;
+                pc++;
+            }
+            break;
+        case 0x66:
+            // "MOV H, M
+            {
+                int mem_addr = (registers.H << 8) | (registers.L);
+                registers.H = memory[mem_addr];
+                pc++;
+            }
+            break;
+        case 0x67:
+            // "MOV H, A
+            {
+                registers.H = registers.A;
+                pc++;
+            }
+            break;
+        case 0x68:
+            // "MOV L, B
+            {
+                registers.L = registers.B;
+                pc++;
+            }
+            break;
+        case 0x69:
+            // "MOV L, C
+            {
+                registers.L = registers.C;
+                pc++;
+            }
+            break;
+        case 0x6a:
+            // "MOV L, D
+            {
+                registers.L = registers.D;
+                pc++;
+            }
+            break;
+        case 0x6b:
+            // "MOV L, E
+            {
+                registers.L = registers.E;
+                pc++;
+            }
+            break;
+        case 0x6c:
+            // "MOV L, H
+            {
+                registers.L = registers.H;
+                pc++;
+            }
+            break;
+        case 0x6d:
+            // "MOV L, L
+            {
+                registers.L = registers.L;
+                pc++;
+            }
+            break;
+        case 0x6e:
+            // "MOV L, M
+            {
+                int mem_addr = (registers.H << 8) | (registers.L);
+                registers.L = memory[mem_addr];
+                pc++;
+            }
+            break;
+        case 0x6f:
+            // "MOV L, A
+            {
+                registers.L = registers.A;
                 pc++;
             }
             break;
