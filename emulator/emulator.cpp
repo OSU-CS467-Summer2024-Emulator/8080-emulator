@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <cstdint>
 #include "emulator/emulator.hpp"
 #include "disassembler/disassembler.hpp"
 
@@ -131,12 +132,28 @@ void Emulator::ZSPFlags(uint8_t value)
     flags.p = parity(value);
 }
 
+void Emulator::SubtractFromA(unsigned char operand)
+{
+    uint16_t num1 = registers.A;
+    uint16_t num2 = ~operand & 0x00ff;
+    uint16_t result = num1 + num2 + 0x0001;
+    registers.A = result & 0x00ff;
+
+    // Set flags
+    flags.z = (registers.A == 0);
+    flags.s = (registers.A & 0x80);
+    flags.p = parity(registers.A);
+    flags.cy = !(result & 0x0100);
+
+    pc++;
+}
+
 void Emulator::Emulate()
 {
     int count = 0;
     pc = 0;
 
-    while (count < 100)
+    while (count < 110)
     {
         unsigned char opcode = memory[pc];
 
@@ -298,6 +315,170 @@ void Emulator::Emulate()
             }
             break;
 
+        // 0x10 - 0x1f
+        case 0x10:
+            // no instruction
+            {
+                pc++;
+            }
+            break;
+        case 0x11:
+            // LXI D, word
+            // Load next two bytes into DE register pair
+            {
+                registers.D = memory[pc + 2];
+                registers.E = memory[pc + 1];
+                pc += 3;
+            }
+            break;
+        case 0x12:
+            // STAX D
+            // Store the value in register A at the memory address stored in the DE register pair
+            {
+                uint16_t mem_addr = (registers.D << 8) | registers.E;
+                memory[mem_addr] = registers.A;
+                pc++;
+            }
+            break;
+        case 0x13:
+            // INX D
+            // Increment registers D and E, no flags affected
+            {
+                registers.E++;
+                if (registers.E == 0x00)
+                {
+                    registers.D++;
+                }
+                pc++;
+            }
+            break;
+        case 0x14:
+            // INR D
+            // Increment D
+            {
+                registers.D++;
+                ZSPFlags(registers.D);
+
+                pc++;
+            }
+            break;
+        case 0x15:
+            // DCR D
+            // Decrement D
+            {
+                registers.D--;
+                ZSPFlags(registers.D);
+
+                pc++;
+            }
+            break;
+        case 0x16:
+            // MVI D, byte
+            // Load next byte into register D
+            {
+                registers.D = memory[pc + 1];
+                pc += 2;
+            }
+            break;
+        case 0x17:
+            // RAL
+            // Shift bits of A to the left, through carry (bit 0 = cy, cy = bit 7)
+            {
+                uint16_t temp = registers.A << 1;
+                if (flags.cy == 1)
+                {
+                    temp = temp | 0x0001;
+                }
+                flags.cy = (registers.A & 0x0080);
+                registers.A = temp & 0x00FF;
+
+                pc++;
+            }
+            break;
+        case 0x18:
+            // no instruction
+            {
+                pc++;
+            }
+            break;
+        case 0x19:
+            // DAD D
+            // 16 bit addition DE + HL is stored in HL, cy set accordingly
+            {
+                uint32_t num1 = (registers.D << 8) | registers.E;
+                uint32_t num2 = (registers.H << 8) | registers.L;
+                uint32_t sum = num1 + num2;
+                registers.H = (sum >> 8) & 0x000000FF;
+                registers.L = sum & 0x000000FF;
+                flags.cy = (sum & 0x00010000);
+
+                pc++;
+            }
+            break;
+        case 0x1a:
+            // LDAX D
+            // Load register A with byte at the memory address stored in the DE register pair
+            {
+                uint16_t mem_addr = (registers.D << 8) | registers.E;
+                registers.A = memory[mem_addr];
+
+                pc++;
+            }
+            break;
+        case 0x1b:
+            // DCX D
+            // Decrement registers D and E as a 16 bit number, no flags affected
+            {
+                registers.E--;
+                if (registers.E == 0xff)
+                {
+                    registers.D--;
+                }
+                pc++;
+            }
+            break;
+        case 0x1c:
+            // INC E
+            // Increment register E and
+            {
+                registers.E++;
+                ZSPFlags(registers.E);
+                pc++;
+            }
+            break;
+        case 0x1d:
+            // DEC E
+            // Decrement register E and
+            {
+                registers.E--;
+                ZSPFlags(registers.E);
+                pc++;
+            }
+            break;
+        case 0x1e:
+            // MVI E, byte
+            // Load next byte into register E
+            {
+                registers.E = memory[pc + 1];
+                pc++;
+            }
+            break;
+        case 0x1f:
+            // RAR
+            // Shift bits of A to the right, through carry (bit 7 = cy, cy = bit 0)
+            {
+                uint16_t temp = registers.A >> 1;
+                if (flags.cy == 1)
+                {
+                    temp = temp | 0x0080;
+                }
+                flags.cy = (registers.A & 0x0001);
+                registers.A = temp & 0x00FF;
+
+                pc++;
+            }
+            break;
+
         // 0x30 - 0x3f
         case 0x30:
             UnimplementedInstruction();
@@ -409,11 +590,12 @@ void Emulator::Emulate()
             }
             break;
         case 0x3f:
-        {
-            flags.cy = 0;
-            pc++;
-        }
-        break;
+            // CMC
+            {
+                flags.cy = 0;
+                pc++;
+            }
+            break;
 
         // 0x40 - 0x4f
         case 0x40:
@@ -538,6 +720,8 @@ void Emulator::Emulate()
             // MOV C,A
             {
                 registers.C = registers.A;
+
+                flags.cy = 0;
                 pc++;
             }
             break;
@@ -587,7 +771,7 @@ void Emulator::Emulate()
         case 0x56:
             // MOV D, M
             {
-                int mem_addr = (registers.H << 8) | (registers.L);
+                uint16_t mem_addr = (registers.H << 8) | (registers.L);
                 registers.D = memory[mem_addr];
                 pc++;
             }
@@ -599,8 +783,6 @@ void Emulator::Emulate()
                 pc++;
             }
             break;
-
-            // 0x50 - 0x5f
         case 0x58:
             // MOV E, B
             {
@@ -645,7 +827,7 @@ void Emulator::Emulate()
         case 0x5e:
             // MOV E, M
             {
-                int mem_addr = (registers.H << 8) | (registers.L);
+                uint16_t mem_addr = (registers.H << 8) | (registers.L);
                 registers.E = memory[mem_addr];
                 pc++;
             }
@@ -941,119 +1123,712 @@ void Emulator::Emulate()
             }
             break;
 
+        // 0x90 - 0x9f
+        case 0x90:
+            // SUB B
+            // Subtract register B from register A and store result in A
+            {
+                SubtractFromA(registers.B);
+                pc++;
+            }
+            break;
+        case 0x91:
+            // SUB C
+            // Subtract register C from register A and store result in A
+            {
+                SubtractFromA(registers.C);
+                pc++;
+            }
+            break;
+        case 0x92:
+            // SUB D
+            // Subtract register D from register A and store result in A
+            {
+                SubtractFromA(registers.D);
+                pc++;
+            }
+            break;
+        case 0x93:
+            // SUB E
+            // Subtract register E from register A and store result in A
+            {
+                SubtractFromA(registers.E);
+                pc++;
+            }
+            break;
+        case 0x94:
+            // SUB H
+            // Subtract register H from register A and store result in A
+            {
+                SubtractFromA(registers.H);
+                pc++;
+            }
+            break;
+        case 0x95:
+            // SUB L
+            // Subtract register L from register A and store result in A
+            {
+                SubtractFromA(registers.L);
+                pc++;
+            }
+            break;
+        case 0x96:
+            // SUB M
+            // Subtract byte from memory at address stored in HL from register A and store result in A
+            {
+                unsigned char operand = memory[registers.H << 8 | registers.L];
+                SubtractFromA(operand);
+                pc++;
+            }
+            break;
+        case 0x97:
+            // SUB A
+            // Subtract register A from register A and store result in A
+            {
+                SubtractFromA(registers.A);
+                pc++;
+            }
+            break;
+        case 0x98:
+            // SBB B
+            // Subtract register B (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.B + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.B);
+                }
+                pc++;
+            }
+            break;
+        case 0x99:
+            // SBB C
+            // Subtract register C (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.C + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.C);
+                }
+                pc++;
+            }
+            break;
+        case 0x9a:
+            // SBB D
+            // Subtract register D (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.D + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.D);
+                }
+                pc++;
+            }
+            break;
+        case 0x9b:
+            // SBB E
+            // Subtract register E (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.E + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.E);
+                }
+                pc++;
+            }
+            break;
+        case 0x9c:
+            // SBB H
+            // Subtract register H (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.H + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.H);
+                }
+                pc++;
+            }
+            break;
+        case 0x9d:
+            // SBB L
+            // Subtract register L (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.L + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.L);
+                }
+                pc++;
+            }
+            break;
+        case 0x9e:
+            // SBB M
+            // Subtract byte in memory (location in HL) from register A and store result in A
+            {
+                unsigned char operand = memory[registers.H << 8 | registers.L];
+                if (flags.cy)
+                {
+                    SubtractFromA(operand + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(operand);
+                }
+                pc++;
+            }
+            break;
+        case 0x9f:
+            // SBB A
+            // Subtract register A (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.A + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.A);
+                }
+                pc++;
+            }
+            break;
+
         // 0xb0 - 0xbf
         case 0xb0:
-        {
-            registers.A = registers.A | registers.B;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA B
+            {
+                registers.A = registers.A | registers.B;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb1:
-        {
-            registers.A = registers.A | registers.C;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA C
+            {
+                registers.A = registers.A | registers.C;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb2:
-        {
-            registers.A = registers.A | registers.D;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA D
+            {
+                registers.A = registers.A | registers.D;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb3:
-        {
-            registers.A = registers.A | registers.E;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA E
+            {
+                registers.A = registers.A | registers.E;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb4:
-        {
-            registers.A = registers.A | registers.H;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA H
+            {
+                registers.A = registers.A | registers.H;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb5:
-        {
-            registers.A = registers.A | registers.L;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA L
+            {
+                registers.A = registers.A | registers.L;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb6:
-        {
-            registers.A = registers.A | ReadFromHL();
-            LogicFlagsA();
-            pc++;
-        }
-        break;
+            // ORA M
+            {
+                registers.A = registers.A | ReadFromHL();
+                LogicFlagsA();
+                pc++;
+            }
+            break;
         case 0xb7:
-        {
-            registers.A = registers.A | registers.A;
-            LogicFlagsA();
-            pc++;
-        }
-        break;
-        case 0xb8: // CMP B
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.B;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xb9: // CMP C
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.C;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xba: // CMP D
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.D;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xbb: // CMP E
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.E;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xbc: // CMP H
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.H;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xbd: // CMP L
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.L;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xbe: // CMP HL
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)ReadFromHL();
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
-        case 0xbf: // CMP A
-        {
-            uint16_t res = (uint16_t)registers.A - (uint16_t)registers.A;
-            ArithFlagsA(res);
-            pc++;
-        }
-        break;
+            // ORA A
+            {
+                registers.A = registers.A | registers.A;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xb8:
+            // CMP B
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.B;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xb9:
+            // CMP C
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.C;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xba:
+            // CMP D
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.D;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xbb:
+            // CMP E
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.E;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xbc:
+            // CMP H
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.H;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xbd:
+            // CMP L
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.L;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xbe:
+            // CMP HL
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)ReadFromHL();
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+        case 0xbf:
+            // CMP A
+            {
+                uint16_t res = (uint16_t)registers.A - (uint16_t)registers.A;
+                ArithFlagsA(res);
+                pc++;
+            }
+            break;
+
+
+        // 0xc0 - 0xcf
+        case 0xc0:
+            // RNZ
+            {
+                if (flags.z == 0)
+                {
+                    pc = memory[sp] | (memory[sp + 1] << 8);
+                    sp += 2;
+                }
+                else
+                {
+                    pc++;
+                }
+            }
+            break;
+
+        case 0xc1:
+            // POP B
+            {
+                Pop(&registers.B, &registers.C);
+                pc++;
+            }
+            break;
+
+        case 0xc2:
+            // JNZ adr
+            {
+                if (flags.z == 0)
+                {
+                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                }
+                else
+                {
+                    pc += 3;
+                }
+            }
+            break;
+
+        case 0xc3:
+            // JMP
+            {
+                pc = (memory[pc + 2] << 8) | memory[pc + 1];
+            }
+            break;
+
+        case 0xc4:
+            // CNZ
+            {
+                if (flags.z == 0)
+                {
+                    uint16_t ret = pc + 3;
+                    Push((ret >> 8) & 0xff, (ret & 0xff));
+                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                }
+                else
+                {
+                    pc += 3;
+                }
+            }
+            break;
+
+        case 0xc5:
+            // PUSH B
+            {
+                Push(registers.B, registers.C);
+                pc++;
+            }
+            break;
+
+        case 0xc6:
+            // ADI D8
+            {
+                uint16_t res = (uint16_t)registers.A + (uint16_t)memory[pc + 1];
+                ArithFlagsA(res);
+                registers.A = (uint8_t)res;
+                pc++;
+            }
+            break;
+
+        case 0xc7:
+            // RST 0
+            {
+                // reference uses return address as pc+3, but I think it should
+                // be pc + 1 since it is a 1 byte operation
+                uint16_t ret = pc + 1;
+                Push((ret >> 8) & 0xff, ret & 0xff);
+                pc = 0x0000;
+            }
+            break;
+
+        case 0xc8:
+            // RZ
+            {
+                if (flags.z == 1)
+                {
+                    pc = memory[sp] | (memory[sp + 1] << 8);
+                    sp += 2;
+                }
+                else
+                {
+                    pc++;
+                }
+            }
+            break;
+
+        case 0xc9:
+            // RET
+            {
+                pc = memory[sp] | (memory[sp + 1] << 8);
+                sp += 2;
+            }
+            break;
+
+        case 0xca:
+            // JZ
+            {
+                if (flags.z == 1)
+                {
+                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                }
+                else
+                {
+                    pc += 3;
+                }
+            }
+            break;
+
+        case 0xcb:
+            // NOP
+            {
+                pc++;
+            }
+            break;
+
+        case 0xcc:
+            // CZ
+            {
+                if (flags.z == 1)
+                {
+                    uint16_t ret = pc + 3;
+                    Push((ret >> 8) & 0xff, (ret & 0xff));
+                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                }
+                else
+                {
+                    pc += 3;
+                }
+            }
+            break;
+
+        case 0xcd:
+            // CALL
+            {
+                uint16_t ret = pc + 3;
+                Push((ret >> 8) & 0xff, (ret & 0xff));
+                pc = (memory[pc + 2] << 8) | memory[pc + 1];
+            }
+            break;
+
+        case 0xce:
+            // ACI D8
+            {
+                uint16_t res = (uint16_t)registers.A +
+                               (uint16_t)memory[pc + 1] + flags.cy;
+                ArithFlagsA(res);
+                registers.A = (uint8_t)res;
+                pc++;
+            }
+            break;
+
+        case 0xcf:
+            // RST 1
+            {
+                // reference uses return address as pc+3, but I think it should
+                // be pc + 1 since it is a 1 byte operation
+                uint16_t ret = pc + 1;
+                Push((ret >> 8) & 0xff, ret & 0xff);
+                pc = 0x0008;
+
+                registers.A = registers.A | registers.A;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+
+        // 0xd0 - 0xdf
+        case 0xd0:
+            // RNC
+            // Return if no carry
+            {
+                if (!flags.cy)
+                {
+                    uint8_t addr_high;
+                    uint8_t addr_low;
+                    Pop(&addr_high, &addr_low);
+
+                    pc = (addr_high << 8) | addr_low;
+                }
+                else
+                {
+                    pc++;
+                }
+            }
+            break;
+        case 0xd1:
+            // POP D
+            // Pop top two bytes of stack to registers D and E
+            {
+                Pop(&registers.D, &registers.E);
+                pc++;
+            }
+            break;
+        case 0xd2:
+            // JNC
+            // Jump if no carry
+            {
+                if (!flags.cy)
+                {
+                    uint8_t addr_high = memory[pc + 2];
+                    uint8_t addr_low = memory[pc + 1];
+                    pc = (addr_high << 8) | addr_low;
+                }
+                else
+                {
+                    pc += 3;
+                }
+            }
+            break;
+        case 0xd3:
+            // OUT
+            // Send contents of register A to output device determined by next byte
+            {
+                // special
+                pc++;
+            }
+            break;
+        case 0xd4:
+            // CNC
+            // Call if no carry
+            {
+                if (!flags.cy)
+                {
+                    uint16_t ret_addr = pc + 3;
+                    uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+                    uint8_t ret_low = ret_addr & 0x00ff;
+
+                    Push(ret_high, ret_low);
+
+                    uint8_t addr_high = memory[pc + 2];
+                    uint8_t addr_low = memory[pc + 1];
+                    pc = (addr_high << 8) | addr_low;
+                }
+                else
+                {
+                    pc += 3;
+                }
+            }
+            break;
+        case 0xd5:
+            // PUSH D
+            // Push registers D and E to the stack
+            {
+                Push(registers.D, registers.E);
+                pc++;
+            }
+            break;
+        case 0xd6:
+            // SUI
+            // Subtract immediate from A
+            {
+                unsigned char operand = memory[pc + 1];
+                SubtractFromA(operand);
+                pc += 2;
+            }
+            break;
+        case 0xd7:
+            // RST 2
+            // calls program at address 0x0010
+            {
+                uint16_t ret_addr = pc + 1;
+                uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+                uint8_t ret_low = ret_addr & 0x00ff;
+                Push(ret_high, ret_low);
+                pc = 0x0010;
+            }
+            break;
+        case 0xd8:
+            // RC
+            // Return if carry
+            {
+                if (flags.cy)
+                {
+                    uint8_t addr_high;
+                    uint8_t addr_low;
+                    Pop(&addr_high, &addr_low);
+
+                    pc = (addr_high << 8) | addr_low;
+                }
+                else
+                {
+                    pc++;
+                }
+            }
+            break;
+        case 0xd9:
+            // NOP
+            {
+                pc++;
+            }
+            break;
+        case 0xda:
+            // JC
+            // Jump if carry
+            {
+                if (flags.cy)
+                {
+                    uint16_t addr_high = memory[pc + 2];
+                    uint16_t addr_low = memory[pc + 1];
+                    pc = (addr_high << 8) | addr_low;
+                }
+                else
+                {
+                    pc += 3;
+                }
+            }
+            break;
+        case 0xdb:
+            // IN
+            // One byte of input is read from the input device specified by next byte
+            // and stored in register A
+            {
+                // special
+                pc++;
+            }
+            break;
+        case 0xdc:
+            // CC
+            // Call if carry
+            {
+                if (flags.cy)
+                {
+                    uint16_t ret_addr = pc + 3;
+                    uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+                    uint8_t ret_low = ret_addr & 0x00ff;
+
+                    Push(ret_high, ret_low);
+
+                    uint8_t addr_high = memory[pc + 2];
+                    uint8_t addr_low = memory[pc + 1];
+                    pc = (addr_high << 8) | addr_low;
+                }
+                else
+                {
+                    pc += 3;
+                }
+            }
+            break;
+        case 0xdd:
+            // NOP
+            {
+                pc++;
+            }
+            break;
+        case 0xde:
+            // SBI
+            // Subtract immediate from accumulator with borrow
+            {
+                unsigned char operand = memory[pc + 1];
+                if (flags.cy)
+                {
+                    operand++;
+                }
+                SubtractFromA(operand);
+                pc += 2;
+            }
+            break;
+        case 0xdf:
+            // RST 3
+            // Calls program at address 0x0018
+            {
+                uint16_t ret_addr = pc + 1;
+                uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+                uint8_t ret_low = ret_addr & 0x00ff;
+                Push(ret_high, ret_low);
+                pc = 0x0018;
+            }
+            break;
 
         // 0xf0 - 0xff
         case 0xf0:
@@ -1090,11 +1865,12 @@ void Emulator::Emulate()
             }
             break;
         case 0xf3:
-        {
-            // interupt_enable = 0;
-            pc++;
-        }
-        break;
+            // DI
+            {
+                // interupt_enable = 0;
+                pc++;
+            }
+            break;
         case 0xf4:
             // CP
             if (flags.s == 0)
@@ -1190,10 +1966,11 @@ void Emulator::Emulate()
             }
             break;
         case 0xfd:
-        {
-            UnimplementedInstruction();
-        }
-        break;
+            // no instruction
+            {
+                UnimplementedInstruction();
+            }
+            break;
         case 0xfe:
             // CPI byte
             {
@@ -1214,6 +1991,9 @@ void Emulator::Emulate()
             break;
         default:
             // unknown instruction
+            {
+                pc++;
+            }
             break;
         }
         count++;
