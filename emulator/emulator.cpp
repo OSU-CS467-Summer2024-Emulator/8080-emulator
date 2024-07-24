@@ -1435,6 +1435,56 @@ void Emulator::Emulate()
         }
         break;
 
+        // 0xe0 - 0xef
+        case 0xe0:
+            // RPO
+            break;
+        case 0xe1:
+            // POP H
+            break;
+        case 0xe2:
+            // JPO $
+            break;
+        case 0xe3:
+            // XTHL
+            break;
+        case 0xe4:
+            // CPO $
+            break;
+        case 0xe5:
+            // PUSH H
+            break;
+        case 0xe6:
+            // ANI #$
+            break;
+        case 0xe7:
+            // RST 4
+            break;
+        case 0xe8:
+            // RPE
+            break;
+        case 0xe9:
+            // PCHL
+            break;
+        case 0xea:
+            // JPE $
+            break;
+        case 0xeb:
+            // XCHG
+            break;
+        case 0xec:
+            // CPE $
+            break;
+        case 0xed:
+            // CALL $
+            break;
+        case 0xee:
+            // XRI #$
+            break;
+        case 0xef:
+            // RST 5
+            break;
+
         // 0xf0 - 0xff
         case 0xf0:
             // RP
