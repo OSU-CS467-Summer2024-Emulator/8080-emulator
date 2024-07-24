@@ -1968,7 +1968,7 @@ void Emulator::Emulate()
         case 0xfd:
             // no instruction
             {
-                UnimplementedInsruction();
+                UnimplementedInstruction();
             }
             break;
         case 0xfe:

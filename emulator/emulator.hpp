@@ -24,7 +24,7 @@ class Emulator
         void Push(uint8_t high, uint8_t low);
         void Pop(uint8_t *high, uint8_t *low);
 
-        void UnimplementedInsruction();
+        void UnimplementedInstruction();
 
         void Emulate();
 
