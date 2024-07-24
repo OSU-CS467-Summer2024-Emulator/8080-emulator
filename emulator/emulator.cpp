@@ -1187,6 +1187,140 @@ void Emulator::Emulate()
             }
             break;
 
+        // 0xa0 - 0xaf
+        case 0xa0:
+            // ANA B
+            {
+                registers.A &= registers.B;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa1:
+            // ANA C
+            {
+                registers.A &= registers.C;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa2:
+            // ANA D
+            {
+                registers.A &= registers.D;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa3:
+            // ANA E
+            {
+                registers.A &= registers.E;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa4:
+            // ANA H
+            {
+                registers.A &= registers.H;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa5:
+            // ANA L
+            {
+                registers.A &= registers.L;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa6:
+            // ANA M
+            {
+                {
+                    uint16_t offset = (registers.H << 8) | registers.L;
+                    registers.A &= memory[offset];
+                    LogicFlagsA();
+                    pc++;
+                }
+            }
+            break;
+        case 0xa7:
+            // ANA A
+            {
+                registers.A &= registers.A;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa8:
+            // XRA B
+            {
+                registers.A ^= registers.B;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa9:
+            // XRA C
+            {
+                registers.A ^= registers.C;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xaa:
+            // XRA D
+            {
+                registers.A ^= registers.D;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xab:
+            // XRA E
+            {
+                registers.A ^= registers.E;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xac:
+            // XRA H
+            {
+                registers.A ^= registers.H;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xad:
+            // XRA L
+            {
+                registers.A ^= registers.L;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xae:
+            // XRA M
+            {
+                uint16_t offset = (registers.H << 8) | registers.L;
+                registers.A ^= memory[offset];
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xaf:
+            // XRA A
+            {
+                registers.A ^= registers.A;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+
         // 0xb0 - 0xbf
         case 0xb0:
         {

@@ -2,6 +2,18 @@
   "editor.defaultFormatter": "jbenden.c-cpp-flylint",
   "editor.formatOnSave": true,
   "files.associations": {
-    "ostream": "cpp"
+    "ostream": "cpp",
+    "__bit_reference": "cpp",
+    "__node_handle": "cpp",
+    "bitset": "cpp",
+    "deque": "cpp",
+    "__memory": "cpp",
+    "limits": "cpp",
+    "locale": "cpp",
+    "optional": "cpp",
+    "ratio": "cpp",
+    "regex": "cpp",
+    "tuple": "cpp",
+    "vector": "cpp"
   }
 }
