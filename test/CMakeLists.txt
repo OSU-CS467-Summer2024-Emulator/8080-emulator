@@ -1,0 +1,28 @@
+Include(FetchContent)
+
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.4.0 # or a later release
+)
+
+FetchContent_MakeAvailable(Catch2)
+
+add_executable(da_tests test_da.cpp)
+add_executable(em_tests test_em.cpp)
+
+target_link_libraries(da_tests PRIVATE Disassembler Catch2::Catch2WithMain)
+target_link_libraries(em_tests PRIVATE Emulator Catch2::Catch2WithMain)
+
+# automatic discovery of unit tests
+list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/contrib)
+include(CTest)
+include(Catch)
+catch_discover_tests(da_tests
+  PROPERTIES
+    LABELS "unit"
+  )
+  catch_discover_tests(em_tests
+  PROPERTIES
+    LABELS "unit"
+  )

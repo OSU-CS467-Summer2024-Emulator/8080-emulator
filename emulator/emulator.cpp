@@ -2,8 +2,8 @@
 #include <iomanip>
 #include <fstream>
 #include <cstdint>
-#include "./emulator.hpp"
-#include "../disassembler/disassembler.hpp"
+#include "emulator/emulator.hpp"
+#include "disassembler/disassembler.hpp"
 
 using namespace std;
 
@@ -80,10 +80,10 @@ void Emulator::ArithFlagsA(uint16_t res)
     flags.p = parity(res & 0xff);
 }
 
-void Emulator::UnimplementedInsruction()
+void Emulator::UnimplementedInstruction()
 {
     cout << "Instruction not implemented" << endl;
-    Disassemble(reinterpret_cast<char *>(memory), pc);
+    Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
     cout << endl;
     exit(1);
 }
@@ -157,7 +157,7 @@ void Emulator::Emulate()
     {
         unsigned char opcode = memory[pc];
 
-        Disassemble(reinterpret_cast<char *>(memory), pc);
+        Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
 
         switch (opcode)
         {
@@ -481,7 +481,7 @@ void Emulator::Emulate()
 
         // 0x30 - 0x3f
         case 0x30:
-            UnimplementedInsruction();
+            UnimplementedInstruction();
             break;
         case 0x31:
             // LXI SP,word
@@ -538,7 +538,7 @@ void Emulator::Emulate()
             }
             break;
         case 0x38:
-            UnimplementedInsruction();
+            UnimplementedInstruction();
             break;
         case 0x39:
             // DAD SP
@@ -1440,6 +1440,7 @@ void Emulator::Emulate()
                 pc++;
             }
             break;
+
 
         // 0xc0 - 0xcf
         case 0xc0:

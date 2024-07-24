@@ -1,3 +1,6 @@
+#ifndef EMULATOR_EMULATOR_HPP_
+#define EMULATOR_EMULATOR_HPP_
+
 #include <string>
 #include <cstdint>
 
@@ -60,3 +63,5 @@ class Emulator
         // array for memory
         unsigned char* memory;
 };
+
+#endif // EMULATOR_EMULATOR_HPP_
