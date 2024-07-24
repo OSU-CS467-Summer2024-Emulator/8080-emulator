@@ -1,8 +1,8 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include "./emulator.hpp"
-#include "../disassembler/disassembler.hpp"
+#include "emulator/emulator.hpp"
+#include "disassembler/disassembler.hpp"
 
 using namespace std;
 
@@ -79,10 +79,10 @@ void Emulator::ArithFlagsA(uint16_t res)
     flags.p = parity(res & 0xff);
 }
 
-void Emulator::UnimplementedInsruction()
+void Emulator::UnimplementedInstruction()
 {
     cout << "Instruction not implemented" << endl;
-    Disassemble(reinterpret_cast<char *>(memory), pc);
+    Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
     cout << endl;
     exit(1);
 }
@@ -140,7 +140,7 @@ void Emulator::Emulate()
     {
         unsigned char opcode = memory[pc];
 
-        Disassemble(reinterpret_cast<char *>(memory), pc);
+        Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
 
         switch (opcode)
         {
@@ -300,7 +300,7 @@ void Emulator::Emulate()
 
         // 0x30 - 0x3f
         case 0x30:
-            UnimplementedInsruction();
+            UnimplementedInstruction();
             break;
         case 0x31:
             // LXI SP,word
@@ -357,7 +357,7 @@ void Emulator::Emulate()
             }
             break;
         case 0x38:
-            UnimplementedInsruction();
+            UnimplementedInstruction();
             break;
         case 0x39:
             // DAD SP
@@ -856,7 +856,7 @@ void Emulator::Emulate()
         case 0x88:
             // ADC B
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.B + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -867,7 +867,7 @@ void Emulator::Emulate()
         case 0x89:
             // ADC C
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.C + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -878,7 +878,7 @@ void Emulator::Emulate()
         case 0x8a:
             // ADC D
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.D + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -889,7 +889,7 @@ void Emulator::Emulate()
         case 0x8b:
             // ADC E
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.E + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -900,7 +900,7 @@ void Emulator::Emulate()
         case 0x8c:
             // ADC H
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.H + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -911,7 +911,7 @@ void Emulator::Emulate()
         case 0x8d:
             // ADC L
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.L + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -933,7 +933,7 @@ void Emulator::Emulate()
         case 0x8f:
             // ADC A
             {
-                uint16_t res = (uint16_t)registers.A + 
+                uint16_t res = (uint16_t)registers.A +
                                (uint16_t)registers.A + flags.cy;
                 ArithFlagsA(res);
                 registers.A = (res & 0xff);
@@ -1054,187 +1054,6 @@ void Emulator::Emulate()
             pc++;
         }
         break;
-
-        // 0xc0 - 0xcf
-        case 0xc0:
-            // RNZ
-            {
-                if (flags.z == 0)
-                {
-                    pc = memory[sp] | (memory[sp + 1] << 8);
-                    sp += 2;
-                }
-                else
-                {
-                    pc++;
-                }
-            }
-            break;
-
-        case 0xc1:
-            // POP B
-            {
-                Pop(&registers.B, &registers.C);
-                pc++;
-            }
-            break;
-
-        case 0xc2:
-            // JNZ adr
-            {
-                if (flags.z == 0)
-                {
-                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
-                }
-                else
-                {
-                    pc += 3;
-                }
-            }
-            break;
-
-        case 0xc3:
-            // JMP
-            {
-                pc = (memory[pc + 2] << 8) | memory[pc + 1];
-            }
-            break;
-
-        case 0xc4:
-            // CNZ
-            {
-                if (flags.z == 0)
-                {
-                    uint16_t ret = pc + 3;
-                    Push((ret >> 8) & 0xff, (ret & 0xff));
-                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
-                }
-                else
-                {
-                    pc += 3;
-                }
-            }
-            break;
-
-        case 0xc5:
-            // PUSH B
-            {
-                Push(registers.B, registers.C);
-                pc++;
-            }
-            break;
-
-        case 0xc6:
-            // ADI D8
-            {
-                uint16_t res = (uint16_t)registers.A + (uint16_t)memory[pc + 1];
-                ArithFlagsA(res);
-                registers.A = (uint8_t)res;
-                pc++;
-            }
-            break;
-
-        case 0xc7:
-            // RST 0
-            {
-                // reference uses return address as pc+3, but I think it should
-                // be pc + 1 since it is a 1 byte operation
-                uint16_t ret = pc + 1;
-                Push((ret >> 8) & 0xff, ret & 0xff);
-                pc = 0x0000;
-            }
-            break;
-
-        case 0xc8:
-            // RZ
-            {
-                if (flags.z == 1)
-                {
-                    pc = memory[sp] | (memory[sp + 1] << 8);
-                    sp += 2;
-                }
-                else 
-                {
-                    pc++;
-                }
-            }
-            break;
-
-        case 0xc9:
-            // RET
-            {
-                pc = memory[sp] | (memory[sp + 1] << 8);
-                sp += 2;
-            }
-            break;
-
-        case 0xca:
-            // JZ
-            {
-                if (flags.z == 1)
-                {
-                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
-                }
-                else
-                {
-                    pc += 3;
-                }
-            }
-            break;
-
-        case 0xcb:
-            // NOP
-            {
-                pc++;
-            }
-            break;
-
-        case 0xcc:
-            // CZ
-            {
-                if (flags.z == 1)
-                {
-                    uint16_t ret = pc + 3;
-                    Push((ret >> 8) & 0xff, (ret & 0xff));
-                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
-                }
-                else
-                {
-                    pc += 3;
-                }
-            }
-            break;
-
-        case 0xcd:
-            // CALL
-            {
-                uint16_t ret = pc + 3;
-                Push((ret >> 8) & 0xff, (ret & 0xff));
-                pc = (memory[pc + 2] << 8) | memory[pc + 1];
-            }
-            break;
-
-        case 0xce:
-            // ACI D8
-            {
-                uint16_t res = (uint16_t)registers.A + 
-                               (uint16_t)memory[pc + 1] + flags.cy;
-                ArithFlagsA(res);
-                registers.A = (uint8_t)res;
-                pc++;
-            }
-            break;
-
-        case 0xcf:
-            // RST 1
-            {
-                // reference uses return address as pc+3, but I think it should
-                // be pc + 1 since it is a 1 byte operation
-                uint16_t ret = pc + 1;
-                Push((ret >> 8) & 0xff, ret & 0xff);
-                pc = 0x0008;
-            }
-            break;
 
         // 0xf0 - 0xff
         case 0xf0:
@@ -1372,7 +1191,7 @@ void Emulator::Emulate()
             break;
         case 0xfd:
         {
-            UnimplementedInsruction();
+            UnimplementedInstruction();
         }
         break;
         case 0xfe:

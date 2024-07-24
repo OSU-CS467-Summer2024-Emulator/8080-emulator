@@ -2,9 +2,10 @@
 #include <iostream>
 #include <locale>
 #include <fstream>
+#include "disassembler/disassembler.hpp"
 using namespace std;
 
-int Disassemble(char *codebuffer, int pc)
+int Disassembler::Disassemble(char *codebuffer, int pc)
 {
     char *code = &codebuffer[pc];
     int opbytes = 1;
@@ -964,7 +965,7 @@ int Disassemble(char *codebuffer, int pc)
     return opbytes;
 }
 
-int main(int argc, char **argv)
+int Disassembler::main(int argc, char **argv)
 {
     cout << "Starting Disassembler\n";
 
