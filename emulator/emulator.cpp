@@ -357,7 +357,22 @@ void Emulator::Emulate()
         case 0x27:
             // DAA
             {
-                // TODO
+                uint8_t lowNibble = registers.A & 0x0F;
+                uint8_t highNibble = registers.A >> 4;
+
+                if (lowNibble > 9 || flags.ac)
+                {
+                    registers.A += 6;
+                    flags.ac = 1;
+                }
+
+                if (highNibble > 9 || flags.cy)
+                {
+                    registers.A += 0x60; // Increment most significant bits by 6
+                }
+
+                LogicFlagsA();
+                pc++;
             }
             break;
         case 0x28:
@@ -375,6 +390,7 @@ void Emulator::Emulate()
                 // Save to registers
                 registers.H = (HL & 0xff00) >> 8;
                 registers.L = (HL & 0xff);
+                pc++;
             }
             break;
         case 0x2a:
