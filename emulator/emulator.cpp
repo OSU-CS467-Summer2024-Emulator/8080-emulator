@@ -1437,52 +1437,183 @@ void Emulator::Emulate()
 
         // 0xe0 - 0xef
         case 0xe0:
-            // RPO
+            // RPO - Return if parity odd
+            if (flags.p == 1)
+            {
+                pc = (memory[sp + 1] << 8) | memory[sp];
+                sp += 2;
+            }
+            else
+            {
+                pc++;
+            }
             break;
         case 0xe1:
             // POP H
+            {
+                registers.L = memory[sp];
+                registers.H = memory[sp + 1];
+                sp += 2;
+                pc++;
+            }
             break;
         case 0xe2:
             // JPO $
+            {
+                // Parity flag = 1 indicates even
+                if (flags.p == 1)
+                {
+                    pc += 3;
+                }
+                else
+                {
+                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                }
+            }
             break;
         case 0xe3:
             // XTHL
+            {
+                uint8_t tempL = registers.L;
+                uint8_t tempH = registers.H;
+                registers.L = memory[sp];
+                registers.H = memory[sp + 1];
+                memory[sp] = tempL;
+                memory[sp + 1] = tempH;
+                pc++;
+            }
             break;
         case 0xe4:
             // CPO $
+            {
+                if (flags.p == 0)
+                {
+                    uint16_t ret = pc + 2;
+                    WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                    WriteToMem(sp - 2, (ret & 0xff));
+                    sp -= 2;
+                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                }
+                else
+                {
+                    pc += 3; // Skip over the address if parity is not odd
+                }
+            }
             break;
         case 0xe5:
             // PUSH H
+            {
+                sp -= 2;
+                memory[sp + 1] = registers.H;
+                memory[sp] = registers.L;
+                pc++;
+            }
             break;
         case 0xe6:
             // ANI #$
+            {
+                registers.A &= memory[pc + 1];
+                LogicFlagsA();
+                pc += 2;
+            }
             break;
         case 0xe7:
             // RST 4
+            {
+                uint16_t ret = pc + 2;
+                WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                WriteToMem(sp - 2, (ret & 0xff));
+                sp -= 2;
+                pc = 0x20;
+            }
             break;
         case 0xe8:
-            // RPE
+            // RPE - Return if parity even
+            if (flags.p == 0)
+            {
+                pc = (memory[sp + 1] << 8) | memory[sp];
+                sp += 2;
+            }
+            else
+            {
+                pc++;
+            }
             break;
         case 0xe9:
             // PCHL
+            {
+                pc = (registers.H << 8) | registers.L;
+            }
             break;
         case 0xea:
             // JPE $
+            {
+                // Parity flag = 0 indicates odd
+                if (flags.p == 0)
+                {
+                    pc += 3;
+                }
+                else
+                {
+                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                }
+            }
             break;
         case 0xeb:
-            // XCHG
+            // XCHG - Swap HL with DE
+            {
+                uint8_t tempH = registers.H;
+                uint8_t tempL = registers.L;
+                registers.H = registers.D;
+                registers.L = registers.E;
+                registers.D = tempH;
+                registers.E = tempL;
+            }
             break;
         case 0xec:
             // CPE $
+            {
+                if (flags.p == 1)
+                {
+                    uint16_t ret = pc + 2;
+                    WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                    WriteToMem(sp - 2, (ret & 0xff));
+                    sp -= 2;
+                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                }
+                else
+                {
+                    pc += 3; // Skip over the address if parity is not odd
+                }
+            }
             break;
         case 0xed:
             // CALL $
+            {
+                uint16_t ret = pc + 2;
+                WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                WriteToMem(sp - 2, (ret & 0xff));
+                sp -= 2;
+                pc = (memory[pc + 2] << 8) | memory[pc + 1];
+            }
             break;
         case 0xee:
             // XRI #$
+            {
+                registers.A ^= memory[pc + 1];
+                LogicFlagsA();
+                pc += 2;
+            }
             break;
         case 0xef:
             // RST 5
+            {
+                uint16_t ret = pc + 2;
+                WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                WriteToMem(sp - 2, (ret & 0xff));
+                sp -= 2;
+                pc = 0x28;
+            }
             break;
 
         // 0xf0 - 0xff
