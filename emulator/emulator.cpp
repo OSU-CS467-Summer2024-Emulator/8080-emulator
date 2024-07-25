@@ -1625,12 +1625,10 @@ void Emulator::Emulate()
         case 0xa6:
             // ANA M
             {
-                {
-                    uint16_t offset = (registers.H << 8) | registers.L;
-                    registers.A &= memory[offset];
-                    LogicFlagsA();
-                    pc++;
-                }
+                uint16_t offset = (registers.H << 8) | registers.L;
+                registers.A &= memory[offset];
+                LogicFlagsA();
+                pc++;
             }
             break;
         case 0xa7:
@@ -2278,7 +2276,7 @@ void Emulator::Emulate()
             {
                 if (flags.p == 0)
                 {
-                    uint16_t ret = pc + 2;
+                    uint16_t ret = pc + 3;
                     WriteToMem(sp - 1, (ret >> 8) & 0xff);
                     WriteToMem(sp - 2, (ret & 0xff));
                     sp -= 2;
@@ -2365,7 +2363,7 @@ void Emulator::Emulate()
             {
                 if (flags.p == 1)
                 {
-                    uint16_t ret = pc + 2;
+                    uint16_t ret = pc + 3;
                     WriteToMem(sp - 1, (ret >> 8) & 0xff);
                     WriteToMem(sp - 2, (ret & 0xff));
                     sp -= 2;
