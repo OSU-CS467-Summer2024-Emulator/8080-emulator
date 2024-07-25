@@ -479,6 +479,152 @@ void Emulator::Emulate()
             }
             break;
 
+        // 0x20 - 0x2f
+        case 0x20:
+            /// NOP
+            UnimplementedInstruction();
+            break;
+        case 0x21:
+            // LXI H, #$
+            {
+                registers.H = (memory[pc + 2] << 8) | memory[pc + 1];
+                pc += 3;
+            }
+            break;
+        case 0x22:
+            // SHLD $
+            {
+                uint16_t address = (memory[pc + 2] << 8) | memory[pc + 1];
+                memory[address] = registers.L;
+                memory[address + 1] = registers.H;
+                pc += 3;
+            }
+            break;
+        case 0x23:
+            // INX H
+            {
+                registers.L++;
+                // Carry if overflows
+                if (registers.L == 0)
+                {
+                    registers.H++;
+                }
+                pc++;
+            }
+            break;
+        case 0x24:
+            // INR H
+            {
+                registers.H++;
+                ZSPFlags(registers.H);
+                pc++;
+            }
+            break;
+        case 0x25:
+            // DCR H
+            {
+                registers.H--;
+                ZSPFlags(registers.H);
+                pc++;
+            }
+            break;
+        case 0x26:
+            // MVI H, #$
+            {
+                registers.H = memory[pc + 1];
+                pc += 2;
+            }
+            break;
+        case 0x27:
+            // DAA
+            {
+                uint8_t lowNibble = registers.A & 0x0F;
+                uint8_t highNibble = registers.A >> 4;
+
+                if (lowNibble > 9 || flags.ac)
+                {
+                    registers.A += 6;
+                    flags.ac = 1;
+                }
+
+                if (highNibble > 9 || flags.cy)
+                {
+                    registers.A += 0x60; // Increment most significant bits by 6
+                }
+
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0x28:
+            UnimplementedInstruction();
+            break;
+        case 0x29:
+            // DAD H
+            {
+                // Combine H and L
+                uint32_t HL = (registers.H << 8) | registers.L;
+                // Double HL
+                HL <<= 1;
+                // Set carry flag if necessary
+                flags.cy = ((HL & 0xffff0000) != 0);
+                // Save to registers
+                registers.H = (HL & 0xff00) >> 8;
+                registers.L = (HL & 0xff);
+                pc++;
+            }
+            break;
+        case 0x2a:
+            // LHLD $
+            {
+                uint16_t address = (memory[pc + 2] << 8) | memory[pc + 1];
+                registers.L = memory[address];
+                registers.H = memory[address + 1];
+                pc += 3;
+            }
+            break;
+        case 0x2b:
+            // DCX H
+            {
+                uint16_t HL = ((uint16_t)registers.H << 8) | registers.L;
+                HL--;
+                registers.H = (uint8_t)(HL >> 8);
+                registers.L = (uint8_t)HL;
+                pc++;
+            }
+            break;
+        case 0x2c:
+            // INR L
+            {
+                registers.L++;
+                ZSPFlags(registers.L);
+                pc++;
+            }
+            break;
+        case 0x2d:
+            // DCR L
+            {
+                registers.L--;
+                ZSPFlags(registers.L);
+                pc++;
+            }
+            break;
+        case 0x2e:
+            // MVI L, #$
+            {
+                registers.L = memory[pc + 1];
+                pc += 2;
+            }
+            break;
+        case 0x2f:
+            // CMA
+            {
+                // Bitwise NOT to get the complement of A
+                registers.A = ~registers.A;
+                pc++;
+            }
+            break;
+
         // 0x30 - 0x3f
         case 0x30:
             UnimplementedInstruction();
@@ -836,6 +982,122 @@ void Emulator::Emulate()
             // MOV E, A
             {
                 registers.E = registers.A;
+                pc++;
+            }
+            break;
+
+        // 0x60 - 0x6f
+        case 0x60:
+            // MOV H, B
+            {
+                registers.H = registers.B;
+                pc++;
+            }
+            break;
+        case 0x61:
+            // MOV H, C
+            {
+                registers.H = registers.C;
+                pc++;
+            }
+            break;
+        case 0x62:
+            // MOV H, D
+            {
+                registers.H = registers.D;
+                pc++;
+            }
+            break;
+        case 0x63:
+            // MOV H, E
+            {
+                registers.H = registers.E;
+                pc++;
+            }
+            break;
+        case 0x64:
+            // MOV H, H
+            {
+                registers.H = registers.H;
+                pc++;
+            }
+            break;
+        case 0x65:
+            // "MOV H, L
+            {
+                registers.H = registers.L;
+                pc++;
+            }
+            break;
+        case 0x66:
+            // "MOV H, M
+            {
+                int mem_addr = (registers.H << 8) | (registers.L);
+                registers.H = memory[mem_addr];
+                pc++;
+            }
+            break;
+        case 0x67:
+            // "MOV H, A
+            {
+                registers.H = registers.A;
+                pc++;
+            }
+            break;
+        case 0x68:
+            // "MOV L, B
+            {
+                registers.L = registers.B;
+                pc++;
+            }
+            break;
+        case 0x69:
+            // "MOV L, C
+            {
+                registers.L = registers.C;
+                pc++;
+            }
+            break;
+        case 0x6a:
+            // "MOV L, D
+            {
+                registers.L = registers.D;
+                pc++;
+            }
+            break;
+        case 0x6b:
+            // "MOV L, E
+            {
+                registers.L = registers.E;
+                pc++;
+            }
+            break;
+        case 0x6c:
+            // "MOV L, H
+            {
+                registers.L = registers.H;
+                pc++;
+            }
+            break;
+        case 0x6d:
+            // "MOV L, L
+            {
+                registers.L = registers.L;
+                pc++;
+            }
+            break;
+        case 0x6e:
+            // "MOV L, M
+            {
+                int mem_addr = (registers.H << 8) | (registers.L);
+                registers.L = memory[mem_addr];
+                pc++;
+            }
+            break;
+        case 0x6f:
+            // "MOV L, A
+            {
+                registers.L = registers.A;
                 pc++;
             }
             break;
@@ -1311,6 +1573,138 @@ void Emulator::Emulate()
             }
             break;
 
+        // 0xa0 - 0xaf
+        case 0xa0:
+            // ANA B
+            {
+                registers.A &= registers.B;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa1:
+            // ANA C
+            {
+                registers.A &= registers.C;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa2:
+            // ANA D
+            {
+                registers.A &= registers.D;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa3:
+            // ANA E
+            {
+                registers.A &= registers.E;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa4:
+            // ANA H
+            {
+                registers.A &= registers.H;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa5:
+            // ANA L
+            {
+                registers.A &= registers.L;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa6:
+            // ANA M
+            {
+                uint16_t offset = (registers.H << 8) | registers.L;
+                registers.A &= memory[offset];
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa7:
+            // ANA A
+            {
+                registers.A &= registers.A;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa8:
+            // XRA B
+            {
+                registers.A ^= registers.B;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xa9:
+            // XRA C
+            {
+                registers.A ^= registers.C;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xaa:
+            // XRA D
+            {
+                registers.A ^= registers.D;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xab:
+            // XRA E
+            {
+                registers.A ^= registers.E;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xac:
+            // XRA H
+            {
+                registers.A ^= registers.H;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xad:
+            // XRA L
+            {
+                registers.A ^= registers.L;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xae:
+            // XRA M
+            {
+                uint16_t offset = (registers.H << 8) | registers.L;
+                registers.A ^= memory[offset];
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+        case 0xaf:
+            // XRA A
+            {
+                registers.A ^= registers.A;
+                LogicFlagsA();
+                pc++;
+            }
+            break;
+
         // 0xb0 - 0xbf
         case 0xb0:
             // ORA B
@@ -1440,7 +1834,6 @@ void Emulator::Emulate()
                 pc++;
             }
             break;
-
 
         // 0xc0 - 0xcf
         case 0xc0:
@@ -1827,6 +2220,187 @@ void Emulator::Emulate()
                 uint8_t ret_low = ret_addr & 0x00ff;
                 Push(ret_high, ret_low);
                 pc = 0x0018;
+            }
+            break;
+
+        // 0xe0 - 0xef
+        case 0xe0:
+            // RPO - Return if parity odd
+            if (flags.p == 1)
+            {
+                pc = (memory[sp + 1] << 8) | memory[sp];
+                sp += 2;
+            }
+            else
+            {
+                pc++;
+            }
+            break;
+        case 0xe1:
+            // POP H
+            {
+                registers.L = memory[sp];
+                registers.H = memory[sp + 1];
+                sp += 2;
+                pc++;
+            }
+            break;
+        case 0xe2:
+            // JPO $
+            {
+                // Parity flag = 1 indicates even
+                if (flags.p == 1)
+                {
+                    pc += 3;
+                }
+                else
+                {
+                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                }
+            }
+            break;
+        case 0xe3:
+            // XTHL
+            {
+                uint8_t tempL = registers.L;
+                uint8_t tempH = registers.H;
+                registers.L = memory[sp];
+                registers.H = memory[sp + 1];
+                memory[sp] = tempL;
+                memory[sp + 1] = tempH;
+                pc++;
+            }
+            break;
+        case 0xe4:
+            // CPO $
+            {
+                if (flags.p == 0)
+                {
+                    uint16_t ret = pc + 3;
+                    WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                    WriteToMem(sp - 2, (ret & 0xff));
+                    sp -= 2;
+                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                }
+                else
+                {
+                    pc += 3; // Skip over the address if parity is not odd
+                }
+            }
+            break;
+        case 0xe5:
+            // PUSH H
+            {
+                sp -= 2;
+                memory[sp + 1] = registers.H;
+                memory[sp] = registers.L;
+                pc++;
+            }
+            break;
+        case 0xe6:
+            // ANI #$
+            {
+                registers.A &= memory[pc + 1];
+                LogicFlagsA();
+                pc += 2;
+            }
+            break;
+        case 0xe7:
+            // RST 4
+            {
+                uint16_t ret = pc + 2;
+                WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                WriteToMem(sp - 2, (ret & 0xff));
+                sp -= 2;
+                pc = 0x20;
+            }
+            break;
+        case 0xe8:
+            // RPE - Return if parity even
+            if (flags.p == 0)
+            {
+                pc = (memory[sp + 1] << 8) | memory[sp];
+                sp += 2;
+            }
+            else
+            {
+                pc++;
+            }
+            break;
+        case 0xe9:
+            // PCHL
+            {
+                pc = (registers.H << 8) | registers.L;
+            }
+            break;
+        case 0xea:
+            // JPE $
+            {
+                // Parity flag = 0 indicates odd
+                if (flags.p == 0)
+                {
+                    pc += 3;
+                }
+                else
+                {
+                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                }
+            }
+            break;
+        case 0xeb:
+            // XCHG - Swap HL with DE
+            {
+                uint8_t tempH = registers.H;
+                uint8_t tempL = registers.L;
+                registers.H = registers.D;
+                registers.L = registers.E;
+                registers.D = tempH;
+                registers.E = tempL;
+            }
+            break;
+        case 0xec:
+            // CPE $
+            {
+                if (flags.p == 1)
+                {
+                    uint16_t ret = pc + 3;
+                    WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                    WriteToMem(sp - 2, (ret & 0xff));
+                    sp -= 2;
+                    pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                }
+                else
+                {
+                    pc += 3; // Skip over the address if parity is not odd
+                }
+            }
+            break;
+        case 0xed:
+            // CALL $
+            {
+                uint16_t ret = pc + 2;
+                WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                WriteToMem(sp - 2, (ret & 0xff));
+                sp -= 2;
+                pc = (memory[pc + 2] << 8) | memory[pc + 1];
+            }
+            break;
+        case 0xee:
+            // XRI #$
+            {
+                registers.A ^= memory[pc + 1];
+                LogicFlagsA();
+                pc += 2;
+            }
+            break;
+        case 0xef:
+            // RST 5
+            {
+                uint16_t ret = pc + 2;
+                WriteToMem(sp - 1, (ret >> 8) & 0xff);
+                WriteToMem(sp - 2, (ret & 0xff));
+                sp -= 2;
+                pc = 0x28;
             }
             break;
 
