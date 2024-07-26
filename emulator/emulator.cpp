@@ -12,6 +12,7 @@ Emulator::Emulator()
 {
     pc = 0;
     sp = 0;
+    memory = nullptr;
 }
 
 // Destructor
