@@ -27,13 +27,12 @@ Emulator::~Emulator()
 int Emulator::LoadRom(string file_path)
 {
     streampos size;
-    char *mem_buffer;
 
     ifstream file(file_path, ios::in | ios::binary | ios::ate);
     if (file.is_open())
     {
         size = file.tellg();
-        memory = new unsigned char[size];
+        memory = new uint8_t[size];
 
         file.seekg(0, ios::beg);
         file.read(reinterpret_cast<char *>(memory), size);
@@ -49,7 +48,7 @@ int Emulator::LoadRom(string file_path)
 }
 
 // Determines parity flag
-int Emulator::parity(int x, int size = 8)
+bool Emulator::parity(int x, int size = 8)
 {
     int p = 0;
     x = (x & ((1 << size) - 1));
@@ -132,7 +131,7 @@ void Emulator::ZSPFlags(uint8_t value)
     flags.p = parity(value);
 }
 
-void Emulator::SubtractFromA(unsigned char operand)
+void Emulator::SubtractFromA(uint8_t operand)
 {
     uint16_t num1 = registers.A;
     uint16_t num2 = ~operand & 0x00ff;
@@ -155,7 +154,7 @@ void Emulator::Emulate()
 
     while (count < 110)
     {
-        unsigned char opcode = memory[pc];
+        uint8_t opcode = memory[pc];
 
         Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
 
@@ -1032,7 +1031,7 @@ void Emulator::Emulate()
         case 0x66:
             // "MOV H, M
             {
-                int mem_addr = (registers.H << 8) | (registers.L);
+                uint16_t mem_addr = (registers.H << 8) | (registers.L);
                 registers.H = memory[mem_addr];
                 pc++;
             }
@@ -1089,7 +1088,7 @@ void Emulator::Emulate()
         case 0x6e:
             // "MOV L, M
             {
-                int mem_addr = (registers.H << 8) | (registers.L);
+                uint16_t mem_addr = (registers.H << 8) | (registers.L);
                 registers.L = memory[mem_addr];
                 pc++;
             }
@@ -1438,7 +1437,7 @@ void Emulator::Emulate()
             // SUB M
             // Subtract byte from memory at address stored in HL from register A and store result in A
             {
-                unsigned char operand = memory[registers.H << 8 | registers.L];
+                uint8_t operand = memory[registers.H << 8 | registers.L];
                 SubtractFromA(operand);
                 pc++;
             }
@@ -1545,7 +1544,7 @@ void Emulator::Emulate()
             // SBB M
             // Subtract byte in memory (location in HL) from register A and store result in A
             {
-                unsigned char operand = memory[registers.H << 8 | registers.L];
+                uint8_t operand = memory[registers.H << 8 | registers.L];
                 if (flags.cy)
                 {
                     SubtractFromA(operand + 0x01);
@@ -2105,7 +2104,7 @@ void Emulator::Emulate()
             // SUI
             // Subtract immediate from A
             {
-                unsigned char operand = memory[pc + 1];
+                uint8_t operand = memory[pc + 1];
                 SubtractFromA(operand);
                 pc += 2;
             }
@@ -2202,7 +2201,7 @@ void Emulator::Emulate()
             // SBI
             // Subtract immediate from accumulator with borrow
             {
-                unsigned char operand = memory[pc + 1];
+                uint8_t operand = memory[pc + 1];
                 if (flags.cy)
                 {
                     operand++;
@@ -2578,19 +2577,19 @@ void Emulator::Emulate()
 void Emulator::PrintRegisters()
 {
     cout << "Register A: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.A) << endl;
+         << static_cast<unsigned>(registers.A) << endl;
     cout << "Register B: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.B) << endl;
+         << static_cast<unsigned>(registers.B) << endl;
     cout << "Register C: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.C) << endl;
+         << static_cast<unsigned>(registers.C) << endl;
     cout << "Register D: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.D) << endl;
+         << static_cast<unsigned>(registers.D) << endl;
     cout << "Register E: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.E) << endl;
+         << static_cast<unsigned>(registers.E) << endl;
     cout << "Register H: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.H) << endl;
+         << static_cast<unsigned>(registers.H) << endl;
     cout << "Register L: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.L) << endl;
+         << static_cast<unsigned>(registers.L) << endl;
 }
 
 // Print current state of all condition codes
