@@ -21,13 +21,82 @@ TEST_CASE("A simple test", "[fast]")
     REQUIRE(1 + 1 == 2);
 }
 
-TEST_CASE("parity", "[flag]")
+TEST_CASE("Flag functions", "[flag]")
 {
     Emulator e;
-    REQUIRE(e.parity(0x00, 8) == 1);
-    REQUIRE(e.parity(0x01, 8) == 0);
-    REQUIRE(e.parity(0xf1, 8) == 0);
-    REQUIRE(e.parity(0xff, 8) == 1);
+    Flags f = {};
+    SECTION("Parity")
+    {
+        CHECK(e.parity(0x00, 8) == 1);
+        CHECK(e.parity(0x01, 8) == 0);
+        CHECK(e.parity(0xf1, 8) == 0);
+        CHECK(e.parity(0xff, 8) == 1);
+    }
+    SECTION("LogicFlags")
+    {
+        // move value 0x00 into A
+        e.EmulateOpcode(0x3e, 0x00);
+        REQUIRE(e.GetRegisters().A == 0x00);
+        e.LogicFlagsA();
+        f = { .z = 1, .s = 0, .p = 1, .cy = 0 };
+        CHECK(e.GetFlags() == f);
+
+        // move value 0xab into A
+        e.EmulateOpcode(0x3e, 0xab);
+        REQUIRE(e.GetRegisters().A == 0xab);
+        e.LogicFlagsA();
+        f = { .z = 0, .s = 1, .p = 0, .cy = 0 };
+        CHECK(e.GetFlags() == f);
+
+        // move value 0x11 into A
+        e.EmulateOpcode(0x3e, 0x11);
+        REQUIRE(e.GetRegisters().A == 0x11);
+        e.LogicFlagsA();
+        f = { .z = 0, .s = 0, .p = 1, .cy = 0 };
+        CHECK(e.GetFlags() == f);
+    }
+    SECTION("Arithmetic flags")
+    {
+        uint16_t num = 0x0000;
+        e.ArithFlagsA(num);
+        f = { .z = 1, .s = 0, .p = 1, .cy = 0 };
+        CHECK(e.GetFlags() == f);
+
+        num = 0x0123;
+        e.ArithFlagsA(num);
+        f = { .z = 0, .s = 0, .p = 0, .cy = 1 };
+        CHECK(e.GetFlags() == f);
+
+        num = 0x00dd;
+        e.ArithFlagsA(num);
+        f = { .z = 0, .s = 1, .p = 1, .cy = 0 };
+        CHECK(e.GetFlags() == f);
+    }
+    SECTION("ZSP flags")
+    {
+        uint8_t num = 0x0000;
+        e.ZSPFlags(num);
+        f = { .z = 1, .s = 0, .p = 1, .cy = 0 };
+        CHECK(e.GetFlags() == f);
+
+        num = 0x23;
+        e.ZSPFlags(num);
+        f = { .z = 0, .s = 0, .p = 0, .cy = 0 };
+        CHECK(e.GetFlags() == f);
+
+        num = 0xdd;
+        e.ZSPFlags(num);
+        f = { .z = 0, .s = 1, .p = 1, .cy = 0 };
+        CHECK(e.GetFlags() == f);
+
+        // set carry
+        e.ArithFlagsA(0x0100);
+        REQUIRE(e.GetFlags().cy == 1);
+        num = 0x23;
+        e.ZSPFlags(num);
+        f = { .z = 0, .s = 0, .p = 0, .cy = 1 };
+        CHECK(e.GetFlags() == f);
+    }
 }
 
 TEST_CASE("0x00 NOP", "[opcode]")
@@ -112,18 +181,18 @@ TEST_CASE("Move Immediate", "[opcode][move][immediate]")
     }
     SECTION("MVI M")
     {
-        e.AllocateMemory(0x1000);
+        e.AllocateMemory(0x3000);
 
         // Write address to HL registers
-        e.EmulateOpcode(0x26, 0x00);
+        e.EmulateOpcode(0x26, 0x25);
         e.EmulateOpcode(0x2e, 0x00);
-        REQUIRE((uint8_t)e.GetRegisters().H == 0x00);
+        REQUIRE((uint8_t)e.GetRegisters().H == 0x25);
         REQUIRE((uint8_t)e.GetRegisters().L == 0x00);
 
         // move 0x33 to memory at (HL)
         e.EmulateOpcode(0x36, 0x33);
 
-        CHECK(e.ReadFromMem(0x0000) == 0x33);
+        CHECK(e.ReadFromMem(0x2500) == 0x33);
     }
     SECTION("MVI A")
     {
@@ -132,3 +201,34 @@ TEST_CASE("Move Immediate", "[opcode][move][immediate]")
         CHECK(e.GetPC() == pc + 2);
     }
 }
+
+TEST_CASE("Subtraction", "[math]")
+{
+    Emulator e;
+    
+    // aa - aa = 0
+    e.EmulateOpcode(0x3e, 0xaa);
+    REQUIRE(e.GetRegisters().A == 0xaa);
+    e.SubtractFromA(0xaa);
+    CHECK(e.GetRegisters().A == 0x00);
+    Flags result = { .z = 1, .s = 0, .p = 1, .cy = 0};
+    CHECK(e.GetFlags() == result);
+
+    // 20 - 10 = 10
+    e.EmulateOpcode(0x3e, 0x20);
+    REQUIRE(e.GetRegisters().A == 0x20);
+    e.SubtractFromA(0x10);
+    CHECK(e.GetRegisters().A == 0x10);
+    result = { .z = 0, .s = 0, .p = 0, .cy = 0};
+    CHECK(e.GetFlags() == result);
+
+
+    // aa - c5 = e5
+    e.EmulateOpcode(0x3e, 0xaa);
+    REQUIRE(e.GetRegisters().A == 0xaa);
+    e.SubtractFromA(0xc5);
+    CHECK(e.GetRegisters().A == 0xe5);
+    result = { .z = 0, .s = 1, .p = 0, .cy = 1};
+    CHECK(e.GetFlags() == result);
+}
+

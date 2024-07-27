@@ -29,6 +29,8 @@ Emulator::~Emulator()
 void Emulator::AllocateMemory(int size)
 {
     memory = new unsigned char[size];
+    for (int i = 0; i < size; i++)
+        memory[i] = 0;
     mem_size = size;
 }
 
@@ -89,6 +91,13 @@ void Emulator::ArithFlagsA(uint16_t res)
     flags.p = parity(res & 0xff);
 }
 
+void Emulator::ZSPFlags(uint8_t value)
+{
+    flags.z = (value == 0);
+    flags.s = (0x80 == (value & 0x80));
+    flags.p = parity(value);
+}
+
 void Emulator::UnimplementedInstruction()
 {
     cout << "Instruction not implemented" << endl;
@@ -137,13 +146,6 @@ void Emulator::Pop(uint8_t *high, uint8_t *low)
     *low = memory[sp];
     *high = memory[sp + 1];
     sp += 2;
-}
-
-void Emulator::ZSPFlags(uint8_t value)
-{
-    flags.z = (value == 0);
-    flags.s = (0x80 == (value & 0x80));
-    flags.p = parity(value);
 }
 
 void Emulator::SubtractFromA(unsigned char operand)
