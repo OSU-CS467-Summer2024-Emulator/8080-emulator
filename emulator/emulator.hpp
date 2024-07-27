@@ -24,55 +24,54 @@ typedef struct Flags
     bool ac = 0; // auxiliary carry - not needed for space invaders
 } Flags;
 
-
 class Emulator
 {
-    public:
-        Emulator();
-        ~Emulator();
+public:
+    Emulator();
+    ~Emulator();
 
-        int LoadRom(std::string);
+    int LoadRom(std::string);
 
-        int parity(int, int);
-        void LogicFlagsA();
-        void ArithFlagsA(uint16_t res);
-        void ZSPFlags(uint8_t value);
+    int parity(int, int);
+    void LogicFlagsA();
+    void ArithFlagsA(uint16_t res);
+    void ZSPFlags(uint8_t value);
 
-        void SubtractFromA(uint8_t);
+    void SubtractFromA(uint8_t);
 
-        void WriteToMem(uint16_t address, uint8_t value);
-        uint8_t ReadFromHL();
-        void WriteToHL(uint8_t value);
+    void WriteToMem(uint16_t address, uint8_t value);
+    uint8_t ReadFromHL();
+    void WriteToHL(uint8_t value);
 
-        void Push(uint8_t high, uint8_t low);
-        void Pop(uint8_t *high, uint8_t *low);
+    void Push(uint8_t high, uint8_t low);
+    void Pop(uint8_t *high, uint8_t *low);
 
-        void UnimplementedInstruction();
+    void UnimplementedInstruction();
 
-        void Emulate();
-        void EmulateOpcode(uint8_t);
+    void Emulate();
+    void EmulateOpcode(uint8_t, uint8_t operand1 = 0x00, uint8_t operand2 = 0x00);
 
-        void PrintRegisters();
-        void PrintFlags();
+    void PrintRegisters();
+    void PrintFlags();
 
-        Registers GetRegisters();
-        Flags GetFlags();
-        int GetPC();
-        int GetSP();
+    Registers GetRegisters();
+    Flags GetFlags();
+    int GetPC();
+    int GetSP();
 
-    private:
-        Registers registers;
+private:
+    Registers registers;
 
-        Flags flags;
+    Flags flags;
 
-        // stack pointer
-        int sp;
+    // stack pointer
+    int sp;
 
-        // program counter
-        int pc;
+    // program counter
+    int pc;
 
-        // array for memory
-        unsigned char* memory;
+    // array for memory
+    unsigned char *memory;
 };
 
 #endif // EMULATOR_EMULATOR_HPP_

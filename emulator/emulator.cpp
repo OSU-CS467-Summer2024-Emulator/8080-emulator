@@ -161,13 +161,13 @@ void Emulator::Emulate()
         unsigned char opcode = memory[pc];
 
         Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
-        EmulateOpcode(opcode);
+        EmulateOpcode(opcode, memory[pc + 1], memory[pc + 2]);
 
         count++;
     }
 }
 
-void Emulator::EmulateOpcode(uint8_t opcode)
+void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
 {
     switch (opcode)
     {
@@ -181,8 +181,8 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0x01:
         // LXI B,D16
         {
-            registers.B = memory[pc + 2];
-            registers.C = memory[pc + 1];
+            registers.B = operand2;
+            registers.C = operand1;
             pc += 3;
         }
         break;
@@ -227,7 +227,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0x06:
         // MVI B, D8
         {
-            registers.B = memory[pc + 1];
+            registers.B = operand1;
             pc += 2;
         }
         break;
@@ -307,7 +307,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0x0e:
         // MVI C, D8
         {
-            registers.C = memory[pc + 1];
+            registers.C = operand1;
             pc += 2;
         }
         break;
@@ -336,8 +336,8 @@ void Emulator::EmulateOpcode(uint8_t opcode)
         // LXI D, word
         // Load next two bytes into DE register pair
         {
-            registers.D = memory[pc + 2];
-            registers.E = memory[pc + 1];
+            registers.D = operand2;
+            registers.E = operand1;
             pc += 3;
         }
         break;
@@ -386,7 +386,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
         // MVI D, byte
         // Load next byte into register D
         {
-            registers.D = memory[pc + 1];
+            registers.D = operand1;
             pc += 2;
         }
         break;
@@ -469,7 +469,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
         // MVI E, byte
         // Load next byte into register E
         {
-            registers.E = memory[pc + 1];
+            registers.E = operand1;
             pc++;
         }
         break;
@@ -497,14 +497,14 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0x21:
         // LXI H, #$
         {
-            registers.H = (memory[pc + 2] << 8) | memory[pc + 1];
+            registers.H = (operand2 << 8) | operand1;
             pc += 3;
         }
         break;
     case 0x22:
         // SHLD $
         {
-            uint16_t address = (memory[pc + 2] << 8) | memory[pc + 1];
+            uint16_t address = (operand2 << 8) | operand1;
             memory[address] = registers.L;
             memory[address + 1] = registers.H;
             pc += 3;
@@ -541,7 +541,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0x26:
         // MVI H, #$
         {
-            registers.H = memory[pc + 1];
+            registers.H = operand1;
             pc += 2;
         }
         break;
@@ -587,7 +587,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0x2a:
         // LHLD $
         {
-            uint16_t address = (memory[pc + 2] << 8) | memory[pc + 1];
+            uint16_t address = (operand2 << 8) | operand1;
             registers.L = memory[address];
             registers.H = memory[address + 1];
             pc += 3;
@@ -622,7 +622,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0x2e:
         // MVI L, #$
         {
-            registers.L = memory[pc + 1];
+            registers.L = operand1;
             pc += 2;
         }
         break;
@@ -642,14 +642,14 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0x31:
         // LXI SP,word
         {
-            sp = (memory[pc + 2] << 8) | memory[pc + 1];
+            sp = (operand2 << 8) | operand1;
             pc += 3;
         }
         break;
     case 0x32:
         // STA (word)
         {
-            uint16_t offset = (memory[pc + 2] << 8) | memory[pc + 1];
+            uint16_t offset = (operand2 << 8) | operand1;
             WriteToMem(offset, registers.A);
             pc += 3;
         }
@@ -682,7 +682,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0x36:
         // MVI M, byte
         {
-            WriteToHL(memory[pc + 1]);
+            WriteToHL(operand1);
             pc++;
         }
         break;
@@ -710,7 +710,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0x3a:
         // LDA (word)
         {
-            uint16_t offset = (memory[pc + 2] << 8) | memory[pc + 1];
+            uint16_t offset = (operand2 << 8) | operand1;
             registers.A = memory[offset];
             pc += 3;
         }
@@ -741,7 +741,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0x3e:
         // MVI A, byte
         {
-            registers.A = memory[pc + 1];
+            registers.A = operand1;
             pc++;
         }
         break;
@@ -1874,7 +1874,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
         {
             if (flags.z == 0)
             {
-                pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                pc = (operand2 << 8) | operand1;
             }
             else
             {
@@ -1886,7 +1886,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0xc3:
         // JMP
         {
-            pc = (memory[pc + 2] << 8) | memory[pc + 1];
+            pc = (operand2 << 8) | operand1;
         }
         break;
 
@@ -1897,7 +1897,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
             {
                 uint16_t ret = pc + 3;
                 Push((ret >> 8) & 0xff, (ret & 0xff));
-                pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                pc = (operand2 << 8) | operand1;
             }
             else
             {
@@ -1917,7 +1917,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0xc6:
         // ADI D8
         {
-            uint16_t res = (uint16_t)registers.A + (uint16_t)memory[pc + 1];
+            uint16_t res = (uint16_t)registers.A + (uint16_t)operand1;
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
@@ -1963,7 +1963,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
         {
             if (flags.z == 1)
             {
-                pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                pc = (operand2 << 8) | operand1;
             }
             else
             {
@@ -1986,7 +1986,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
             {
                 uint16_t ret = pc + 3;
                 Push((ret >> 8) & 0xff, (ret & 0xff));
-                pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                pc = (operand2 << 8) | operand1;
             }
             else
             {
@@ -2000,7 +2000,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
         {
             uint16_t ret = pc + 3;
             Push((ret >> 8) & 0xff, (ret & 0xff));
-            pc = (memory[pc + 2] << 8) | memory[pc + 1];
+            pc = (operand2 << 8) | operand1;
         }
         break;
 
@@ -2008,7 +2008,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
         // ACI D8
         {
             uint16_t res = (uint16_t)registers.A +
-                           (uint16_t)memory[pc + 1] + flags.cy;
+                           (uint16_t)operand1 + flags.cy;
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
@@ -2063,8 +2063,8 @@ void Emulator::EmulateOpcode(uint8_t opcode)
         {
             if (!flags.cy)
             {
-                uint8_t addr_high = memory[pc + 2];
-                uint8_t addr_low = memory[pc + 1];
+                uint8_t addr_high = operand2;
+                uint8_t addr_low = operand1;
                 pc = (addr_high << 8) | addr_low;
             }
             else
@@ -2093,8 +2093,8 @@ void Emulator::EmulateOpcode(uint8_t opcode)
 
                 Push(ret_high, ret_low);
 
-                uint8_t addr_high = memory[pc + 2];
-                uint8_t addr_low = memory[pc + 1];
+                uint8_t addr_high = operand2;
+                uint8_t addr_low = operand1;
                 pc = (addr_high << 8) | addr_low;
             }
             else
@@ -2115,7 +2115,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
         // SUI
         // Subtract immediate from A
         {
-            unsigned char operand = memory[pc + 1];
+            unsigned char operand = operand1;
             SubtractFromA(operand);
             pc += 2;
         }
@@ -2161,8 +2161,8 @@ void Emulator::EmulateOpcode(uint8_t opcode)
         {
             if (flags.cy)
             {
-                uint16_t addr_high = memory[pc + 2];
-                uint16_t addr_low = memory[pc + 1];
+                uint16_t addr_high = operand2;
+                uint16_t addr_low = operand1;
                 pc = (addr_high << 8) | addr_low;
             }
             else
@@ -2192,8 +2192,8 @@ void Emulator::EmulateOpcode(uint8_t opcode)
 
                 Push(ret_high, ret_low);
 
-                uint8_t addr_high = memory[pc + 2];
-                uint8_t addr_low = memory[pc + 1];
+                uint8_t addr_high = operand2;
+                uint8_t addr_low = operand1;
                 pc = (addr_high << 8) | addr_low;
             }
             else
@@ -2212,7 +2212,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
         // SBI
         // Subtract immediate from accumulator with borrow
         {
-            unsigned char operand = memory[pc + 1];
+            unsigned char operand = operand1;
             if (flags.cy)
             {
                 operand++;
@@ -2265,7 +2265,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
             }
             else
             {
-                pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                pc = (operand2 << 8) | operand1;
             }
         }
         break;
@@ -2290,7 +2290,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
                 WriteToMem(sp - 1, (ret >> 8) & 0xff);
                 WriteToMem(sp - 2, (ret & 0xff));
                 sp -= 2;
-                pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                pc = (operand2 << 8) | operand1;
             }
             else
             {
@@ -2310,7 +2310,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0xe6:
         // ANI #$
         {
-            registers.A &= memory[pc + 1];
+            registers.A &= operand1;
             LogicFlagsA();
             pc += 2;
         }
@@ -2353,7 +2353,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
             }
             else
             {
-                pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                pc = (operand2 << 8) | operand1;
             }
         }
         break;
@@ -2377,7 +2377,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
                 WriteToMem(sp - 1, (ret >> 8) & 0xff);
                 WriteToMem(sp - 2, (ret & 0xff));
                 sp -= 2;
-                pc = (memory[pc + 2] << 8) | memory[pc + 1];
+                pc = (operand2 << 8) | operand1;
             }
             else
             {
@@ -2392,13 +2392,13 @@ void Emulator::EmulateOpcode(uint8_t opcode)
             WriteToMem(sp - 1, (ret >> 8) & 0xff);
             WriteToMem(sp - 2, (ret & 0xff));
             sp -= 2;
-            pc = (memory[pc + 2] << 8) | memory[pc + 1];
+            pc = (operand2 << 8) | operand1;
         }
         break;
     case 0xee:
         // XRI #$
         {
-            registers.A ^= memory[pc + 1];
+            registers.A ^= operand1;
             LogicFlagsA();
             pc += 2;
         }
@@ -2441,7 +2441,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0xf2:
         if (flags.s == 0)
         {
-            pc = (memory[pc + 2] << 8) | memory[pc + 1];
+            pc = (operand2 << 8) | operand1;
         }
         else
         {
@@ -2463,7 +2463,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
             WriteToMem(sp - 1, (ret >> 8) & 0xff);
             WriteToMem(sp - 2, (ret & 0xff));
             sp -= 2;
-            pc = (memory[pc + 2]) | memory[pc + 1];
+            pc = (operand2) | operand1;
         }
         else
         {
@@ -2483,7 +2483,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0xf6:
         // ORI byte
         {
-            uint8_t x = registers.A | memory[pc + 1];
+            uint8_t x = registers.A | operand1;
             ZSPFlags(x);
             flags.cy = 0;
             registers.A = x;
@@ -2520,7 +2520,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
         // JM
         if (flags.s != 0)
         {
-            pc = (memory[pc + 2] << 8) | memory[pc + 1];
+            pc = (operand2 << 8) | operand1;
         }
         else
         {
@@ -2542,7 +2542,7 @@ void Emulator::EmulateOpcode(uint8_t opcode)
             WriteToMem(sp - 1, (ret >> 8) & 0xff);
             WriteToMem(sp - 2, (ret & 0xff));
             sp -= 2;
-            pc = (memory[pc + 2] << 8) | memory[pc + 1];
+            pc = (operand2 << 8) | operand1;
         }
         else
         {
@@ -2558,9 +2558,9 @@ void Emulator::EmulateOpcode(uint8_t opcode)
     case 0xfe:
         // CPI byte
         {
-            uint8_t mem = registers.A - memory[pc + 1];
+            uint8_t mem = registers.A - operand1;
             ZSPFlags(mem);
-            flags.cy = registers.A < memory[pc + 1];
+            flags.cy = registers.A < operand1;
             pc++;
         }
     case 0xff:
