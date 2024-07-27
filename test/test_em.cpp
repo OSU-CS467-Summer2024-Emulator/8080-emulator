@@ -230,3 +230,160 @@ TEST_CASE("Subtraction", "[math]")
     result = {.z = 0, .s = 1, .p = 0, .cy = 1};
     CHECK(e.GetFlags() == result);
 }
+
+TEST_CASE("Addition", "[opcode][add][math]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("ADD B")
+    {
+        int test_pc = pc;
+
+        // MVI B
+        e.EmulateOpcode(0x06, 0x30);
+        REQUIRE(e.GetRegisters().A == 0);
+        REQUIRE(e.GetRegisters().B == 0x30);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD B
+        e.EmulateOpcode(0x80);
+        CHECK(e.GetRegisters().A == 0x30);
+        CHECK(e.GetRegisters().B == 0x30);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADD C")
+    {
+        int test_pc = pc;
+
+        // MVI C
+        e.EmulateOpcode(0x0e, 0x30);
+        REQUIRE(e.GetRegisters().A == 0);
+        REQUIRE(e.GetRegisters().C == 0x30);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD C
+        e.EmulateOpcode(0x81);
+        CHECK(e.GetRegisters().A == 0x30);
+        CHECK(e.GetRegisters().C == 0x30);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADD D")
+    {
+        int test_pc = pc;
+
+        // MVI D
+        e.EmulateOpcode(0x16, 0x30);
+        REQUIRE(e.GetRegisters().A == 0);
+        REQUIRE(e.GetRegisters().D == 0x30);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD D
+        e.EmulateOpcode(0x82);
+        CHECK(e.GetRegisters().A == 0x30);
+        CHECK(e.GetRegisters().D == 0x30);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADD E")
+    {
+        int test_pc = pc;
+
+        // MVI D
+        e.EmulateOpcode(0x1e, 0x30);
+        REQUIRE(e.GetRegisters().A == 0);
+        REQUIRE(e.GetRegisters().E == 0x30);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD D
+        e.EmulateOpcode(0x83);
+        CHECK(e.GetRegisters().A == 0x30);
+        CHECK(e.GetRegisters().E == 0x30);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADD H")
+    {
+        int test_pc = pc;
+
+        // MVI H
+        e.EmulateOpcode(0x26, 0x30);
+        REQUIRE(e.GetRegisters().A == 0);
+        REQUIRE(e.GetRegisters().H == 0x30);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD H
+        e.EmulateOpcode(0x84);
+        CHECK(e.GetRegisters().A == 0x30);
+        CHECK(e.GetRegisters().H == 0x30);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADD L")
+    {
+        int test_pc = pc;
+
+        // MVI L
+        e.EmulateOpcode(0x2e, 0x30);
+        REQUIRE(e.GetRegisters().A == 0);
+        REQUIRE(e.GetRegisters().L == 0x30);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD L
+        e.EmulateOpcode(0x85);
+        CHECK(e.GetRegisters().A == 0x30);
+        CHECK(e.GetRegisters().L == 0x30);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADD M")
+    {
+        int test_pc = pc;
+        e.AllocateMemory(0x3000);
+
+        // Write address to HL registers
+        // MVI H, 0x25
+        // MVI L, 0x00
+        e.EmulateOpcode(0x26, 0x25);
+        e.EmulateOpcode(0x2e, 0x00);
+        REQUIRE((uint8_t)e.GetRegisters().H == 0x25);
+        REQUIRE((uint8_t)e.GetRegisters().L == 0x00);
+        test_pc = e.GetPC();
+
+        // MVI M, 0x30
+        e.EmulateOpcode(0x36, 0x30);
+        REQUIRE(e.GetRegisters().A == 0);
+        REQUIRE(e.ReadFromMem(0x2500) == 0x30);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD M
+        e.EmulateOpcode(0x86);
+        CHECK(e.GetRegisters().A == 0x30);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADD A")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x30);
+        REQUIRE(e.GetRegisters().A == 0x30);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD A
+        e.EmulateOpcode(0x87);
+        CHECK(e.GetRegisters().A == 0x60);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+}
