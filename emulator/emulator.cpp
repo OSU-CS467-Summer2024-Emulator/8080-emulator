@@ -483,7 +483,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Load next byte into register E
         {
             registers.E = operand1;
-            pc++;
+            pc += 2;
         }
         break;
     case 0x1f:
@@ -755,7 +755,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // MVI A, byte
         {
             registers.A = operand1;
-            pc++;
+            pc += 2;
         }
         break;
     case 0x3f:
