@@ -6,13 +6,13 @@
 
 typedef struct Registers
 {
-    unsigned char A = 0;
-    unsigned char B = 0;
-    unsigned char C = 0;
-    unsigned char D = 0;
-    unsigned char E = 0;
-    unsigned char H = 0;
-    unsigned char L = 0;
+    uint8_t A = 0;
+    uint8_t B = 0;
+    uint8_t C = 0;
+    uint8_t D = 0;
+    uint8_t E = 0;
+    uint8_t H = 0;
+    uint8_t L = 0;
 } Registers;
 
 typedef struct Flags
@@ -33,10 +33,10 @@ public:
     void AllocateMemory(int size);
     int LoadRom(std::string);
 
-    int parity(int, int);
-    void LogicFlagsA();
-    void ArithFlagsA(uint16_t res);
-    void ZSPFlags(uint8_t value);
+        bool parity(int, int);
+        void LogicFlagsA();
+        void ArithFlagsA(uint16_t res);
+        void ZSPFlags(uint8_t value);
 
     void SubtractFromA(uint8_t);
 
@@ -66,14 +66,14 @@ private:
 
     Flags flags;
 
-    // stack pointer
-    int sp;
+        // stack pointer
+        uint16_t sp;
 
-    // program counter
-    int pc;
+        // program counter
+        uint16_t pc;
 
     // array for memory
-    unsigned char *memory;
+    uint8_t *memory;
     int mem_size;
 };
 

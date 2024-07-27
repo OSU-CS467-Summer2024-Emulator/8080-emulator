@@ -28,7 +28,7 @@ Emulator::~Emulator()
 
 void Emulator::AllocateMemory(int size)
 {
-    memory = new unsigned char[size];
+    memory = new uint8_t[size];
     for (int i = 0; i < size; i++)
         memory[i] = 0;
     mem_size = size;
@@ -60,7 +60,7 @@ int Emulator::LoadRom(string file_path)
 }
 
 // Determines parity flag
-int Emulator::parity(int x, int size = 8)
+bool Emulator::parity(int x, int size = 8)
 {
     int p = 0;
     x = (x & ((1 << size) - 1));
@@ -148,7 +148,7 @@ void Emulator::Pop(uint8_t *high, uint8_t *low)
     sp += 2;
 }
 
-void Emulator::SubtractFromA(unsigned char operand)
+void Emulator::SubtractFromA(uint8_t operand)
 {
     uint16_t num1 = registers.A;
     uint16_t num2 = ~operand & 0x00ff;
@@ -171,7 +171,7 @@ void Emulator::Emulate()
 
     while (count < 110)
     {
-        unsigned char opcode = memory[pc];
+        uint8_t opcode = memory[pc];
 
         Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
         EmulateOpcode(opcode, memory[pc + 1], memory[pc + 2]);
@@ -1009,121 +1009,121 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         }
         break;
 
-    // 0x60 - 0x6f
-    case 0x60:
-        // MOV H, B
-        {
-            registers.H = registers.B;
-            pc++;
-        }
-        break;
-    case 0x61:
-        // MOV H, C
-        {
-            registers.H = registers.C;
-            pc++;
-        }
-        break;
-    case 0x62:
-        // MOV H, D
-        {
-            registers.H = registers.D;
-            pc++;
-        }
-        break;
-    case 0x63:
-        // MOV H, E
-        {
-            registers.H = registers.E;
-            pc++;
-        }
-        break;
-    case 0x64:
-        // MOV H, H
-        {
-            registers.H = registers.H;
-            pc++;
-        }
-        break;
-    case 0x65:
-        // "MOV H, L
-        {
-            registers.H = registers.L;
-            pc++;
-        }
-        break;
-    case 0x66:
-        // "MOV H, M
-        {
-            int mem_addr = (registers.H << 8) | (registers.L);
-            registers.H = memory[mem_addr];
-            pc++;
-        }
-        break;
-    case 0x67:
-        // "MOV H, A
-        {
-            registers.H = registers.A;
-            pc++;
-        }
-        break;
-    case 0x68:
-        // "MOV L, B
-        {
-            registers.L = registers.B;
-            pc++;
-        }
-        break;
-    case 0x69:
-        // "MOV L, C
-        {
-            registers.L = registers.C;
-            pc++;
-        }
-        break;
-    case 0x6a:
-        // "MOV L, D
-        {
-            registers.L = registers.D;
-            pc++;
-        }
-        break;
-    case 0x6b:
-        // "MOV L, E
-        {
-            registers.L = registers.E;
-            pc++;
-        }
-        break;
-    case 0x6c:
-        // "MOV L, H
-        {
-            registers.L = registers.H;
-            pc++;
-        }
-        break;
-    case 0x6d:
-        // "MOV L, L
-        {
-            registers.L = registers.L;
-            pc++;
-        }
-        break;
-    case 0x6e:
-        // "MOV L, M
-        {
-            int mem_addr = (registers.H << 8) | (registers.L);
-            registers.L = memory[mem_addr];
-            pc++;
-        }
-        break;
-    case 0x6f:
-        // "MOV L, A
-        {
-            registers.L = registers.A;
-            pc++;
-        }
-        break;
+        // 0x60 - 0x6f
+        case 0x60:
+            // MOV H, B
+            {
+                registers.H = registers.B;
+                pc++;
+            }
+            break;
+        case 0x61:
+            // MOV H, C
+            {
+                registers.H = registers.C;
+                pc++;
+            }
+            break;
+        case 0x62:
+            // MOV H, D
+            {
+                registers.H = registers.D;
+                pc++;
+            }
+            break;
+        case 0x63:
+            // MOV H, E
+            {
+                registers.H = registers.E;
+                pc++;
+            }
+            break;
+        case 0x64:
+            // MOV H, H
+            {
+                registers.H = registers.H;
+                pc++;
+            }
+            break;
+        case 0x65:
+            // "MOV H, L
+            {
+                registers.H = registers.L;
+                pc++;
+            }
+            break;
+        case 0x66:
+            // "MOV H, M
+            {
+                uint16_t mem_addr = (registers.H << 8) | (registers.L);
+                registers.H = memory[mem_addr];
+                pc++;
+            }
+            break;
+        case 0x67:
+            // "MOV H, A
+            {
+                registers.H = registers.A;
+                pc++;
+            }
+            break;
+        case 0x68:
+            // "MOV L, B
+            {
+                registers.L = registers.B;
+                pc++;
+            }
+            break;
+        case 0x69:
+            // "MOV L, C
+            {
+                registers.L = registers.C;
+                pc++;
+            }
+            break;
+        case 0x6a:
+            // "MOV L, D
+            {
+                registers.L = registers.D;
+                pc++;
+            }
+            break;
+        case 0x6b:
+            // "MOV L, E
+            {
+                registers.L = registers.E;
+                pc++;
+            }
+            break;
+        case 0x6c:
+            // "MOV L, H
+            {
+                registers.L = registers.H;
+                pc++;
+            }
+            break;
+        case 0x6d:
+            // "MOV L, L
+            {
+                registers.L = registers.L;
+                pc++;
+            }
+            break;
+        case 0x6e:
+            // "MOV L, M
+            {
+                uint16_t mem_addr = (registers.H << 8) | (registers.L);
+                registers.L = memory[mem_addr];
+                pc++;
+            }
+            break;
+        case 0x6f:
+            // "MOV L, A
+            {
+                registers.L = registers.A;
+                pc++;
+            }
+            break;
 
     // 0x70 - 0x7f
     case 0x70:
@@ -1408,193 +1408,193 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         }
         break;
 
-    // 0x90 - 0x9f
-    case 0x90:
-        // SUB B
-        // Subtract register B from register A and store result in A
-        {
-            SubtractFromA(registers.B);
-            pc++;
-        }
-        break;
-    case 0x91:
-        // SUB C
-        // Subtract register C from register A and store result in A
-        {
-            SubtractFromA(registers.C);
-            pc++;
-        }
-        break;
-    case 0x92:
-        // SUB D
-        // Subtract register D from register A and store result in A
-        {
-            SubtractFromA(registers.D);
-            pc++;
-        }
-        break;
-    case 0x93:
-        // SUB E
-        // Subtract register E from register A and store result in A
-        {
-            SubtractFromA(registers.E);
-            pc++;
-        }
-        break;
-    case 0x94:
-        // SUB H
-        // Subtract register H from register A and store result in A
-        {
-            SubtractFromA(registers.H);
-            pc++;
-        }
-        break;
-    case 0x95:
-        // SUB L
-        // Subtract register L from register A and store result in A
-        {
-            SubtractFromA(registers.L);
-            pc++;
-        }
-        break;
-    case 0x96:
-        // SUB M
-        // Subtract byte from memory at address stored in HL from register A and store result in A
-        {
-            unsigned char operand = memory[registers.H << 8 | registers.L];
-            SubtractFromA(operand);
-            pc++;
-        }
-        break;
-    case 0x97:
-        // SUB A
-        // Subtract register A from register A and store result in A
-        {
-            SubtractFromA(registers.A);
-            pc++;
-        }
-        break;
-    case 0x98:
-        // SBB B
-        // Subtract register B (plus carry) from register A and store result in A
-        {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.B + 0x01);
-            }
-            else
+        // 0x90 - 0x9f
+        case 0x90:
+            // SUB B
+            // Subtract register B from register A and store result in A
             {
                 SubtractFromA(registers.B);
+                pc++;
             }
-            pc++;
-        }
-        break;
-    case 0x99:
-        // SBB C
-        // Subtract register C (plus carry) from register A and store result in A
-        {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.C + 0x01);
-            }
-            else
+            break;
+        case 0x91:
+            // SUB C
+            // Subtract register C from register A and store result in A
             {
                 SubtractFromA(registers.C);
+                pc++;
             }
-            pc++;
-        }
-        break;
-    case 0x9a:
-        // SBB D
-        // Subtract register D (plus carry) from register A and store result in A
-        {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.D + 0x01);
-            }
-            else
+            break;
+        case 0x92:
+            // SUB D
+            // Subtract register D from register A and store result in A
             {
                 SubtractFromA(registers.D);
+                pc++;
             }
-            pc++;
-        }
-        break;
-    case 0x9b:
-        // SBB E
-        // Subtract register E (plus carry) from register A and store result in A
-        {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.E + 0x01);
-            }
-            else
+            break;
+        case 0x93:
+            // SUB E
+            // Subtract register E from register A and store result in A
             {
                 SubtractFromA(registers.E);
+                pc++;
             }
-            pc++;
-        }
-        break;
-    case 0x9c:
-        // SBB H
-        // Subtract register H (plus carry) from register A and store result in A
-        {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.H + 0x01);
-            }
-            else
+            break;
+        case 0x94:
+            // SUB H
+            // Subtract register H from register A and store result in A
             {
                 SubtractFromA(registers.H);
+                pc++;
             }
-            pc++;
-        }
-        break;
-    case 0x9d:
-        // SBB L
-        // Subtract register L (plus carry) from register A and store result in A
-        {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.L + 0x01);
-            }
-            else
+            break;
+        case 0x95:
+            // SUB L
+            // Subtract register L from register A and store result in A
             {
                 SubtractFromA(registers.L);
+                pc++;
             }
-            pc++;
-        }
-        break;
-    case 0x9e:
-        // SBB M
-        // Subtract byte in memory (location in HL) from register A and store result in A
-        {
-            unsigned char operand = memory[registers.H << 8 | registers.L];
-            if (flags.cy)
+            break;
+        case 0x96:
+            // SUB M
+            // Subtract byte from memory at address stored in HL from register A and store result in A
             {
-                SubtractFromA(operand + 0x01);
-            }
-            else
-            {
+                uint8_t operand = memory[registers.H << 8 | registers.L];
                 SubtractFromA(operand);
+                pc++;
             }
-            pc++;
-        }
-        break;
-    case 0x9f:
-        // SBB A
-        // Subtract register A (plus carry) from register A and store result in A
-        {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.A + 0x01);
-            }
-            else
+            break;
+        case 0x97:
+            // SUB A
+            // Subtract register A from register A and store result in A
             {
                 SubtractFromA(registers.A);
+                pc++;
             }
-            pc++;
-        }
-        break;
+            break;
+        case 0x98:
+            // SBB B
+            // Subtract register B (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.B + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.B);
+                }
+                pc++;
+            }
+            break;
+        case 0x99:
+            // SBB C
+            // Subtract register C (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.C + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.C);
+                }
+                pc++;
+            }
+            break;
+        case 0x9a:
+            // SBB D
+            // Subtract register D (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.D + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.D);
+                }
+                pc++;
+            }
+            break;
+        case 0x9b:
+            // SBB E
+            // Subtract register E (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.E + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.E);
+                }
+                pc++;
+            }
+            break;
+        case 0x9c:
+            // SBB H
+            // Subtract register H (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.H + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.H);
+                }
+                pc++;
+            }
+            break;
+        case 0x9d:
+            // SBB L
+            // Subtract register L (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.L + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.L);
+                }
+                pc++;
+            }
+            break;
+        case 0x9e:
+            // SBB M
+            // Subtract byte in memory (location in HL) from register A and store result in A
+            {
+                uint8_t operand = memory[registers.H << 8 | registers.L];
+                if (flags.cy)
+                {
+                    SubtractFromA(operand + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(operand);
+                }
+                pc++;
+            }
+            break;
+        case 0x9f:
+            // SBB A
+            // Subtract register A (plus carry) from register A and store result in A
+            {
+                if (flags.cy)
+                {
+                    SubtractFromA(registers.A + 0x01);
+                }
+                else
+                {
+                    SubtractFromA(registers.A);
+                }
+                pc++;
+            }
+            break;
 
     // 0xa0 - 0xaf
     case 0xa0:
@@ -2128,7 +2128,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SUI
         // Subtract immediate from A
         {
-            unsigned char operand = operand1;
+            uint8_t operand = operand1;
             SubtractFromA(operand);
             pc += 2;
         }
@@ -2225,7 +2225,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBI
         // Subtract immediate from accumulator with borrow
         {
-            unsigned char operand = operand1;
+            uint8_t operand = operand1;
             if (flags.cy)
             {
                 operand++;
@@ -2599,19 +2599,19 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
 void Emulator::PrintRegisters()
 {
     cout << "Register A: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.A) << endl;
+         << static_cast<unsigned>(registers.A) << endl;
     cout << "Register B: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.B) << endl;
+         << static_cast<unsigned>(registers.B) << endl;
     cout << "Register C: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.C) << endl;
+         << static_cast<unsigned>(registers.C) << endl;
     cout << "Register D: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.D) << endl;
+         << static_cast<unsigned>(registers.D) << endl;
     cout << "Register E: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.E) << endl;
+         << static_cast<unsigned>(registers.E) << endl;
     cout << "Register H: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.H) << endl;
+         << static_cast<unsigned>(registers.H) << endl;
     cout << "Register L: " << hex << setfill('0') << setw(2)
-         << static_cast<unsigned>((unsigned char)registers.L) << endl;
+         << static_cast<unsigned>(registers.L) << endl;
 }
 
 // Print current state of all condition codes
