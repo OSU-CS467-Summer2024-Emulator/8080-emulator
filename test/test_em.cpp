@@ -110,10 +110,21 @@ TEST_CASE("Move Immediate", "[opcode][move][immediate]")
         CHECK((uint8_t)e.GetRegisters().L == 0x22);
         CHECK(e.GetPC() == pc + 2);
     }
+    SECTION("MVI M")
+    {
+        e.AllocateMemory(0x1000);
 
-    // e.EmulateOpcode(0x36, 0x33);  // MVI M
-    //  Requires accessing memory at (HL)
+        // Write address to HL registers
+        e.EmulateOpcode(0x26, 0x00);
+        e.EmulateOpcode(0x2e, 0x00);
+        REQUIRE((uint8_t)e.GetRegisters().H == 0x00);
+        REQUIRE((uint8_t)e.GetRegisters().L == 0x00);
 
+        // move 0x33 to memory at (HL)
+        e.EmulateOpcode(0x36, 0x33);
+
+        CHECK(e.ReadFromMem(0x0000) == 0x33);
+    }
     SECTION("MVI A")
     {
         e.EmulateOpcode(0x3e, 0xaa);

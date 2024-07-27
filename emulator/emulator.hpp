@@ -30,6 +30,7 @@ public:
     Emulator();
     ~Emulator();
 
+    void AllocateMemory(int size);
     int LoadRom(std::string);
 
     int parity(int, int);
@@ -39,6 +40,7 @@ public:
 
     void SubtractFromA(uint8_t);
 
+    uint8_t ReadFromMem(uint16_t address);
     void WriteToMem(uint16_t address, uint8_t value);
     uint8_t ReadFromHL();
     void WriteToHL(uint8_t value);
@@ -72,6 +74,7 @@ private:
 
     // array for memory
     unsigned char *memory;
+    int mem_size;
 };
 
 #endif // EMULATOR_EMULATOR_HPP_

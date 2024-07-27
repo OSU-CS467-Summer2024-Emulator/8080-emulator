@@ -13,6 +13,7 @@ Emulator::Emulator()
     pc = 0;
     sp = 0;
     memory = nullptr;
+    mem_size = 0;
 }
 
 // Destructor
@@ -25,18 +26,23 @@ Emulator::~Emulator()
     }
 }
 
+void Emulator::AllocateMemory(int size)
+{
+    memory = new unsigned char[size];
+    mem_size = size;
+}
+
 // Copy contents of file specified by file_path into memory
 // Returns number of bytes read
 int Emulator::LoadRom(string file_path)
 {
     streampos size;
-    char *mem_buffer;
 
     ifstream file(file_path, ios::in | ios::binary | ios::ate);
     if (file.is_open())
     {
         size = file.tellg();
-        memory = new unsigned char[size];
+        AllocateMemory(size);
 
         file.seekg(0, ios::beg);
         file.read(reinterpret_cast<char *>(memory), size);
@@ -106,6 +112,11 @@ void Emulator::WriteToHL(uint8_t value)
 {
     uint16_t offset = (registers.H << 8) | registers.L;
     WriteToMem(offset, value);
+}
+
+uint8_t Emulator::ReadFromMem(uint16_t address)
+{
+    return memory[address];
 }
 
 uint8_t Emulator::ReadFromHL()
