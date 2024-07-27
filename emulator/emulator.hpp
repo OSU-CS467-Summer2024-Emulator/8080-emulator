@@ -12,7 +12,7 @@ class Emulator
 
         int LoadRom(std::string);
 
-        int parity(int, int);
+        bool parity(int, int);
         void LogicFlagsA();
         void ArithFlagsA(uint16_t res);
         void ZSPFlags(uint8_t value);
@@ -36,13 +36,13 @@ class Emulator
     private:
         struct Registers
         {
-            unsigned char A = 0;
-            unsigned char B = 0;
-            unsigned char C = 0;
-            unsigned char D = 0;
-            unsigned char E = 0;
-            unsigned char H = 0;
-            unsigned char L = 0;
+            uint8_t A = 0;
+            uint8_t B = 0;
+            uint8_t C = 0;
+            uint8_t D = 0;
+            uint8_t E = 0;
+            uint8_t H = 0;
+            uint8_t L = 0;
         } registers;
 
         struct Flags
@@ -55,13 +55,13 @@ class Emulator
         } flags;
 
         // stack pointer
-        int sp;
+        uint16_t sp;
 
         // program counter
-        int pc;
+        uint16_t pc;
 
         // array for memory
-        unsigned char* memory;
+        uint8_t* memory;
 };
 
 #endif // EMULATOR_EMULATOR_HPP_
