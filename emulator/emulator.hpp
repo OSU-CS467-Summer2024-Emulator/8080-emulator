@@ -33,10 +33,10 @@ public:
     void AllocateMemory(int size);
     int LoadRom(std::string);
 
-        bool parity(int, int);
-        void LogicFlagsA();
-        void ArithFlagsA(uint16_t res);
-        void ZSPFlags(uint8_t value);
+    bool parity(int, int);
+    void LogicFlagsA();
+    void ArithFlagsA(uint16_t res);
+    void ZSPFlags(uint8_t value);
 
     void SubtractFromA(uint8_t);
 
@@ -44,6 +44,9 @@ public:
     void WriteToMem(uint16_t address, uint8_t value);
     uint8_t ReadFromHL();
     void WriteToHL(uint8_t value);
+
+    void Call(uint8_t, uint8_t);
+    void Return();
 
     void Push(uint8_t high, uint8_t low);
     void Pop(uint8_t *high, uint8_t *low);
@@ -60,17 +63,18 @@ public:
     Flags GetFlags();
     int GetPC();
     int GetSP();
+    void SetSP(uint16_t);
 
 private:
     Registers registers;
 
     Flags flags;
 
-        // stack pointer
-        uint16_t sp;
+    // stack pointer
+    uint16_t sp;
 
-        // program counter
-        uint16_t pc;
+    // program counter
+    uint16_t pc;
 
     // array for memory
     uint8_t *memory;

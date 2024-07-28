@@ -115,6 +115,40 @@ TEST_CASE("0x00 NOP", "[opcode]")
     REQUIRE(e.GetSP() == sp_before);
 }
 
+TEST_CASE("Set and complement carry flag", "[opcode][flag]")
+{
+    Emulator e;
+
+    SECTION("STC (set carry)")
+    {
+        REQUIRE(e.GetFlags().cy == 0);
+
+        uint16_t pc_before = e.GetPC();
+        e.EmulateOpcode(0x37);
+
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == pc_before + 1);
+
+        e.EmulateOpcode(0x37);
+
+        REQUIRE(e.GetFlags().cy == 1);
+    }
+    SECTION("CMC (complement carry)")
+    {
+        REQUIRE(e.GetFlags().cy == 0);
+
+        uint16_t pc_before = e.GetPC();
+        e.EmulateOpcode(0x3f);
+
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == pc_before + 1);
+
+        e.EmulateOpcode(0x3f);
+
+        REQUIRE(e.GetFlags().cy == 0);
+    }
+}
+
 // Random other example
 TEST_CASE("0x04 INR B", "[opcode]")
 {
@@ -385,5 +419,402 @@ TEST_CASE("Addition", "[opcode][add][math]")
         e.EmulateOpcode(0x87);
         CHECK(e.GetRegisters().A == 0x60);
         CHECK(e.GetPC() == test_pc + 1);
+    }
+}
+
+TEST_CASE("PUSH", "[stack]")
+{
+    Emulator e;
+    e.AllocateMemory(0x3000);
+    uint16_t sp_before = 0x2500;
+    e.SetSP(sp_before);
+    REQUIRE(e.GetSP() == sp_before);
+
+    SECTION("Push()")
+    {
+        e.Push(0x11, 0x22);
+        CHECK(e.GetSP() == sp_before - 2);
+        CHECK(e.ReadFromMem(sp_before - 1) == 0x11);
+        CHECK(e.ReadFromMem(sp_before - 2) == 0x22);
+    }
+    SECTION("PUSH B")
+    {
+        // Move values into B, C
+        uint8_t value1 = 0x11;
+        uint8_t value2 = 0x22;
+        e.EmulateOpcode(0x06, value1);
+        e.EmulateOpcode(0x0e, value2);
+        REQUIRE(e.GetRegisters().B == value1);
+        REQUIRE(e.GetRegisters().C == value2);
+
+        uint16_t pc_before = e.GetPC();
+        // PUSH B
+        e.EmulateOpcode(0xc5);
+
+        CHECK(e.GetSP() == sp_before - 2);
+        CHECK(e.ReadFromMem(sp_before - 1) == value1);
+        CHECK(e.ReadFromMem(sp_before - 2) == value2);
+        CHECK(e.GetPC() == pc_before + 1);
+    }
+    SECTION("PUSH D")
+    {
+        // Move values into D, E
+        uint8_t value1 = 0x11;
+        uint8_t value2 = 0x22;
+        e.EmulateOpcode(0x16, value1);
+        e.EmulateOpcode(0x1e, value2);
+        REQUIRE(e.GetRegisters().D == value1);
+        REQUIRE(e.GetRegisters().E == value2);
+
+        uint16_t pc_before = e.GetPC();
+        // PUSH D
+        e.EmulateOpcode(0xd5);
+
+        CHECK(e.GetSP() == sp_before - 2);
+        CHECK(e.ReadFromMem(sp_before - 1) == value1);
+        CHECK(e.ReadFromMem(sp_before - 2) == value2);
+        CHECK(e.GetPC() == pc_before + 1);
+    }
+    SECTION("PUSH H")
+    {
+        // Move values into H, L
+        uint8_t value1 = 0x11;
+        uint8_t value2 = 0x22;
+        e.EmulateOpcode(0x26, value1);
+        e.EmulateOpcode(0x2e, value2);
+        REQUIRE(e.GetRegisters().H == value1);
+        REQUIRE(e.GetRegisters().L == value2);
+
+        uint16_t pc_before = e.GetPC();
+        // PUSH H
+        e.EmulateOpcode(0xe5);
+
+        CHECK(e.GetSP() == sp_before - 2);
+        CHECK(e.ReadFromMem(sp_before - 1) == value1);
+        CHECK(e.ReadFromMem(sp_before - 2) == value2);
+        CHECK(e.GetPC() == pc_before + 1);
+    }
+    SECTION("PUSH PSW")
+    {
+        // Move values into A, B
+        uint8_t value1 = 0x11;
+        uint8_t value2 = 0xaa;
+        e.EmulateOpcode(0x3e, value1);
+        e.EmulateOpcode(0x06, value2);
+
+        // Add B to A to set flags (11+aa=bb)
+        e.EmulateOpcode(0x80);
+
+        REQUIRE(e.GetRegisters().A == 0xbb);
+        REQUIRE(e.GetFlags().z == 0);
+        REQUIRE(e.GetFlags().s == 1);
+        REQUIRE(e.GetFlags().p == 1);
+        REQUIRE(e.GetFlags().cy == 0);
+
+        uint16_t pc_before = e.GetPC();
+        // PUSH PSW
+        e.EmulateOpcode(0xf5);
+
+        CHECK(e.GetSP() == sp_before - 2);
+        CHECK(e.ReadFromMem(sp_before - 1) == 0xbb);
+        uint8_t psw = e.ReadFromMem(sp_before - 2);
+        CHECK((psw & 0x01) == 0x00); // z bit == 0
+        CHECK((psw & 0x02) == 0x02); // s bit == 1
+        CHECK((psw & 0x04) == 0x04); // p bit == 1
+        CHECK((psw & 0x08) == 0x00); // cy bit == 0
+        CHECK(e.GetPC() == pc_before + 1);
+    }
+}
+
+TEST_CASE("POP", "[stack]")
+{
+    Emulator e;
+    e.AllocateMemory(0x3000);
+    uint16_t sp_before = 0x2500;
+    e.SetSP(sp_before);
+    REQUIRE(e.GetSP() == sp_before);
+
+    SECTION("Pop()")
+    {
+        e.Push(0x11, 0x22);
+        REQUIRE(e.ReadFromMem(sp_before - 1) == 0x11);
+        REQUIRE(e.ReadFromMem(sp_before - 2) == 0x22);
+        REQUIRE(e.GetSP() == sp_before - 2);
+
+        uint8_t value1 = 0x00;
+        uint8_t value2 = 0x00;
+
+        e.Pop(&value1, &value2);
+
+        CHECK(value1 == 0x11);
+        CHECK(value2 == 0x22);
+        CHECK(e.GetSP() == sp_before);
+    }
+    SECTION("POP B")
+    {
+        uint8_t value1 = 0x11;
+        uint8_t value2 = 0x22;
+        e.Push(value1, value2);
+        REQUIRE(e.ReadFromMem(sp_before - 1) == value1);
+        REQUIRE(e.ReadFromMem(sp_before - 2) == value2);
+
+        uint16_t pc_before = e.GetPC();
+
+        e.EmulateOpcode(0xc1);
+
+        CHECK(e.GetSP() == sp_before);
+        CHECK(e.GetRegisters().B == value1);
+        CHECK(e.GetRegisters().C == value2);
+        CHECK(e.GetPC() == pc_before + 1);
+    }
+    SECTION("POP D")
+    {
+        uint8_t value1 = 0x11;
+        uint8_t value2 = 0x22;
+        e.Push(value1, value2);
+        REQUIRE(e.ReadFromMem(sp_before - 1) == value1);
+        REQUIRE(e.ReadFromMem(sp_before - 2) == value2);
+
+        uint16_t pc_before = e.GetPC();
+
+        e.EmulateOpcode(0xd1);
+
+        CHECK(e.GetSP() == sp_before);
+        CHECK(e.GetRegisters().D == value1);
+        CHECK(e.GetRegisters().E == value2);
+        CHECK(e.GetPC() == pc_before + 1);
+    }
+    SECTION("POP H")
+    {
+        uint8_t value1 = 0x11;
+        uint8_t value2 = 0x22;
+        e.Push(value1, value2);
+        REQUIRE(e.ReadFromMem(sp_before - 1) == value1);
+        REQUIRE(e.ReadFromMem(sp_before - 2) == value2);
+
+        uint16_t pc_before = e.GetPC();
+
+        e.EmulateOpcode(0xe1);
+
+        CHECK(e.GetSP() == sp_before);
+        CHECK(e.GetRegisters().H == value1);
+        CHECK(e.GetRegisters().L == value2);
+        CHECK(e.GetPC() == pc_before + 1);
+    }
+    SECTION("POP PSW")
+    {
+        // Move values into A, B
+        uint8_t value1 = 0x11;
+        uint8_t value2 = 0xaa;
+        e.EmulateOpcode(0x3e, value1);
+        e.EmulateOpcode(0x06, value2);
+
+        // Add B to A to set flags (11+aa=bb)
+        // z=0, s=1, p=1, cy=0 (psw = 00000110 = 0x06)
+        e.EmulateOpcode(0x80);
+
+        // PUSH PSW
+        e.EmulateOpcode(0xf5);
+        // SUB A to clear register and reset flags
+        e.EmulateOpcode(0x97, 0x00);
+
+        REQUIRE(e.GetSP() == sp_before - 2);
+        REQUIRE(e.ReadFromMem(sp_before - 1) == 0xbb);
+        REQUIRE(e.ReadFromMem(sp_before - 2) == 0x06);
+        REQUIRE(e.GetFlags().z == 1);
+        REQUIRE(e.GetFlags().s == 0);
+        REQUIRE(e.GetFlags().p == 1);
+        REQUIRE(e.GetFlags().cy == 0);
+
+        uint16_t pc_before = e.GetPC();
+        // POP PSW
+        e.EmulateOpcode(0xf1);
+        uint16_t pc_after = e.GetPC();
+
+        CHECK(e.GetSP() == sp_before);
+        CHECK(e.GetRegisters().A == 0xbb);
+        CHECK(e.GetFlags().z == 0);
+        CHECK(e.GetFlags().s == 1);
+        CHECK(e.GetFlags().p == 1);
+        CHECK(e.GetFlags().cy == 0);
+        CHECK(pc_after == pc_before + 1);
+    }
+}
+
+TEST_CASE("Call", "[stack][subroutine][call][opcode]")
+{
+    Emulator e;
+    e.AllocateMemory(0x3000);
+
+    // Increase PC to 0x0102
+    for (int i = 0; i < 0x0102; i++)
+        e.EmulateOpcode(0x00);
+
+    uint16_t pc_before = e.GetPC();
+    REQUIRE(pc_before == 0x0102);
+
+    uint8_t ret_high = (pc_before + 3) >> 8;
+    uint8_t ret_low = (pc_before + 3) & 0x00ff;
+
+    uint16_t sp_before = 0x2500;
+    e.SetSP(sp_before);
+
+    SECTION("Call()")
+    {
+        e.Call(0x12, 0x34);
+
+        CHECK(e.GetPC() == 0x1234);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("CALL")
+    {
+        e.EmulateOpcode(0xcd, 0x34, 0x12);
+
+        CHECK(e.GetPC() == 0x1234);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("CC (cy=0)")
+    {
+        // set cy = 0
+        REQUIRE(e.GetFlags().cy == 0);
+
+        e.EmulateOpcode(0xdc, 0x34, 0x12);
+
+        // No call
+        CHECK(e.GetPC() == pc_before + 3);
+        CHECK(e.GetSP() == sp_before);
+    }
+    SECTION("CC (cy=1)")
+    {
+        // set cy = 1
+        e.EmulateOpcode(0x37);
+        pc_before = e.GetPC();
+        ret_high = (pc_before + 3) >> 8;
+        ret_low = (pc_before + 3) & 0x00ff;
+
+        REQUIRE(e.GetFlags().cy == 1);
+
+        e.EmulateOpcode(0xdc, 0x34, 0x12);
+
+        // Call
+        CHECK(e.GetPC() == 0x1234);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("CNC (cy=0)")
+    {
+        REQUIRE(e.GetFlags().cy == 0);
+
+        e.EmulateOpcode(0xd4, 0x34, 0x12);
+
+        // Call
+        CHECK(e.GetPC() == 0x1234);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("CNC (cy=1)")
+    {
+        // set cy = 1
+        e.EmulateOpcode(0x37);
+        pc_before = e.GetPC();
+        ret_high = (pc_before + 3) >> 8;
+        ret_low = (pc_before + 3) & 0x00ff;
+        REQUIRE(e.GetFlags().cy == 1);
+
+        e.EmulateOpcode(0xd4, 0x34, 0x12);
+
+        // No call
+        CHECK(e.GetPC() == pc_before + 3);
+        CHECK(e.GetSP() == sp_before);
+    }
+}
+
+TEST_CASE("Return", "[stack][subroutine][return][opcode]")
+{
+    Emulator e;
+    e.AllocateMemory(0x3000);
+
+    // Increase PC to 0x0102 with NOP instructions
+    for (int i = 0; i < 0x0102; i++)
+        e.EmulateOpcode(0x00);
+
+    uint16_t ret_addr = e.GetPC() + 3;
+    // return address 0x0105
+    uint8_t ret_high = (ret_addr) >> 8;
+    uint8_t ret_low = (ret_addr) & 0x00ff;
+
+    uint16_t sp_start = 0x2500;
+    e.SetSP(sp_start);
+
+    e.Call(0x12, 0x34);
+
+    // increment PC with NOP instructions
+    for (int i = 0; i < 25; i++)
+        e.EmulateOpcode(0x00);
+
+    uint16_t pc_before = e.GetPC();
+    uint16_t sp_before = e.GetSP();
+    REQUIRE(pc_before == 0x124d);
+    REQUIRE(sp_before == sp_start - 2);
+
+    SECTION("Return()")
+    {
+        e.Return();
+
+        CHECK(e.GetPC() == ret_addr);
+        CHECK(e.GetSP() == sp_start);
+    }
+    SECTION("RET")
+    {
+        e.EmulateOpcode(0xc9);
+
+        CHECK(e.GetPC() == ret_addr);
+        CHECK(e.GetSP() == sp_start);
+    }
+    SECTION("RC (cy=0)")
+    {
+        e.EmulateOpcode(0xd8);
+
+        // don't return
+        CHECK(e.GetPC() == pc_before + 1);
+        CHECK(e.GetSP() == sp_before);
+    }
+    SECTION("RC (cy=1)")
+    {
+        // set cy = 1
+        e.EmulateOpcode(0x37);
+        pc_before = e.GetPC();
+
+        e.EmulateOpcode(0xd8);
+
+        // return
+        CHECK(e.GetPC() == ret_addr);
+        CHECK(e.GetSP() == sp_start);
+    }
+    SECTION("RNC (cy=0)")
+    {
+        e.EmulateOpcode(0xd0);
+
+        // return
+        CHECK(e.GetPC() == ret_addr);
+        CHECK(e.GetSP() == sp_start);
+    }
+    SECTION("RNC (cy=1)")
+    {
+        // set cy = 1
+        e.EmulateOpcode(0x37);
+        pc_before = e.GetPC();
+
+        e.EmulateOpcode(0xd0);
+
+        // don't return
+        CHECK(e.GetPC() == pc_before + 1);
+        CHECK(e.GetSP() == sp_before);
     }
 }

@@ -134,6 +134,21 @@ uint8_t Emulator::ReadFromHL()
     return memory[offset];
 }
 
+void Emulator::Call(uint8_t addr_high, uint8_t addr_low)
+{
+    uint16_t ret = pc + 3;
+    Push((ret >> 8) & 0xff, (ret & 0xff));
+    pc = (addr_high << 8) | addr_low;
+}
+
+void Emulator::Return()
+{
+    uint8_t addr_high;
+    uint8_t addr_low;
+    Pop(&addr_high, &addr_low);
+    pc = (addr_high << 8) | addr_low;
+}
+
 void Emulator::Push(uint8_t high, uint8_t low)
 {
     WriteToMem(sp - 1, high);
@@ -761,7 +776,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x3f:
         // CMC
         {
-            flags.cy = 0;
+            flags.cy = !flags.cy;
             pc++;
         }
         break;
@@ -1966,8 +1981,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xc9:
         // RET
         {
-            pc = memory[sp] | (memory[sp + 1] << 8);
-            sp += 2;
+            Return();
         }
         break;
 
@@ -2011,9 +2025,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xcd:
         // CALL
         {
-            uint16_t ret = pc + 3;
-            Push((ret >> 8) & 0xff, (ret & 0xff));
-            pc = (operand2 << 8) | operand1;
+            Call(operand2, operand1);
         }
         break;
 
@@ -2050,11 +2062,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             if (!flags.cy)
             {
-                uint8_t addr_high;
-                uint8_t addr_low;
-                Pop(&addr_high, &addr_low);
-
-                pc = (addr_high << 8) | addr_low;
+                Return();
             }
             else
             {
@@ -2100,15 +2108,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             if (!flags.cy)
             {
-                uint16_t ret_addr = pc + 3;
-                uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
-                uint8_t ret_low = ret_addr & 0x00ff;
-
-                Push(ret_high, ret_low);
-
-                uint8_t addr_high = operand2;
-                uint8_t addr_low = operand1;
-                pc = (addr_high << 8) | addr_low;
+                Call(operand2, operand1);
             }
             else
             {
@@ -2150,11 +2150,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             if (flags.cy)
             {
-                uint8_t addr_high;
-                uint8_t addr_low;
-                Pop(&addr_high, &addr_low);
-
-                pc = (addr_high << 8) | addr_low;
+                Return();
             }
             else
             {
@@ -2199,15 +2195,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             if (flags.cy)
             {
-                uint16_t ret_addr = pc + 3;
-                uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
-                uint8_t ret_low = ret_addr & 0x00ff;
-
-                Push(ret_high, ret_low);
-
-                uint8_t addr_high = operand2;
-                uint8_t addr_low = operand1;
-                pc = (addr_high << 8) | addr_low;
+                Call(operand2, operand1);
             }
             else
             {
@@ -2642,4 +2630,9 @@ int Emulator::GetPC()
 int Emulator::GetSP()
 {
     return sp;
+}
+
+void Emulator::SetSP(uint16_t new_sp)
+{
+    sp = new_sp;
 }
