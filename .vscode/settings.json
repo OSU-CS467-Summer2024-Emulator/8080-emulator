@@ -14,6 +14,7 @@
     "ratio": "cpp",
     "regex": "cpp",
     "tuple": "cpp",
-    "vector": "cpp"
+    "vector": "cpp",
+    "istream": "cpp"
   }
 }
