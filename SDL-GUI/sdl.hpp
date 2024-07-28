@@ -14,7 +14,6 @@ public:
     SDL();
     ~SDL();
     void Initialize();
-    int Loadrom(string file_path);
     void DrawGraphic();
 
 public:

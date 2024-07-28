@@ -68,27 +68,3 @@ void SDL::DrawGraphic()
     }
     SDL_RenderPresent(renderer);
 }
-
-int SDL::Loadrom(string file_path)
-{
-    streampos size;
-    char *mem_buffer;
-
-    ifstream file(file_path, ios::in | ios::binary | ios::ate);
-    if (file.is_open())
-    {
-        size = file.tellg();
-        memory = new unsigned char[size];
-
-        file.seekg(0, ios::beg);
-        file.read(reinterpret_cast<char *>(memory), size);
-        file.close();
-
-        return size;
-    }
-    else
-    {
-        cout << "Unable to open file " << file_path << endl;
-        return 0;
-    }
-}
