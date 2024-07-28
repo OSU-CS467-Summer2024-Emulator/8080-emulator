@@ -11,15 +11,13 @@ using namespace std;
 class SDL
 {
 public:
-    SDL();
-    ~SDL();
     void Initialize();
-    void DrawGraphic();
+    void DrawGraphic(unsigned char *memory);
+    void GetInput();
 
 public:
     SDL_Window *window;
     SDL_Renderer *renderer;
-    unsigned char *memory;
 };
 
 #endif // SDLPLATFORM_SDLPLATFORM_HPP_

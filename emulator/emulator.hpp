@@ -33,6 +33,9 @@ class Emulator
 
         void SubtractFromA(uint8_t);
 
+        // array for memory
+        unsigned char* memory;
+
     private:
         struct Registers
         {
@@ -60,8 +63,6 @@ class Emulator
         // program counter
         int pc;
 
-        // array for memory
-        unsigned char* memory;
 };
 
 #endif // EMULATOR_EMULATOR_HPP_
