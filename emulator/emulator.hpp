@@ -45,6 +45,9 @@ public:
     uint8_t ReadFromHL();
     void WriteToHL(uint8_t value);
 
+    void Call(uint8_t, uint8_t);
+    void Return();
+
     void Push(uint8_t high, uint8_t low);
     void Pop(uint8_t *high, uint8_t *low);
 
@@ -60,6 +63,7 @@ public:
     Flags GetFlags();
     int GetPC();
     int GetSP();
+    void SetSP(uint16_t);
 
 private:
     Registers registers;

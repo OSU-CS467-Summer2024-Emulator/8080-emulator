@@ -134,6 +134,21 @@ uint8_t Emulator::ReadFromHL()
     return memory[offset];
 }
 
+void Emulator::Call(uint8_t addr_high, uint8_t addr_low)
+{
+    uint16_t ret = pc + 3;
+    Push((ret >> 8) & 0xff, (ret & 0xff));
+    pc = (addr_high << 8) | addr_low;
+}
+
+void Emulator::Return()
+{
+    uint8_t addr_high;
+    uint8_t addr_low;
+    Pop(&addr_high, &addr_low);
+    pc = (addr_high << 8) | addr_low;
+}
+
 void Emulator::Push(uint8_t high, uint8_t low)
 {
     WriteToMem(sp - 1, high);
@@ -2642,4 +2657,9 @@ int Emulator::GetPC()
 int Emulator::GetSP()
 {
     return sp;
+}
+
+void Emulator::SetSP(uint16_t new_sp)
+{
+    sp = new_sp;
 }
