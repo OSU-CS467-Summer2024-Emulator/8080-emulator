@@ -33,10 +33,10 @@ public:
     void AllocateMemory(int size);
     int LoadRom(std::string);
 
-        bool parity(int, int);
-        void LogicFlagsA();
-        void ArithFlagsA(uint16_t res);
-        void ZSPFlags(uint8_t value);
+    bool parity(int, int);
+    void LogicFlagsA();
+    void ArithFlagsA(uint16_t res);
+    void ZSPFlags(uint8_t value);
 
     void SubtractFromA(uint8_t);
 
@@ -70,11 +70,11 @@ private:
 
     Flags flags;
 
-        // stack pointer
-        uint16_t sp;
+    // stack pointer
+    uint16_t sp;
 
-        // program counter
-        uint16_t pc;
+    // program counter
+    uint16_t pc;
 
     // array for memory
     uint8_t *memory;
