@@ -1259,7 +1259,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             uint16_t res = (uint16_t)registers.A + (uint16_t)registers.B;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1269,7 +1269,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             uint16_t res = (uint16_t)registers.A + (uint16_t)registers.C;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1279,7 +1279,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             uint16_t res = (uint16_t)registers.A + (uint16_t)registers.D;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1289,7 +1289,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             uint16_t res = (uint16_t)registers.A + (uint16_t)registers.E;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1299,7 +1299,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             uint16_t res = (uint16_t)registers.A + (uint16_t)registers.H;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1309,7 +1309,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             uint16_t res = (uint16_t)registers.A + (uint16_t)registers.L;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1320,7 +1320,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t offset = (registers.H << 8) | registers.L;
             uint32_t res = (uint16_t)registers.A + memory[offset];
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1330,7 +1330,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             uint16_t res = (uint16_t)registers.A + (uint16_t)registers.A;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1341,7 +1341,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A +
                            (uint16_t)registers.B + flags.cy;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1352,7 +1352,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A +
                            (uint16_t)registers.C + flags.cy;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1363,7 +1363,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A +
                            (uint16_t)registers.D + flags.cy;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1374,7 +1374,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A +
                            (uint16_t)registers.E + flags.cy;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1385,7 +1385,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A +
                            (uint16_t)registers.H + flags.cy;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1396,7 +1396,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A +
                            (uint16_t)registers.L + flags.cy;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1407,7 +1407,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t offset = (registers.H << 8) | registers.L;
             uint32_t res = (uint16_t)registers.A + memory[offset] + flags.cy;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;
@@ -1418,7 +1418,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A +
                            (uint16_t)registers.A + flags.cy;
             ArithFlagsA(res);
-            registers.A = (res & 0xff);
+            registers.A = (uint8_t)res;
             pc++;
         }
         break;

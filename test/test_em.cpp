@@ -444,6 +444,287 @@ TEST_CASE("Add immediate", "[opcode][add][math]")
     }
 }
 
+TEST_CASE("Add with carry", "[opcode][add][math]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("ADC B")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xfa);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetRegisters().B == 0);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI B
+        e.EmulateOpcode(0x06, 0x08);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetRegisters().B == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD B
+        // Trigger a carry operation
+        e.EmulateOpcode(0x80);
+        REQUIRE(e.GetRegisters().A == 0x02);
+        REQUIRE(e.GetRegisters().B == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // ADC B
+        e.EmulateOpcode(0x88);
+        CHECK(e.GetRegisters().A == 0x0b);
+        CHECK(e.GetRegisters().B == 0x08);
+        REQUIRE(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADC C")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xfa);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetRegisters().C == 0);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI C
+        e.EmulateOpcode(0x0e, 0x08);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetRegisters().C == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD C
+        // Trigger a carry operation
+        e.EmulateOpcode(0x81);
+        REQUIRE(e.GetRegisters().A == 0x02);
+        REQUIRE(e.GetRegisters().C == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // ADC C
+        e.EmulateOpcode(0x89);
+        CHECK(e.GetRegisters().A == 0x0b);
+        CHECK(e.GetRegisters().C == 0x08);
+        REQUIRE(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADC D")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xfa);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetRegisters().D == 0);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI D
+        e.EmulateOpcode(0x16, 0x08);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetRegisters().D == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD D
+        // Trigger a carry operation
+        e.EmulateOpcode(0x82);
+        REQUIRE(e.GetRegisters().A == 0x02);
+        REQUIRE(e.GetRegisters().D == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // ADC D
+        e.EmulateOpcode(0x8a);
+        CHECK(e.GetRegisters().A == 0x0b);
+        CHECK(e.GetRegisters().D == 0x08);
+        REQUIRE(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADC E")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xfa);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetRegisters().E == 0);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI E
+        e.EmulateOpcode(0x1e, 0x08);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetRegisters().E == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD E
+        // Trigger a carry operation
+        e.EmulateOpcode(0x83);
+        REQUIRE(e.GetRegisters().A == 0x02);
+        REQUIRE(e.GetRegisters().E == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // ADC E
+        e.EmulateOpcode(0x8b);
+        CHECK(e.GetRegisters().A == 0x0b);
+        CHECK(e.GetRegisters().E == 0x08);
+        REQUIRE(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADC H")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xfa);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetRegisters().H == 0);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI H
+        e.EmulateOpcode(0x26, 0x08);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetRegisters().H == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD H
+        // Trigger a carry operation
+        e.EmulateOpcode(0x84);
+        REQUIRE(e.GetRegisters().A == 0x02);
+        REQUIRE(e.GetRegisters().H == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // ADC H
+        e.EmulateOpcode(0x8c);
+        CHECK(e.GetRegisters().A == 0x0b);
+        CHECK(e.GetRegisters().H == 0x08);
+        REQUIRE(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADC L")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xfa);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetRegisters().L == 0);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI L
+        e.EmulateOpcode(0x2e, 0x08);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetRegisters().L == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD L
+        // Trigger a carry operation
+        e.EmulateOpcode(0x85);
+        REQUIRE(e.GetRegisters().A == 0x02);
+        REQUIRE(e.GetRegisters().L == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // ADC L
+        e.EmulateOpcode(0x8d);
+        CHECK(e.GetRegisters().A == 0x0b);
+        CHECK(e.GetRegisters().L == 0x08);
+        REQUIRE(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADC M")
+    {
+        int test_pc = pc;
+        e.AllocateMemory(0x3000);
+
+        // Write address to HL registers
+        // MVI H, 0x25
+        // MVI L, 0x00
+        e.EmulateOpcode(0x26, 0x25);
+        e.EmulateOpcode(0x2e, 0x00);
+        REQUIRE((uint8_t)e.GetRegisters().H == 0x25);
+        REQUIRE((uint8_t)e.GetRegisters().L == 0x00);
+        test_pc = e.GetPC();
+
+        // MVI M, 0x08
+        e.EmulateOpcode(0x36, 0x08);
+        REQUIRE(e.GetRegisters().A == 0);
+        REQUIRE(e.ReadFromMem(0x2500) == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xfa);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD M
+        // Trigger a carry operation
+        e.EmulateOpcode(0x86);
+        REQUIRE(e.GetRegisters().A == 0x02);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // ADC M
+        e.EmulateOpcode(0x8e);
+        CHECK(e.GetRegisters().A == 0x0b);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("ADC A")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xfa);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD A
+        // Trigger a carry operation
+        e.EmulateOpcode(0x87);
+        REQUIRE(e.GetRegisters().A == 0xfa);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // ADC A
+        e.EmulateOpcode(0x8f);
+        CHECK(e.GetRegisters().A == 0x60);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+}
+
 TEST_CASE("PUSH", "[stack]")
 {
     Emulator e;
