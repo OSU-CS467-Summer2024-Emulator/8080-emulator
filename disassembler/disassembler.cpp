@@ -76,7 +76,10 @@ int Disassembler::Disassemble(char *codebuffer, int pc)
         cout << "NOP" << endl;
         break;
     case 0x11:
-        cout << "LXI D" << endl;
+        cout << "LXI D #$" << hex << setfill('0') << setw(2)
+             << static_cast<unsigned>((unsigned char)code[2])
+             << setfill('0') << setw(2)
+             << static_cast<unsigned>((unsigned char)code[1]) << endl;
         opbytes = 3;
         break;
     case 0x12:

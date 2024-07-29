@@ -8,16 +8,22 @@
 
 using namespace std;
 
+class Emulator;
+
 class SDL
 {
 public:
-    void Initialize();
-    void DrawGraphic(unsigned char *memory);
+    SDL(Emulator& i8080);
+    // void Initialize(Emulator* i8080);
+    void DrawGraphic();
     void GetInput();
+    void RunGame();
 
 public:
     SDL_Window *window;
     SDL_Renderer *renderer;
+    Emulator& this_cpu;
+
 };
 
 #endif // SDLPLATFORM_SDLPLATFORM_HPP_

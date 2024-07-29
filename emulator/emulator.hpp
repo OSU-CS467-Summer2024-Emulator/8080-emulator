@@ -7,7 +7,7 @@
 class Emulator
 {
     public:
-        Emulator();
+        Emulator(char* rom_path);
         ~Emulator();
 
         int LoadRom(std::string);
@@ -18,6 +18,7 @@ class Emulator
         void ZSPFlags(uint8_t value);
 
         void WriteToMem(uint16_t address, uint8_t value);
+        uint8_t ReadMem(uint16_t address);
         uint8_t ReadFromHL();
         void WriteToHL(uint8_t value);
 
@@ -34,7 +35,8 @@ class Emulator
         void SubtractFromA(uint8_t);
 
         // array for memory
-        unsigned char* memory;
+        // unsigned char* memory;
+        
 
     private:
         struct Registers
@@ -61,8 +63,10 @@ class Emulator
         int sp;
 
         // program counter
-        int pc;
+        int pc = 0;
 
+        // array for memory
+        unsigned char* memory;
 };
 
 #endif // EMULATOR_EMULATOR_HPP_

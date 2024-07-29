@@ -15,6 +15,7 @@
     "regex": "cpp",
     "tuple": "cpp",
     "vector": "cpp",
-    "istream": "cpp"
+    "istream": "cpp",
+    "iomanip": "cpp"
   }
 }

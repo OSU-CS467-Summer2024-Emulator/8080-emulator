@@ -2,14 +2,15 @@
 #include <iomanip>
 #include <fstream>
 #include <cstdint>
-#include "emulator/emulator.hpp"
-#include "disassembler/disassembler.hpp"
+#include "./emulator.hpp"
+#include "../disassembler/disassembler.hpp"
 
 using namespace std;
 
 // Constructor
-Emulator::Emulator()
+Emulator::Emulator(char* rom_path)
 {
+    LoadRom(rom_path);
 }
 
 // Destructor
@@ -33,7 +34,8 @@ int Emulator::LoadRom(string file_path)
     if (file.is_open())
     {
         size = file.tellg();
-        memory = new unsigned char[size];
+        memory = new unsigned char[16 * 1024];
+        // memory[0x3200] = 0xff;
 
         file.seekg(0, ios::beg);
         file.read(reinterpret_cast<char *>(memory), size);
@@ -96,7 +98,17 @@ void Emulator::WriteToMem(uint16_t address, uint8_t value)
         return;
     }
 
+    if (address >= 0x2400)
+    {
+        // printf("VIDEO MEM WRITE -------- %04x %04x\n", address, value);
+    }
+    
     memory[address] = value;
+}
+
+uint8_t Emulator::ReadMem(uint16_t address)
+{
+    return memory[address];
 }
 
 void Emulator::WriteToHL(uint8_t value)
@@ -127,6 +139,7 @@ void Emulator::Pop(uint8_t *high, uint8_t *low)
 
 void Emulator::ZSPFlags(uint8_t value)
 {
+    // printf("ZERO FLAG-- %d\n", value);
     flags.z = (value == 0);
     flags.s = (0x80 == (value & 0x80));
     flags.p = parity(value);
@@ -150,10 +163,7 @@ void Emulator::SubtractFromA(unsigned char operand)
 
 void Emulator::Emulate()
 {
-    int count = 0;
-    pc = 0;
-
-    while (count < 110)
+    // while (count < 110)
     {
         unsigned char opcode = memory[pc];
 
@@ -460,7 +470,7 @@ void Emulator::Emulate()
             // Load next byte into register E
             {
                 registers.E = memory[pc + 1];
-                pc++;
+                pc += 2;
             }
             break;
         case 0x1f:
@@ -487,7 +497,8 @@ void Emulator::Emulate()
         case 0x21:
             // LXI H, #$
             {
-                registers.H = (memory[pc + 2] << 8) | memory[pc + 1];
+                registers.H = memory[pc + 2];
+                registers.L =  memory[pc + 1];
                 pc += 3;
             }
             break;
@@ -673,7 +684,7 @@ void Emulator::Emulate()
             // MVI M, byte
             {
                 WriteToHL(memory[pc + 1]);
-                pc++;
+                pc += 2;
             }
             break;
         case 0x37:
@@ -732,7 +743,7 @@ void Emulator::Emulate()
             // MVI A, byte
             {
                 registers.A = memory[pc + 1];
-                pc++;
+                pc += 2;
             }
             break;
         case 0x3f:
@@ -1870,6 +1881,7 @@ void Emulator::Emulate()
                 {
                     pc += 3;
                 }
+                // PrintFlags();
             }
             break;
 
@@ -1943,6 +1955,11 @@ void Emulator::Emulate()
         case 0xc9:
             // RET
             {
+                printf("STACK POINTER --- %04x\n", sp);
+                // if (sp > 0x2400)
+                // {
+                //     exit(1);
+                // }
                 pc = memory[sp] | (memory[sp + 1] << 8);
                 sp += 2;
             }
@@ -2068,7 +2085,7 @@ void Emulator::Emulate()
             // Send contents of register A to output device determined by next byte
             {
                 // special
-                pc++;
+                pc += 2;
             }
             break;
         case 0xd4:
@@ -2167,7 +2184,7 @@ void Emulator::Emulate()
             // and stored in register A
             {
                 // special
-                pc++;
+                pc += 2;
             }
             break;
         case 0xdc:
@@ -2356,6 +2373,7 @@ void Emulator::Emulate()
                 registers.L = registers.E;
                 registers.D = tempH;
                 registers.E = tempL;
+                pc++;
             }
             break;
         case 0xec:
@@ -2570,8 +2588,13 @@ void Emulator::Emulate()
             }
             break;
         }
-        count++;
     }
+    printf("STACK POINTER --- %04x\n", sp);
+    // if (sp > 0x2400)
+    // {
+    //     exit(1);
+    // }
+
 }
 
 // Print contents of all registers

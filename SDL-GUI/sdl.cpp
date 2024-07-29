@@ -3,11 +3,13 @@
 #include "./sdl.hpp"
 #include <fstream>
 #include <string>
+#include "../emulator/emulator.hpp"
 
 using namespace std;
 
-void SDL::Initialize()
+SDL::SDL(Emulator& i8080) : this_cpu(i8080)
 {
+    //this_cpu = i8080;
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     SDL_CreateWindowAndRenderer(224 * 3, 256 * 3, 0, &window, &renderer);
     SDL_RenderSetScale(renderer, 3, 3);
@@ -15,7 +17,7 @@ void SDL::Initialize()
     cout << 'SDL INITIALIZED' << endl;
 }
 
-void SDL::DrawGraphic(unsigned char *memory)
+void SDL::DrawGraphic()
 {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     SDL_RenderClear(renderer);
@@ -31,7 +33,7 @@ void SDL::DrawGraphic(unsigned char *memory)
                                 + horizontal_offset;
             uint8_t current_bit = (h % 8);
 
-            bool thisPixel = (memory[current_byte] & (1 << current_bit)) != 0;
+            bool thisPixel = (this_cpu.ReadMem(current_byte) & (1 << current_bit)) != 0;
 
             // retrieve the current pixel color
             if(thisPixel)
@@ -52,31 +54,44 @@ void SDL::DrawGraphic(unsigned char *memory)
 
 void SDL::GetInput()
 {
-
     SDL_Event e;
     bool quit = false;
-    while(!quit)
+    
+    while (SDL_PollEvent(&e))
     {
-        while (SDL_PollEvent(&e))
+        if (e.type == SDL_QUIT)
         {
-            if (e.type == SDL_QUIT)
-            {
-                quit = true;
-            }
+            quit = true;
+            this_cpu.PrintRegisters();
+            exit(0);
+        }
 
-            else if (e.type == SDL_KEYDOWN)
+        else if (e.type == SDL_KEYDOWN)
+        {
+            switch(e.key.keysym.sym) 
             {
-                switch(e.key.keysym.sym) 
-                {
-                    case SDLK_UP:
-                        cout << "RIGHT DOWN" << endl;
-                        break;
-                    
-                    case SDLK_DOWN:
-                        cout << "LEFT DOWN" << endl;
-                        break;
-                }
+                case SDLK_UP:
+                    cout << "RIGHT DOWN" << endl;
+                    break;
+                
+                case SDLK_DOWN:
+                    cout << "LEFT DOWN" << endl;
+                    break;
             }
         }
+    }
+}
+
+void SDL::RunGame()
+{   int counter = 0;
+    while(true)
+    {
+        this_cpu.Emulate();
+        if (!(++counter % 500))
+        {
+            DrawGraphic();
+        }
+        GetInput();
+        
     }
 }
