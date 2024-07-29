@@ -422,6 +422,28 @@ TEST_CASE("Addition", "[opcode][add][math]")
     }
 }
 
+TEST_CASE("Add immediate", "[opcode][add][math]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("ADI D8")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x30);
+        REQUIRE(e.GetRegisters().A == 0x30);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADI 0x30
+        e.EmulateOpcode(0xc6, 0x30);
+        CHECK(e.GetRegisters().A == 0x60);
+        CHECK(e.GetPC() == test_pc + 2);
+    }
+}
+
 TEST_CASE("PUSH", "[stack]")
 {
     Emulator e;
