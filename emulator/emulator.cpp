@@ -1879,8 +1879,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             if (flags.z == 0)
             {
-                pc = memory[sp] | (memory[sp + 1] << 8);
-                sp += 2;
+                Return();
             }
             else
             {
@@ -1923,9 +1922,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             if (flags.z == 0)
             {
-                uint16_t ret = pc + 3;
-                Push((ret >> 8) & 0xff, (ret & 0xff));
-                pc = (operand2 << 8) | operand1;
+                Call(operand2, operand1);
             }
             else
             {
@@ -1968,8 +1965,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             if (flags.z == 1)
             {
-                pc = memory[sp] | (memory[sp + 1] << 8);
-                sp += 2;
+                Return();
             }
             else
             {
@@ -2011,9 +2007,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             if (flags.z == 1)
             {
-                uint16_t ret = pc + 3;
-                Push((ret >> 8) & 0xff, (ret & 0xff));
-                pc = (operand2 << 8) | operand1;
+                Call(operand2, operand1);
             }
             else
             {
@@ -2237,10 +2231,9 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     // 0xe0 - 0xef
     case 0xe0:
         // RPO - Return if parity odd
-        if (flags.p == 1)
+        if (flags.p == 0)
         {
-            pc = (memory[sp + 1] << 8) | memory[sp];
-            sp += 2;
+            Return();
         }
         else
         {
@@ -2287,11 +2280,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             if (flags.p == 0)
             {
-                uint16_t ret = pc + 3;
-                WriteToMem(sp - 1, (ret >> 8) & 0xff);
-                WriteToMem(sp - 2, (ret & 0xff));
-                sp -= 2;
-                pc = (operand2 << 8) | operand1;
+                Call(operand2, operand1);
             }
             else
             {
@@ -2328,10 +2317,9 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         break;
     case 0xe8:
         // RPE - Return if parity even
-        if (flags.p == 0)
+        if (flags.p == 1)
         {
-            pc = (memory[sp + 1] << 8) | memory[sp];
-            sp += 2;
+            Return();
         }
         else
         {
@@ -2374,11 +2362,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             if (flags.p == 1)
             {
-                uint16_t ret = pc + 3;
-                WriteToMem(sp - 1, (ret >> 8) & 0xff);
-                WriteToMem(sp - 2, (ret & 0xff));
-                sp -= 2;
-                pc = (operand2 << 8) | operand1;
+                Call(operand2, operand1);
             }
             else
             {
@@ -2420,10 +2404,12 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // RP
         if (flags.s == 0)
         {
-            pc = memory[sp] | (memory[sp + 1] << 8);
-            sp += 2;
+            Return();
         }
-        pc++;
+        else
+        {
+            pc++;
+        }
         break;
     case 0xf1:
         // POP PSW
@@ -2460,11 +2446,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // CP
         if (flags.s == 0)
         {
-            uint16_t ret = pc + 2;
-            WriteToMem(sp - 1, (ret >> 8) & 0xff);
-            WriteToMem(sp - 2, (ret & 0xff));
-            sp -= 2;
-            pc = (operand2) | operand1;
+            Call(operand2, operand1);
         }
         else
         {
@@ -2505,10 +2487,12 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // RM
         if (flags.s != 0)
         {
-            pc = memory[sp] | (memory[sp + 1] << 8);
-            sp += 2;
+            Return();
         }
-        pc++;
+        else
+        {
+            pc++;
+        }
         break;
     case 0xf9:
         // SPHL
@@ -2539,11 +2523,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // CM
         if (flags.s != 0)
         {
-            uint16_t ret = pc + 2;
-            WriteToMem(sp - 1, (ret >> 8) & 0xff);
-            WriteToMem(sp - 2, (ret & 0xff));
-            sp -= 2;
-            pc = (operand2 << 8) | operand1;
+            Call(operand2, operand1);
         }
         else
         {
