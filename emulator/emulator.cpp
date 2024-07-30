@@ -1318,7 +1318,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // ADD M
         {
             uint16_t offset = (registers.H << 8) | registers.L;
-            uint32_t res = (uint16_t)registers.A + memory[offset];
+            uint16_t res = (uint16_t)registers.A + memory[offset];
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
