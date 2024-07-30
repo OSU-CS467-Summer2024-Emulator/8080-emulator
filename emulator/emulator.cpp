@@ -117,21 +117,21 @@ void Emulator::WriteToMem(uint16_t address, uint8_t value)
     memory[address] = value;
 }
 
+uint8_t Emulator::ReadFromMem(uint16_t address)
+{
+    return memory[address];
+}
+
 void Emulator::WriteToHL(uint8_t value)
 {
     uint16_t offset = (registers.H << 8) | registers.L;
     WriteToMem(offset, value);
 }
 
-uint8_t Emulator::ReadFromMem(uint16_t address)
-{
-    return memory[address];
-}
-
 uint8_t Emulator::ReadFromHL()
 {
     uint16_t offset = (registers.H << 8) | registers.L;
-    return memory[offset];
+    return ReadFromMem(offset);
 }
 
 void Emulator::Call(uint8_t addr_high, uint8_t addr_low)
@@ -392,7 +392,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         break;
     case 0x14:
         // INR D
-        // Increment D
         {
             registers.D++;
             ZSPFlags(registers.D);
@@ -476,8 +475,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         }
         break;
     case 0x1c:
-        // INC E
-        // Increment register E and
+        // INR E
         {
             registers.E++;
             ZSPFlags(registers.E);
@@ -485,7 +483,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         }
         break;
     case 0x1d:
-        // DEC E
+        // DCR E
         // Decrement register E and
         {
             registers.E--;
@@ -830,8 +828,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x46:
         // MOV B,M
         {
-            uint16_t offset = (registers.H << 8) | registers.L;
-            registers.B = memory[offset];
+            registers.B = ReadFromHL();
             pc++;
         }
         break;
@@ -894,8 +891,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x4e:
         // MOV C,M
         {
-            uint16_t offset = (registers.H << 8) | registers.L;
-            registers.C = memory[offset];
+            registers.C = ReadFromHL();
             pc++;
         }
         break;
@@ -1011,8 +1007,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x5e:
         // MOV E, M
         {
-            uint16_t mem_addr = (registers.H << 8) | (registers.L);
-            registers.E = memory[mem_addr];
+            registers.E = ReadFromHL();
             pc++;
         }
         break;
@@ -1070,8 +1065,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x66:
         // "MOV H, M
         {
-            uint16_t mem_addr = (registers.H << 8) | (registers.L);
-            registers.H = memory[mem_addr];
+            registers.H = ReadFromHL();
             pc++;
         }
         break;
@@ -1317,8 +1311,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x86:
         // ADD M
         {
-            uint16_t offset = (registers.H << 8) | registers.L;
-            uint16_t res = (uint16_t)registers.A + memory[offset];
+            uint16_t res = (uint16_t)registers.A + ReadFromHL();
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
@@ -1404,8 +1397,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x8e:
         // ADC M
         {
-            uint16_t offset = (registers.H << 8) | registers.L;
-            uint32_t res = (uint16_t)registers.A + memory[offset] + flags.cy;
+            uint32_t res = (uint16_t)registers.A + ReadFromHL() + flags.cy;
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
@@ -1663,8 +1655,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xa6:
         // ANA M
         {
-            uint16_t offset = (registers.H << 8) | registers.L;
-            registers.A &= memory[offset];
+            registers.A &= ReadFromHL();
             LogicFlagsA();
             pc++;
         }
@@ -1728,8 +1719,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xae:
         // XRA M
         {
-            uint16_t offset = (registers.H << 8) | registers.L;
-            registers.A ^= memory[offset];
+            registers.A ^= ReadFromHL();
             LogicFlagsA();
             pc++;
         }
