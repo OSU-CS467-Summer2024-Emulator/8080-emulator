@@ -1167,3 +1167,219 @@ TEST_CASE("Return", "[stack][subroutine][return][opcode]")
         CHECK(e.GetSP() == sp_before);
     }
 }
+
+TEST_CASE("Jump", "[jump][opcode]")
+{
+    Emulator e;
+
+    e.AllocateMemory(0x3000);
+
+    // Increase PC to 0x0102
+    for (int i = 0; i < 0x0102; i++)
+        e.EmulateOpcode(0x00);
+
+    uint16_t pc_before = e.GetPC();
+    REQUIRE(pc_before == 0x0102);
+
+    uint16_t sp_before = 0x2500;
+    e.SetSP(sp_before);
+
+    SECTION("JMP")
+    {
+        e.EmulateOpcode(0xc3, 0x34, 0x12);
+
+        CHECK(e.GetPC() == 0x1234);
+    }
+    SECTION("JC (cy=0)")
+    {
+        // set cy = 0
+        REQUIRE(e.GetFlags().cy == 0);
+
+        e.EmulateOpcode(0xda, 0x34, 0x12);
+
+        // No jump
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+    SECTION("JC (cy=1)")
+    {
+        // set cy = 1
+        e.EmulateOpcode(0x37);
+        pc_before = e.GetPC();
+
+        REQUIRE(e.GetFlags().cy == 1);
+
+        e.EmulateOpcode(0xda, 0x34, 0x12);
+
+        // Jump
+        CHECK(e.GetPC() == 0x1234);
+    }
+    SECTION("JNC (cy=0)")
+    {
+        REQUIRE(e.GetFlags().cy == 0);
+
+        e.EmulateOpcode(0xd2, 0x34, 0x12);
+
+        // Jump
+        CHECK(e.GetPC() == 0x1234);
+    }
+    SECTION("JNC (cy=1)")
+    {
+        // set cy = 1
+        e.EmulateOpcode(0x37);
+        pc_before = e.GetPC();
+
+        REQUIRE(e.GetFlags().cy == 1);
+
+        e.EmulateOpcode(0xd2, 0x34, 0x12);
+
+        // No jump
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+    SECTION("JZ (z=0)")
+    {
+        REQUIRE(e.GetFlags().z == 0);
+
+        e.EmulateOpcode(0xca, 0x34, 0x12);
+
+        // No jump
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+    SECTION("JZ (z=1)")
+    {
+        // set z = 1
+        // A = 0x22 - 0x22 = 0x00
+        e.EmulateOpcode(0x3e, 0x22);
+        e.EmulateOpcode(0x06, 0x22);
+        e.EmulateOpcode(0x90);
+
+        pc_before = e.GetPC();
+
+        REQUIRE(e.GetFlags().z == 1);
+
+        e.EmulateOpcode(0xca, 0x34, 0x12);
+
+        // Jump
+        CHECK(e.GetPC() == 0x1234);
+    }
+    SECTION("JNZ (z=0)")
+    {
+        REQUIRE(e.GetFlags().z == 0);
+
+        e.EmulateOpcode(0xc2, 0x34, 0x12);
+
+        // Jump
+        CHECK(e.GetPC() == 0x1234);
+    }
+    SECTION("JNZ (z=1)")
+    {
+        // set z = 1
+        // A = 0x22 - 0x22 = 0x00
+        e.EmulateOpcode(0x3e, 0x22);
+        e.EmulateOpcode(0x06, 0x22);
+        e.EmulateOpcode(0x90);
+        pc_before = e.GetPC();
+
+        REQUIRE(e.GetFlags().z == 1);
+
+        e.EmulateOpcode(0xc2, 0x34, 0x12);
+
+        // No jump
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+    SECTION("JM (s=0)")
+    {
+        REQUIRE(e.GetFlags().s == 0);
+
+        e.EmulateOpcode(0xfa, 0x34, 0x12);
+
+        // No jump
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+    SECTION("JM (s=1)")
+    {
+        // set s = 1
+        // A = 0xff - 0x11 = 0xee
+        e.EmulateOpcode(0x3e, 0xff);
+        e.EmulateOpcode(0x06, 0x11);
+        e.EmulateOpcode(0x90);
+
+        pc_before = e.GetPC();
+
+        REQUIRE(e.GetFlags().s == 1);
+
+        e.EmulateOpcode(0xfa, 0x34, 0x12);
+
+        // Jump
+        CHECK(e.GetPC() == 0x1234);
+    }
+    SECTION("JP (s=0)")
+    {
+        REQUIRE(e.GetFlags().s == 0);
+
+        e.EmulateOpcode(0xf2, 0x34, 0x12);
+
+        // Jump
+        CHECK(e.GetPC() == 0x1234);
+    }
+    SECTION("JP (s=1)")
+    {
+        // set s = 1
+        // A = 0xff - 0x11 = 0xee
+        e.EmulateOpcode(0x3e, 0xff);
+        e.EmulateOpcode(0x06, 0x11);
+        e.EmulateOpcode(0x90);
+        pc_before = e.GetPC();
+
+        REQUIRE(e.GetFlags().s == 1);
+
+        e.EmulateOpcode(0xf2, 0x34, 0x12);
+
+        // No jump
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+    SECTION("JPE (p=0)")
+    {
+        REQUIRE(e.GetFlags().p == 0);
+
+        e.EmulateOpcode(0xea, 0x34, 0x12);
+
+        // No jump
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+    SECTION("JPE (p=1)")
+    {
+        // set p = 1: A-- -> 0xff (even parity)
+        e.EmulateOpcode(0x3d);
+
+        pc_before = e.GetPC();
+
+        REQUIRE(e.GetFlags().p == 1);
+
+        e.EmulateOpcode(0xea, 0x34, 0x12);
+
+        // Jump
+        CHECK(e.GetPC() == 0x1234);
+    }
+    SECTION("JPO (p=0)")
+    {
+        REQUIRE(e.GetFlags().p == 0);
+
+        e.EmulateOpcode(0xe2, 0x34, 0x12);
+
+        // Jump
+        CHECK(e.GetPC() == 0x1234);
+    }
+    SECTION("JPO (p=1)")
+    {
+        // set p = 1: A-- -> 0xff (even parity)
+        e.EmulateOpcode(0x3d);
+
+        pc_before = e.GetPC();
+
+        REQUIRE(e.GetFlags().p == 1);
+
+        e.EmulateOpcode(0xe2, 0x34, 0x12);
+
+        // No jump
+    }
+}
