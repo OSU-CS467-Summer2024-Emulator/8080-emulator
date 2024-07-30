@@ -229,6 +229,12 @@ TEST_CASE("Move Immediate", "[opcode][move][immediate]")
         CHECK((uint8_t)e.GetRegisters().A == 0xaa);
         CHECK(e.GetPC() == pc + 2);
     }
+    SECTION("MVI A - Max value")
+    {
+        e.EmulateOpcode(0x3e, 0xff);
+        CHECK((uint8_t)e.GetRegisters().A == 0xff);
+        CHECK(e.GetPC() == pc + 2);
+    }
 }
 
 TEST_CASE("PUSH", "[stack]")

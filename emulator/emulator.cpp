@@ -2036,7 +2036,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
                            (uint16_t)operand1 + flags.cy;
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
-            pc++;
+            pc += 2;
         }
         break;
 

@@ -199,7 +199,7 @@ TEST_CASE("Addition", "[opcode][add][math]")
     }
 }
 
-TEST_CASE("Add immediate", "[opcode][add][math]")
+TEST_CASE("Add immediate", "[opcode][adi][math]")
 {
     Emulator e;
     int pc = e.GetPC();
@@ -220,7 +220,7 @@ TEST_CASE("Add immediate", "[opcode][add][math]")
         CHECK(e.GetPC() == test_pc + 2);
     }
 
-    SECTION("ADI D8 - With carry")
+    SECTION("ADI D8 - Set carry")
     {
         int test_pc = pc;
 
@@ -232,6 +232,60 @@ TEST_CASE("Add immediate", "[opcode][add][math]")
 
         // ADI 0x30
         e.EmulateOpcode(0xc6, 0xff);
+        CHECK(e.GetRegisters().A == 0x2f);
+        CHECK(e.GetFlags().cy == 1);
+        CHECK(e.GetPC() == test_pc + 2);
+    }
+}
+
+TEST_CASE("Add immediate with carry", "[opcode][aci][math]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("ACI D8")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xca);
+        REQUIRE(e.GetRegisters().A == 0xca);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD A
+        e.EmulateOpcode(0x87);
+        REQUIRE(e.GetRegisters().A == 0x94);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // ACI 0x30
+        e.EmulateOpcode(0xce, 0x30);
+        CHECK(e.GetRegisters().A == 0xc5);
+        CHECK(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 2);
+    }
+
+    SECTION("ACI D8 - Set carry")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xff);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD A
+        e.EmulateOpcode(0x87);
+        REQUIRE(e.GetRegisters().A == 0xfe);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // ACI 0x30
+        e.EmulateOpcode(0xce, 0x30);
         CHECK(e.GetRegisters().A == 0x2f);
         CHECK(e.GetFlags().cy == 1);
         CHECK(e.GetPC() == test_pc + 2);
