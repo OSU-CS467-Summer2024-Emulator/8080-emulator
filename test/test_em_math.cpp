@@ -243,7 +243,7 @@ TEST_CASE("Add immediate with carry", "[opcode][aci][math]")
     Emulator e;
     int pc = e.GetPC();
 
-    SECTION("ADI D8 - No carry")
+    SECTION("ACI D8 - No carry")
     {
         int test_pc = pc;
 
