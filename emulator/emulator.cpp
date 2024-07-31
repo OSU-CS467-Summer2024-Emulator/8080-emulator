@@ -175,8 +175,6 @@ void Emulator::SubtractFromA(uint8_t operand)
     flags.s = (registers.A & 0x80);
     flags.p = parity(registers.A);
     flags.cy = !(result & 0x0100);
-
-    pc++;
 }
 
 void Emulator::Emulate()
@@ -305,11 +303,10 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x0b:
         // DCX B
         {
-            registers.C--;
-            if (registers.C == 0xff)
-            {
-                registers.B--;
-            }
+            uint16_t BC = ((uint16_t)registers.B << 8) | registers.C;
+            BC--;
+            registers.B = (uint8_t)(BC >> 8);
+            registers.C = (uint8_t)BC;
             pc++;
         }
         break;
@@ -466,11 +463,10 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // DCX D
         // Decrement registers D and E as a 16 bit number, no flags affected
         {
-            registers.E--;
-            if (registers.E == 0xff)
-            {
-                registers.D--;
-            }
+            uint16_t DE = ((uint16_t)registers.D << 8) | registers.E;
+            DE--;
+            registers.D = (uint8_t)(DE >> 8);
+            registers.E = (uint8_t)DE;
             pc++;
         }
         break;
@@ -1467,7 +1463,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SUB M
         // Subtract byte from memory at address stored in HL from register A and store result in A
         {
-            uint8_t operand = memory[registers.H << 8 | registers.L];
+            uint8_t operand = ReadFromHL();
             SubtractFromA(operand);
             pc++;
         }
@@ -1484,14 +1480,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB B
         // Subtract register B (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.B + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.B);
-            }
+            SubtractFromA(registers.B + flags.cy);
             pc++;
         }
         break;
@@ -1499,14 +1488,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB C
         // Subtract register C (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.C + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.C);
-            }
+            SubtractFromA(registers.C + flags.cy);
             pc++;
         }
         break;
@@ -1514,14 +1496,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB D
         // Subtract register D (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.D + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.D);
-            }
+            SubtractFromA(registers.D + flags.cy);
             pc++;
         }
         break;
@@ -1529,14 +1504,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB E
         // Subtract register E (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.E + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.E);
-            }
+            SubtractFromA(registers.E + flags.cy);
             pc++;
         }
         break;
@@ -1544,14 +1512,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB H
         // Subtract register H (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.H + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.H);
-            }
+            SubtractFromA(registers.H + flags.cy);
             pc++;
         }
         break;
@@ -1559,14 +1520,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB L
         // Subtract register L (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.L + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.L);
-            }
+            SubtractFromA(registers.L + flags.cy);
             pc++;
         }
         break;
@@ -1574,15 +1528,8 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB M
         // Subtract byte in memory (location in HL) from register A and store result in A
         {
-            uint8_t operand = memory[registers.H << 8 | registers.L];
-            if (flags.cy)
-            {
-                SubtractFromA(operand + 0x01);
-            }
-            else
-            {
-                SubtractFromA(operand);
-            }
+            uint8_t operand = ReadFromHL();
+            SubtractFromA(operand + flags.cy);
             pc++;
         }
         break;
@@ -1590,14 +1537,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB A
         // Subtract register A (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.A + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.A);
-            }
+            SubtractFromA(registers.A + flags.cy);
             pc++;
         }
         break;
@@ -2196,12 +2136,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBI
         // Subtract immediate from accumulator with borrow
         {
-            uint8_t operand = operand1;
-            if (flags.cy)
-            {
-                operand++;
-            }
-            SubtractFromA(operand);
+            SubtractFromA(operand1 + flags.cy);
             pc += 2;
         }
         break;
