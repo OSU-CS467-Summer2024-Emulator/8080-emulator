@@ -1330,6 +1330,138 @@ TEST_CASE("Increment register", "[opcode][inr][math]")
     }
 }
 
+TEST_CASE("INX", "[opcode][inx][math]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("INX B")
+    {
+        int test_pc = pc;
+
+        // MVI B, 0xff
+        // MVI C, 0xff
+        e.EmulateOpcode(0x06, 0xff);
+        e.EmulateOpcode(0x0e, 0xff);
+        REQUIRE(e.GetRegisters().B == 0xff);
+        REQUIRE(e.GetRegisters().C == 0xff);
+        test_pc = e.GetPC();
+
+        // INX B
+        e.EmulateOpcode(0x03);
+        CHECK(e.GetRegisters().B == 0x00);
+        CHECK(e.GetRegisters().C == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("INX B - No overflow")
+    {
+        int test_pc = pc;
+
+        // MVI B, 0x00
+        // MVI C, 0xff
+        e.EmulateOpcode(0x06, 0x00);
+        e.EmulateOpcode(0x0e, 0xff);
+        REQUIRE(e.GetRegisters().B == 0x00);
+        REQUIRE(e.GetRegisters().C == 0xff);
+        test_pc = e.GetPC();
+
+        // INX B
+        e.EmulateOpcode(0x03);
+        CHECK(e.GetRegisters().B == 0x01);
+        CHECK(e.GetRegisters().C == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("INX D")
+    {
+        int test_pc = pc;
+
+        // MVI D, 0xff
+        // MVI E, 0xff
+        e.EmulateOpcode(0x16, 0xff);
+        e.EmulateOpcode(0x1e, 0xff);
+        REQUIRE(e.GetRegisters().D == 0xff);
+        REQUIRE(e.GetRegisters().E == 0xff);
+        test_pc = e.GetPC();
+
+        // INX D
+        e.EmulateOpcode(0x13);
+        CHECK(e.GetRegisters().D == 0x00);
+        CHECK(e.GetRegisters().E == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("INX D - No overflow")
+    {
+        int test_pc = pc;
+
+        // MVI D, 0x00
+        // MVI E, 0xff
+        e.EmulateOpcode(0x16, 0x00);
+        e.EmulateOpcode(0x1e, 0xff);
+        REQUIRE(e.GetRegisters().D == 0x00);
+        REQUIRE(e.GetRegisters().E == 0xff);
+        test_pc = e.GetPC();
+
+        // INX D
+        e.EmulateOpcode(0x13);
+        CHECK(e.GetRegisters().D == 0x01);
+        CHECK(e.GetRegisters().E == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("INX H")
+    {
+        int test_pc = pc;
+
+        // MVI H, 0xff
+        // MVI L, 0xff
+        e.EmulateOpcode(0x26, 0xff);
+        e.EmulateOpcode(0x2e, 0xff);
+        REQUIRE(e.GetRegisters().H == 0xff);
+        REQUIRE(e.GetRegisters().L == 0xff);
+        test_pc = e.GetPC();
+
+        // INX H
+        e.EmulateOpcode(0x23);
+        CHECK(e.GetRegisters().H == 0x00);
+        CHECK(e.GetRegisters().L == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("INX H - No overflow")
+    {
+        int test_pc = pc;
+
+        // MVI H, 0x00
+        // MVI L, 0xff
+        e.EmulateOpcode(0x26, 0x00);
+        e.EmulateOpcode(0x2e, 0xff);
+        REQUIRE(e.GetRegisters().H == 0x00);
+        REQUIRE(e.GetRegisters().L == 0xff);
+        test_pc = e.GetPC();
+
+        // INX H
+        e.EmulateOpcode(0x23);
+        CHECK(e.GetRegisters().H == 0x01);
+        CHECK(e.GetRegisters().L == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("INX SP")
+    {
+        int test_pc = pc;
+
+        REQUIRE(e.GetSP() == 0x00);
+
+        // INX SP
+        e.EmulateOpcode(0x33);
+        CHECK(e.GetSP() == 0x01);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+}
+
 TEST_CASE("Decrement register", "[opcode][dcr][math]")
 {
     Emulator e;
