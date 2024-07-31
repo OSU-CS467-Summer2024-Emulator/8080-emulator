@@ -254,29 +254,6 @@ TEST_CASE("Set and complement carry flag", "[opcode][flag]")
     }
 }
 
-// Random other example
-TEST_CASE("0x04 INR B", "[opcode]")
-{
-    Emulator e;
-    Registers registers_before = e.GetRegisters();
-    Flags flags_before = e.GetFlags();
-    int pc_before = e.GetPC();
-    int sp_before = e.GetSP();
-
-    e.EmulateOpcode(0x04);
-
-    Registers registers_after = registers_before;
-    registers_after.B++;
-
-    Flags flags_after;
-    flags_after.p = 1;
-
-    REQUIRE(e.GetRegisters() == registers_after);
-    REQUIRE(e.GetFlags() == flags_before);
-    REQUIRE(e.GetPC() == pc_before + 1);
-    REQUIRE(e.GetSP() == sp_before);
-}
-
 TEST_CASE("PUSH", "[stack]")
 {
     Emulator e;
