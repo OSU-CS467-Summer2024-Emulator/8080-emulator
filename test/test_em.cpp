@@ -1383,7 +1383,7 @@ TEST_CASE("Rotate", "[opcode][rotate]")
         // MVI A
         e.EmulateOpcode(0x3e, 0xf2);
 
-        // RLC
+        // RRC
         e.EmulateOpcode(0x0f);
 
         // A: f2 = 1111 0010 -> 0111 1001 = 79
