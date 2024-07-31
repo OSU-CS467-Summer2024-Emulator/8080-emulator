@@ -292,6 +292,45 @@ TEST_CASE("Add immediate with carry", "[opcode][aci][math]")
     }
 }
 
+TEST_CASE("Subtract immediate from accumulator", "[opcode][sui][math]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("SUI D8")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x60);
+        REQUIRE(e.GetRegisters().A == 0x60);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // SUI 0x30
+        e.EmulateOpcode(0xd6, 0x30);
+        CHECK(e.GetRegisters().A == 0x30);
+        CHECK(e.GetPC() == test_pc + 2);
+    }
+
+    SECTION("SUI D8 - Set carry")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x2f);
+        REQUIRE(e.GetRegisters().A == 0x2f);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // SUI 0x30
+        e.EmulateOpcode(0xd6, 0x30);
+        CHECK(e.GetRegisters().A == 0xff);
+        CHECK(e.GetFlags().cy == 1);
+        CHECK(e.GetPC() == test_pc + 2);
+    }
+}
+
 TEST_CASE("Add with carry", "[opcode][add][math]")
 {
     Emulator e;

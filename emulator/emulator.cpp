@@ -175,8 +175,6 @@ void Emulator::SubtractFromA(uint8_t operand)
     flags.s = (registers.A & 0x80);
     flags.p = parity(registers.A);
     flags.cy = !(result & 0x0100);
-
-    pc++;
 }
 
 void Emulator::Emulate()
@@ -1420,6 +1418,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register B from register A and store result in A
         {
             SubtractFromA(registers.B);
+            pc++;
         }
         break;
     case 0x91:
@@ -1427,6 +1426,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register C from register A and store result in A
         {
             SubtractFromA(registers.C);
+            pc++;
         }
         break;
     case 0x92:
@@ -1434,6 +1434,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register D from register A and store result in A
         {
             SubtractFromA(registers.D);
+            pc++;
         }
         break;
     case 0x93:
@@ -1441,6 +1442,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register E from register A and store result in A
         {
             SubtractFromA(registers.E);
+            pc++;
         }
         break;
     case 0x94:
@@ -1448,6 +1450,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register H from register A and store result in A
         {
             SubtractFromA(registers.H);
+            pc++;
         }
         break;
     case 0x95:
@@ -1455,6 +1458,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register L from register A and store result in A
         {
             SubtractFromA(registers.L);
+            pc++;
         }
         break;
     case 0x96:
@@ -1463,6 +1467,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             uint8_t operand = ReadFromHL();
             SubtractFromA(operand);
+            pc++;
         }
         break;
     case 0x97:
@@ -1470,6 +1475,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register A from register A and store result in A
         {
             SubtractFromA(registers.A);
+            pc++;
         }
         break;
     case 0x98:
@@ -1477,6 +1483,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register B (plus carry) from register A and store result in A
         {
             SubtractFromA(registers.B + flags.cy);
+            pc++;
         }
         break;
     case 0x99:
@@ -1484,6 +1491,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register C (plus carry) from register A and store result in A
         {
             SubtractFromA(registers.C + flags.cy);
+            pc++;
         }
         break;
     case 0x9a:
@@ -1491,6 +1499,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register D (plus carry) from register A and store result in A
         {
             SubtractFromA(registers.D + flags.cy);
+            pc++;
         }
         break;
     case 0x9b:
@@ -1498,6 +1507,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register E (plus carry) from register A and store result in A
         {
             SubtractFromA(registers.E + flags.cy);
+            pc++;
         }
         break;
     case 0x9c:
@@ -1505,6 +1515,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register H (plus carry) from register A and store result in A
         {
             SubtractFromA(registers.H + flags.cy);
+            pc++;
         }
         break;
     case 0x9d:
@@ -1512,6 +1523,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register L (plus carry) from register A and store result in A
         {
             SubtractFromA(registers.L + flags.cy);
+            pc++;
         }
         break;
     case 0x9e:
@@ -1520,6 +1532,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             uint8_t operand = ReadFromHL();
             SubtractFromA(operand + flags.cy);
+            pc++;
         }
         break;
     case 0x9f:
@@ -1527,6 +1540,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register A (plus carry) from register A and store result in A
         {
             SubtractFromA(registers.A + flags.cy);
+            pc++;
         }
         break;
 
@@ -2124,12 +2138,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBI
         // Subtract immediate from accumulator with borrow
         {
-            uint8_t operand = operand1;
-            if (flags.cy)
-            {
-                operand++;
-            }
-            SubtractFromA(operand);
+            SubtractFromA(operand1 + flags.cy);
             pc += 2;
         }
         break;
