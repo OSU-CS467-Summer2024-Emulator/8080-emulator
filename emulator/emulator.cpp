@@ -1943,10 +1943,10 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xc7:
         // RST 0
         {
-            // reference uses return address as pc+3, but I think it should
-            // be pc + 1 since it is a 1 byte operation
-            uint16_t ret = pc + 1;
-            Push((ret >> 8) & 0xff, ret & 0xff);
+            uint16_t ret_addr = pc + 1;
+            uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+            uint8_t ret_low = ret_addr & 0x00ff;
+            Push(ret_high, ret_low);
             pc = 0x0000;
         }
         break;
@@ -2028,15 +2028,11 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xcf:
         // RST 1
         {
-            // reference uses return address as pc+3, but I think it should
-            // be pc + 1 since it is a 1 byte operation
-            uint16_t ret = pc + 1;
-            Push((ret >> 8) & 0xff, ret & 0xff);
+            uint16_t ret_addr = pc + 1;
+            uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+            uint8_t ret_low = ret_addr & 0x00ff;
+            Push(ret_high, ret_low);
             pc = 0x0008;
-
-            registers.A = registers.A | registers.A;
-            LogicFlagsA();
-            pc++;
         }
         break;
 
@@ -2299,11 +2295,11 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xe7:
         // RST 4
         {
-            uint16_t ret = pc + 2;
-            WriteToMem(sp - 1, (ret >> 8) & 0xff);
-            WriteToMem(sp - 2, (ret & 0xff));
-            sp -= 2;
-            pc = 0x20;
+            uint16_t ret_addr = pc + 1;
+            uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+            uint8_t ret_low = ret_addr & 0x00ff;
+            Push(ret_high, ret_low);
+            pc = 0x0020;
         }
         break;
     case 0xe8:
@@ -2378,11 +2374,11 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xef:
         // RST 5
         {
-            uint16_t ret = pc + 2;
-            WriteToMem(sp - 1, (ret >> 8) & 0xff);
-            WriteToMem(sp - 2, (ret & 0xff));
-            sp -= 2;
-            pc = 0x28;
+            uint16_t ret_addr = pc + 1;
+            uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+            uint8_t ret_low = ret_addr & 0x00ff;
+            Push(ret_high, ret_low);
+            pc = 0x0028;
         }
         break;
 
@@ -2463,11 +2459,11 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xf7:
         // RST 6
         {
-            uint16_t ret = pc + 2;
-            WriteToMem(sp - 1, (ret >> 8) & 0xff);
-            WriteToMem(sp - 2, (ret & 0xff));
-            sp -= 2;
-            pc = 0x30;
+            uint16_t ret_addr = pc + 1;
+            uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+            uint8_t ret_low = ret_addr & 0x00ff;
+            Push(ret_high, ret_low);
+            pc = 0x0030;
         }
         break;
     case 0xf8:
@@ -2534,11 +2530,11 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xff:
         // RST 7
         {
-            uint16_t ret = pc + 2;
-            WriteToMem(sp - 1, (ret >> 8) & 0xff);
-            WriteToMem(sp - 2, (ret & 0xff));
-            sp -= 2;
-            pc = 0x38;
+            uint16_t ret_addr = pc + 1;
+            uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+            uint8_t ret_low = ret_addr & 0x00ff;
+            Push(ret_high, ret_low);
+            pc = 0x0038;
         }
         break;
     default:

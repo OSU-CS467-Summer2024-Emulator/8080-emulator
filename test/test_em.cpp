@@ -1238,3 +1238,95 @@ TEST_CASE("Jump", "[jump][opcode]")
         // No jump
     }
 }
+
+TEST_CASE("Restart", "[stack][subroutine][restart][opcode]")
+{
+    Emulator e;
+    e.AllocateMemory(0x3000);
+
+    // Increase PC to 0x0102
+    for (int i = 0; i < 0x0102; i++)
+        e.EmulateOpcode(0x00);
+
+    uint16_t pc_before = e.GetPC();
+    REQUIRE(pc_before == 0x0102);
+
+    uint8_t ret_high = (pc_before + 1) >> 8;
+    uint8_t ret_low = (pc_before + 1) & 0x00ff;
+
+    uint16_t sp_before = 0x2500;
+    e.SetSP(sp_before);
+
+    SECTION("RST 0")
+    {
+        e.EmulateOpcode(0xc7);
+
+        CHECK(e.GetPC() == 0x0000);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 1")
+    {
+        e.EmulateOpcode(0xcf);
+
+        CHECK(e.GetPC() == 0x0008);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 2")
+    {
+        e.EmulateOpcode(0xd7);
+
+        CHECK(e.GetPC() == 0x0010);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 3")
+    {
+        e.EmulateOpcode(0xdf);
+
+        CHECK(e.GetPC() == 0x0018);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 4")
+    {
+        e.EmulateOpcode(0xe7);
+
+        CHECK(e.GetPC() == 0x0020);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 5")
+    {
+        e.EmulateOpcode(0xef);
+
+        CHECK(e.GetPC() == 0x0028);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 6")
+    {
+        e.EmulateOpcode(0xf7);
+
+        CHECK(e.GetPC() == 0x0030);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 7")
+    {
+        e.EmulateOpcode(0xff);
+
+        CHECK(e.GetPC() == 0x0038);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+}
