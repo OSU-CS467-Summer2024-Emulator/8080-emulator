@@ -1261,3 +1261,56 @@ TEST_CASE("LDAX", "[opcode][load]")
         CHECK(e.GetPC() == pc + 1);
     }
 }
+
+TEST_CASE("LXI - load immediate register pair", "[opcode][load][move][immediate]")
+{
+    Emulator e;
+
+    uint16_t pc_before = e.GetPC();
+    SECTION("LXI B")
+    {
+        REQUIRE(e.GetRegisters().B == 0x00);
+        REQUIRE(e.GetRegisters().C == 0x00);
+
+        // LXI B
+        e.EmulateOpcode(0x01, 0xcc, 0xbb);
+
+        CHECK(e.GetRegisters().B == 0xbb);
+        CHECK(e.GetRegisters().C == 0xcc);
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+    SECTION("LXI D")
+    {
+        REQUIRE(e.GetRegisters().D == 0x00);
+        REQUIRE(e.GetRegisters().E == 0x00);
+
+        // LXI D
+        e.EmulateOpcode(0x11, 0xee, 0xdd);
+
+        CHECK(e.GetRegisters().D == 0xdd);
+        CHECK(e.GetRegisters().E == 0xee);
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+    SECTION("LXI H")
+    {
+        REQUIRE(e.GetRegisters().H == 0x00);
+        REQUIRE(e.GetRegisters().L == 0x00);
+
+        // LXI H
+        e.EmulateOpcode(0x21, 0x34, 0x12);
+
+        CHECK(e.GetRegisters().H == 0x12);
+        CHECK(e.GetRegisters().L == 0x34);
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+    SECTION("LXI SP")
+    {
+        REQUIRE(e.GetSP() == 0x00);
+
+        // LXI SP
+        e.EmulateOpcode(0x31, 0x34, 0x12);
+
+        CHECK(e.GetSP() == 0x1234);
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+}

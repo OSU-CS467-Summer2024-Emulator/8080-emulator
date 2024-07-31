@@ -521,7 +521,8 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x21:
         // LXI H, #$
         {
-            registers.H = (operand2 << 8) | operand1;
+            registers.H = operand2;
+            registers.L = operand1;
             pc += 3;
         }
         break;
