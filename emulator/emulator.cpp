@@ -1420,7 +1420,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register B from register A and store result in A
         {
             SubtractFromA(registers.B);
-            pc++;
         }
         break;
     case 0x91:
@@ -1428,7 +1427,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register C from register A and store result in A
         {
             SubtractFromA(registers.C);
-            pc++;
         }
         break;
     case 0x92:
@@ -1436,7 +1434,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register D from register A and store result in A
         {
             SubtractFromA(registers.D);
-            pc++;
         }
         break;
     case 0x93:
@@ -1444,7 +1441,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register E from register A and store result in A
         {
             SubtractFromA(registers.E);
-            pc++;
         }
         break;
     case 0x94:
@@ -1452,7 +1448,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register H from register A and store result in A
         {
             SubtractFromA(registers.H);
-            pc++;
         }
         break;
     case 0x95:
@@ -1460,16 +1455,14 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register L from register A and store result in A
         {
             SubtractFromA(registers.L);
-            pc++;
         }
         break;
     case 0x96:
         // SUB M
         // Subtract byte from memory at address stored in HL from register A and store result in A
         {
-            uint8_t operand = memory[registers.H << 8 | registers.L];
+            uint8_t operand = ReadFromHL();
             SubtractFromA(operand);
-            pc++;
         }
         break;
     case 0x97:
@@ -1477,7 +1470,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Subtract register A from register A and store result in A
         {
             SubtractFromA(registers.A);
-            pc++;
         }
         break;
     case 0x98:
@@ -1492,7 +1484,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 SubtractFromA(registers.B);
             }
-            pc++;
         }
         break;
     case 0x99:
@@ -1507,7 +1498,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 SubtractFromA(registers.C);
             }
-            pc++;
         }
         break;
     case 0x9a:
@@ -1522,7 +1512,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 SubtractFromA(registers.D);
             }
-            pc++;
         }
         break;
     case 0x9b:
@@ -1537,7 +1526,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 SubtractFromA(registers.E);
             }
-            pc++;
         }
         break;
     case 0x9c:
@@ -1552,7 +1540,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 SubtractFromA(registers.H);
             }
-            pc++;
         }
         break;
     case 0x9d:
@@ -1567,7 +1554,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 SubtractFromA(registers.L);
             }
-            pc++;
         }
         break;
     case 0x9e:
@@ -1583,7 +1569,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 SubtractFromA(operand);
             }
-            pc++;
         }
         break;
     case 0x9f:
@@ -1598,7 +1583,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 SubtractFromA(registers.A);
             }
-            pc++;
         }
         break;
 

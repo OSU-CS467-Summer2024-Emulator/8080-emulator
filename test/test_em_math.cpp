@@ -575,6 +575,198 @@ TEST_CASE("Add with carry", "[opcode][add][math]")
     }
 }
 
+TEST_CASE("Subtraction", "[opcode][sub][math]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("SUB B")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x35);
+        REQUIRE(e.GetRegisters().A == 0x35);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI B
+        e.EmulateOpcode(0x06, 0x12);
+        REQUIRE(e.GetRegisters().B == 0x12);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // SUB B
+        e.EmulateOpcode(0x90);
+        CHECK(e.GetRegisters().A == 0x23);
+        CHECK(e.GetRegisters().B == 0x12);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SUB C")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x35);
+        REQUIRE(e.GetRegisters().A == 0x35);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI C
+        e.EmulateOpcode(0x0e, 0x12);
+        REQUIRE(e.GetRegisters().C == 0x12);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // SUB C
+        e.EmulateOpcode(0x91);
+        CHECK(e.GetRegisters().A == 0x23);
+        CHECK(e.GetRegisters().C == 0x12);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SUB D")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x35);
+        REQUIRE(e.GetRegisters().A == 0x35);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI D
+        e.EmulateOpcode(0x16, 0x12);
+        REQUIRE(e.GetRegisters().D == 0x12);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // SUB D
+        e.EmulateOpcode(0x92);
+        CHECK(e.GetRegisters().A == 0x23);
+        CHECK(e.GetRegisters().D == 0x12);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SUB E")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x35);
+        REQUIRE(e.GetRegisters().A == 0x35);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI E
+        e.EmulateOpcode(0x1e, 0x12);
+        REQUIRE(e.GetRegisters().E == 0x12);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // SUB E
+        e.EmulateOpcode(0x93);
+        CHECK(e.GetRegisters().A == 0x23);
+        CHECK(e.GetRegisters().E == 0x12);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SUB H")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x35);
+        REQUIRE(e.GetRegisters().A == 0x35);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI H
+        e.EmulateOpcode(0x26, 0x12);
+        REQUIRE(e.GetRegisters().H == 0x12);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // SUB H
+        e.EmulateOpcode(0x94);
+        CHECK(e.GetRegisters().A == 0x23);
+        CHECK(e.GetRegisters().H == 0x12);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SUB L")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x35);
+        REQUIRE(e.GetRegisters().A == 0x35);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI L
+        e.EmulateOpcode(0x2e, 0x12);
+        REQUIRE(e.GetRegisters().L == 0x12);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // SUB L
+        e.EmulateOpcode(0x95);
+        CHECK(e.GetRegisters().A == 0x23);
+        CHECK(e.GetRegisters().L == 0x12);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SUB M")
+    {
+        int test_pc = pc;
+        e.AllocateMemory(0x3000);
+
+        // Write address to HL registers
+        // MVI H, 0x25
+        // MVI L, 0x00
+        e.EmulateOpcode(0x26, 0x25);
+        e.EmulateOpcode(0x2e, 0x00);
+        REQUIRE((uint8_t)e.GetRegisters().H == 0x25);
+        REQUIRE((uint8_t)e.GetRegisters().L == 0x00);
+        test_pc = e.GetPC();
+
+        // MVI A, 0x35
+        e.EmulateOpcode(0x3e, 0x35);
+        REQUIRE(e.GetRegisters().A == 0x35);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI M, 0x12
+        e.EmulateOpcode(0x36, 0x12);
+        REQUIRE(e.ReadFromMem(0x2500) == 0x12);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // SUB M
+        e.EmulateOpcode(0x96);
+        CHECK(e.GetRegisters().A == 0x23);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SUB A")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x35);
+        REQUIRE(e.GetRegisters().A == 0x35);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // SUB A
+        e.EmulateOpcode(0x97);
+        CHECK(e.GetRegisters().A == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+}
+
 // NOTE: INR only affects auxiliary carry flag (not regular carry), which isn't used in Space Invaders
 TEST_CASE("Increment register", "[opcode][inr][math]")
 {
