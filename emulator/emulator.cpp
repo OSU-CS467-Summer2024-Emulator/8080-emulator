@@ -374,7 +374,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Store the value in register A at the memory address stored in the DE register pair
         {
             uint16_t mem_addr = (registers.D << 8) | registers.E;
-            memory[mem_addr] = registers.A;
+            WriteToMem(mem_addr, registers.A);
             pc++;
         }
         break;
@@ -782,7 +782,9 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     // 0x40 - 0x4f
     case 0x40:
         // MOV B,B
-        pc++;
+        {
+            pc++;
+        }
         break;
 
     case 0x41:
@@ -1051,7 +1053,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x64:
         // MOV H, H
         {
-            registers.H = registers.H;
             pc++;
         }
         break;
@@ -1114,15 +1115,13 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x6d:
         // "MOV L, L
         {
-            registers.L = registers.L;
             pc++;
         }
         break;
     case 0x6e:
         // "MOV L, M
         {
-            uint16_t mem_addr = (registers.H << 8) | (registers.L);
-            registers.L = memory[mem_addr];
+            registers.L = ReadFromHL();
             pc++;
         }
         break;
