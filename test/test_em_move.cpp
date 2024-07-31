@@ -1390,3 +1390,61 @@ TEST_CASE("Direct Addressing Instructions", "[opcode][store][load]")
         CHECK(e.GetPC() == pc_before + 3);
     }
 }
+
+TEST_CASE("XCHG - exchange registers", "[opcode]")
+{
+    Emulator e;
+
+    // MVI D, E, H, and L
+    e.EmulateOpcode(0x16, 0xdd);
+    e.EmulateOpcode(0x1e, 0xee);
+    e.EmulateOpcode(0x26, 0x11);
+    e.EmulateOpcode(0x2e, 0xff);
+
+    uint16_t pc_before = e.GetPC();
+
+    REQUIRE(e.GetRegisters().D == 0xdd);
+    REQUIRE(e.GetRegisters().E == 0xee);
+    REQUIRE(e.GetRegisters().H == 0x11);
+    REQUIRE(e.GetRegisters().L == 0xff);
+
+    // XCHG
+    e.EmulateOpcode(0xeb);
+
+    CHECK(e.GetRegisters().D == 0x11);
+    CHECK(e.GetRegisters().E == 0xff);
+    CHECK(e.GetRegisters().H == 0xdd);
+    CHECK(e.GetRegisters().L == 0xee);
+    CHECK(e.GetPC() == pc_before + 1);
+}
+
+TEST_CASE("XTHL - exchange stack", "[opcode][stack]")
+{
+    Emulator e;
+    e.AllocateMemory(0x3000);
+    e.SetSP(0x2500);
+
+    // MVI H and L
+    e.EmulateOpcode(0x26, 0xee);
+    e.EmulateOpcode(0x2e, 0xff);
+
+    e.Push(0x11, 0x22);
+
+    uint16_t pc_before = e.GetPC();
+    uint16_t sp_before = e.GetSP();
+
+    REQUIRE(e.GetRegisters().H == 0xee);
+    REQUIRE(e.GetRegisters().L == 0xff);
+    REQUIRE(e.ReadFromMem(0x24ff) == 0x11);
+    REQUIRE(e.ReadFromMem(0x24fe) == 0x22);
+
+    // XTHL
+    e.EmulateOpcode(0xe3);
+
+    CHECK(e.GetRegisters().H == 0x11);
+    CHECK(e.GetRegisters().L == 0x22);
+    CHECK(e.ReadFromMem(0x24ff) == 0xee);
+    CHECK(e.ReadFromMem(0x24fe) == 0xff);
+    CHECK(e.GetPC() == pc_before + 1);
+    CHECK(e.GetSP() == sp_before);
+}

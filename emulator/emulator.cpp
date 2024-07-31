@@ -2278,6 +2278,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.L = registers.E;
             registers.D = tempH;
             registers.E = tempL;
+            pc++;
         }
         break;
     case 0xec:

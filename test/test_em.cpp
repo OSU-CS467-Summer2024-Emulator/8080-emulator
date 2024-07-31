@@ -1438,3 +1438,48 @@ TEST_CASE("Rotate", "[opcode][rotate]")
         CHECK(e.GetFlags().cy == 0);
     }
 }
+
+TEST_CASE("PCHL - Load PC from H and L", "[opcode][jump][load]")
+{
+    Emulator e;
+
+    // MVI H and L
+    e.EmulateOpcode(0x26, 0x25);
+    e.EmulateOpcode(0x2e, 0x0a);
+
+    REQUIRE(e.GetRegisters().H == 0x25);
+    REQUIRE(e.GetRegisters().L == 0x0a);
+
+    // PCHL
+    e.EmulateOpcode(0xe9);
+
+    CHECK(e.GetRegisters().H == 0x25);
+    CHECK(e.GetRegisters().L == 0x0a);
+    CHECK(e.GetPC() == 0x250a);
+}
+
+TEST_CASE("SPHL - Load SP from H and L", "[opcode][stack][load]")
+{
+    Emulator e;
+    e.AllocateMemory(0x3000);
+    e.SetSP(0x0000);
+
+    // MVI H and L
+    e.EmulateOpcode(0x26, 0x25);
+    e.EmulateOpcode(0x2e, 0x0a);
+
+    REQUIRE(e.GetRegisters().H == 0x25);
+    REQUIRE(e.GetRegisters().L == 0x0a);
+    REQUIRE(e.GetSP() == 0x0000);
+
+    uint16_t pc_before = e.GetPC();
+    uint16_t sp_before = e.GetSP();
+
+    // SPHL
+    e.EmulateOpcode(0xf9);
+
+    CHECK(e.GetRegisters().H == 0x25);
+    CHECK(e.GetRegisters().L == 0x0a);
+    CHECK(e.GetPC() == pc_before + 1);
+    CHECK(e.GetSP() == 0x250a);
+}
