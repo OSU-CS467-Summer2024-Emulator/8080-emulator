@@ -1662,7 +1662,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xa7:
         // ANA A
         {
-            registers.A &= registers.A;
             LogicFlagsA();
             pc++;
         }
@@ -1726,7 +1725,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xaf:
         // XRA A
         {
-            registers.A ^= registers.A;
+            registers.A = 0x00;
             LogicFlagsA();
             pc++;
         }
@@ -1792,7 +1791,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xb7:
         // ORA A
         {
-            registers.A = registers.A | registers.A;
             LogicFlagsA();
             pc++;
         }
