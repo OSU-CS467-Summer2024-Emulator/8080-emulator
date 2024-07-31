@@ -767,6 +767,347 @@ TEST_CASE("Subtraction", "[opcode][sub][math]")
     }
 }
 
+TEST_CASE("Subtract with borrow", "[opcode][sbb][math]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("SBB B")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xff);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().B == 0);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI B
+        e.EmulateOpcode(0x06, 0x08);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().B == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD B
+        // Trigger a carry operation
+        e.EmulateOpcode(0x80);
+        REQUIRE(e.GetRegisters().A == 0x07);
+        REQUIRE(e.GetRegisters().B == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // MVI A - To prevent overflow
+        e.EmulateOpcode(0x3e, 0x0a);
+        REQUIRE(e.GetRegisters().A == 0x0a);
+        REQUIRE(e.GetRegisters().B == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        test_pc = e.GetPC();
+
+        // SBB B
+        e.EmulateOpcode(0x98);
+        CHECK(e.GetRegisters().A == 0x01);
+        CHECK(e.GetRegisters().B == 0x08);
+        CHECK(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SBB B - Overflow")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xff);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().B == 0);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI B
+        e.EmulateOpcode(0x06, 0x08);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().B == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD B
+        // Trigger a carry operation
+        e.EmulateOpcode(0x80);
+        REQUIRE(e.GetRegisters().A == 0x07);
+        REQUIRE(e.GetRegisters().B == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // SBB B
+        e.EmulateOpcode(0x98);
+        CHECK(e.GetRegisters().A == 0xfe);
+        CHECK(e.GetRegisters().B == 0x08);
+        CHECK(e.GetFlags().cy == 1); // Caused overflow
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SBB C")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xff);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().C == 0);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI C
+        e.EmulateOpcode(0x0e, 0x08);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().C == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD C
+        // Trigger a carry operation
+        e.EmulateOpcode(0x81);
+        REQUIRE(e.GetRegisters().A == 0x07);
+        REQUIRE(e.GetRegisters().C == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // MVI A - To prevent overflow
+        e.EmulateOpcode(0x3e, 0x0a);
+        REQUIRE(e.GetRegisters().A == 0x0a);
+        REQUIRE(e.GetRegisters().C == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        test_pc = e.GetPC();
+
+        // SBB C
+        e.EmulateOpcode(0x99);
+        CHECK(e.GetRegisters().A == 0x01);
+        CHECK(e.GetRegisters().C == 0x08);
+        CHECK(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SBB D")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xff);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().D == 0);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI D
+        e.EmulateOpcode(0x16, 0x08);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().D == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD D
+        // Trigger a carry operation
+        e.EmulateOpcode(0x82);
+        REQUIRE(e.GetRegisters().A == 0x07);
+        REQUIRE(e.GetRegisters().D == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // MVI A - To prevent overflow
+        e.EmulateOpcode(0x3e, 0x0a);
+        REQUIRE(e.GetRegisters().A == 0x0a);
+        REQUIRE(e.GetRegisters().D == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        test_pc = e.GetPC();
+
+        // SBB D
+        e.EmulateOpcode(0x9a);
+        CHECK(e.GetRegisters().A == 0x01);
+        CHECK(e.GetRegisters().D == 0x08);
+        CHECK(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SBB E")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xff);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().E == 0);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI E
+        e.EmulateOpcode(0x1e, 0x08);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().E == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD E
+        // Trigger a carry operation
+        e.EmulateOpcode(0x83);
+        REQUIRE(e.GetRegisters().A == 0x07);
+        REQUIRE(e.GetRegisters().E == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // MVI A - To prevent overflow
+        e.EmulateOpcode(0x3e, 0x0a);
+        REQUIRE(e.GetRegisters().A == 0x0a);
+        REQUIRE(e.GetRegisters().E == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        test_pc = e.GetPC();
+
+        // SBB E
+        e.EmulateOpcode(0x9b);
+        CHECK(e.GetRegisters().A == 0x01);
+        CHECK(e.GetRegisters().E == 0x08);
+        CHECK(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SBB H")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xff);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().H == 0);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI H
+        e.EmulateOpcode(0x26, 0x08);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().H == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD H
+        // Trigger a carry operation
+        e.EmulateOpcode(0x84);
+        REQUIRE(e.GetRegisters().A == 0x07);
+        REQUIRE(e.GetRegisters().H == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // MVI A - To prevent overflow
+        e.EmulateOpcode(0x3e, 0x0a);
+        REQUIRE(e.GetRegisters().A == 0x0a);
+        REQUIRE(e.GetRegisters().H == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        test_pc = e.GetPC();
+
+        // SBB H
+        e.EmulateOpcode(0x9c);
+        CHECK(e.GetRegisters().A == 0x01);
+        CHECK(e.GetRegisters().H == 0x08);
+        CHECK(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SBB L")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xff);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().L == 0);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI L
+        e.EmulateOpcode(0x2e, 0x08);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetRegisters().L == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD L
+        // Trigger a carry operation
+        e.EmulateOpcode(0x85);
+        REQUIRE(e.GetRegisters().A == 0x07);
+        REQUIRE(e.GetRegisters().L == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // MVI A - To prevent overflow
+        e.EmulateOpcode(0x3e, 0x0a);
+        REQUIRE(e.GetRegisters().A == 0x0a);
+        REQUIRE(e.GetRegisters().L == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        test_pc = e.GetPC();
+
+        // SBB L
+        e.EmulateOpcode(0x9d);
+        CHECK(e.GetRegisters().A == 0x01);
+        CHECK(e.GetRegisters().L == 0x08);
+        CHECK(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("SBB M")
+    {
+        int test_pc = pc;
+        e.AllocateMemory(0x3000);
+
+        // Write address to HL registers
+        // MVI H, 0x25
+        // MVI L, 0x00
+        e.EmulateOpcode(0x26, 0x25);
+        e.EmulateOpcode(0x2e, 0x00);
+        REQUIRE((uint8_t)e.GetRegisters().H == 0x25);
+        REQUIRE((uint8_t)e.GetRegisters().L == 0x00);
+        test_pc = e.GetPC();
+
+        // MVI A, 0xff
+        e.EmulateOpcode(0x3e, 0xff);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // MVI M, 0x08
+        e.EmulateOpcode(0x36, 0x08);
+        REQUIRE(e.ReadFromMem(0x2500) == 0x08);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD M
+        // Trigger a carry operation
+        e.EmulateOpcode(0x86);
+        REQUIRE(e.GetRegisters().A == 0x07);
+        REQUIRE(e.ReadFromMem(0x2500) == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // MVI A - To prevent overflow
+        e.EmulateOpcode(0x3e, 0x0a);
+        REQUIRE(e.GetRegisters().A == 0x0a);
+        REQUIRE(e.ReadFromMem(0x2500) == 0x08);
+        REQUIRE(e.GetFlags().cy == 1);
+        test_pc = e.GetPC();
+
+        // SBB M
+        e.EmulateOpcode(0x9e);
+        CHECK(e.GetRegisters().A == 0x01);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+}
+
 // NOTE: INR only affects auxiliary carry flag (not regular carry), which isn't used in Space Invaders
 TEST_CASE("Increment register", "[opcode][inr][math]")
 {

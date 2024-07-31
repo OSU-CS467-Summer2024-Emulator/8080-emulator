@@ -1476,113 +1476,57 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB B
         // Subtract register B (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.B + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.B);
-            }
+            SubtractFromA(registers.B + flags.cy);
         }
         break;
     case 0x99:
         // SBB C
         // Subtract register C (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.C + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.C);
-            }
+            SubtractFromA(registers.C + flags.cy);
         }
         break;
     case 0x9a:
         // SBB D
         // Subtract register D (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.D + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.D);
-            }
+            SubtractFromA(registers.D + flags.cy);
         }
         break;
     case 0x9b:
         // SBB E
         // Subtract register E (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.E + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.E);
-            }
+            SubtractFromA(registers.E + flags.cy);
         }
         break;
     case 0x9c:
         // SBB H
         // Subtract register H (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.H + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.H);
-            }
+            SubtractFromA(registers.H + flags.cy);
         }
         break;
     case 0x9d:
         // SBB L
         // Subtract register L (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.L + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.L);
-            }
+            SubtractFromA(registers.L + flags.cy);
         }
         break;
     case 0x9e:
         // SBB M
         // Subtract byte in memory (location in HL) from register A and store result in A
         {
-            uint8_t operand = memory[registers.H << 8 | registers.L];
-            if (flags.cy)
-            {
-                SubtractFromA(operand + 0x01);
-            }
-            else
-            {
-                SubtractFromA(operand);
-            }
+            uint8_t operand = ReadFromHL();
+            SubtractFromA(operand + flags.cy);
         }
         break;
     case 0x9f:
         // SBB A
         // Subtract register A (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.A + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.A);
-            }
+            SubtractFromA(registers.A + flags.cy);
         }
         break;
 
