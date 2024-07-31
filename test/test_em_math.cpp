@@ -243,6 +243,22 @@ TEST_CASE("Add immediate with carry", "[opcode][aci][math]")
     Emulator e;
     int pc = e.GetPC();
 
+    SECTION("ADI D8 - No carry")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x30);
+        REQUIRE(e.GetRegisters().A == 0x30);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ACI 0x30
+        e.EmulateOpcode(0xce, 0x30);
+        CHECK(e.GetRegisters().A == 0x60);
+        CHECK(e.GetPC() == test_pc + 2);
+    }
+
     SECTION("ACI D8")
     {
         int test_pc = pc;
@@ -325,6 +341,76 @@ TEST_CASE("Subtract immediate from accumulator", "[opcode][sui][math]")
 
         // SUI 0x30
         e.EmulateOpcode(0xd6, 0x30);
+        CHECK(e.GetRegisters().A == 0xff);
+        CHECK(e.GetFlags().cy == 1);
+        CHECK(e.GetPC() == test_pc + 2);
+    }
+}
+
+TEST_CASE("Subtract immediate from accumulator with borrow", "[opcode][sbi][math]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("SBI D8 - No borrow")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x60);
+        REQUIRE(e.GetRegisters().A == 0x60);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // SUI 0x30
+        e.EmulateOpcode(0xde, 0x30);
+        CHECK(e.GetRegisters().A == 0x30);
+        CHECK(e.GetPC() == test_pc + 2);
+    }
+
+    SECTION("SBI D8")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xca);
+        REQUIRE(e.GetRegisters().A == 0xca);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD A
+        e.EmulateOpcode(0x87);
+        REQUIRE(e.GetRegisters().A == 0x94);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // SBI 0x30
+        e.EmulateOpcode(0xde, 0x30);
+        CHECK(e.GetRegisters().A == 0x63);
+        CHECK(e.GetFlags().cy == 0);
+        CHECK(e.GetPC() == test_pc + 2);
+    }
+
+    SECTION("SBI D8 - Set carry")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xff);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // ADD A
+        e.EmulateOpcode(0x87);
+        REQUIRE(e.GetRegisters().A == 0xfe);
+        REQUIRE(e.GetFlags().cy == 1);
+        REQUIRE(e.GetPC() == test_pc + 1);
+        test_pc = e.GetPC();
+
+        // SBI 0xfe
+        e.EmulateOpcode(0xde, 0xfe);
         CHECK(e.GetRegisters().A == 0xff);
         CHECK(e.GetFlags().cy == 1);
         CHECK(e.GetPC() == test_pc + 2);
