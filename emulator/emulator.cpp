@@ -98,12 +98,14 @@ void Emulator::ZSPFlags(uint8_t value)
     flags.p = parity(value);
 }
 
-void Emulator::UnimplementedInstruction()
+void Emulator::InvalidInstruction(uint8_t byte, uint16_t addr)
 {
-    cout << "Instruction not implemented" << endl;
-    Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
-    cout << endl;
-    exit(1);
+    cout << "Invalid instruction:" << endl;
+    cout << "opcode 0x" << hex << setfill('0') << setw(2)
+         << static_cast<unsigned>(byte) << endl;
+    cout << "at memory location 0x" << hex << setfill('0') << setw(4)
+         << static_cast<unsigned>(addr) << endl;
+    pc++;
 }
 
 void Emulator::WriteToMem(uint16_t address, uint8_t value)
@@ -276,7 +278,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x08:
         // NOP
         {
-            pc++;
+            InvalidInstruction(opcode, pc);
         }
         break;
 
@@ -357,7 +359,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x10:
         // no instruction
         {
-            pc++;
+            InvalidInstruction(opcode, pc);
         }
         break;
     case 0x11:
@@ -435,7 +437,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x18:
         // no instruction
         {
-            pc++;
+            InvalidInstruction(opcode, pc);
         }
         break;
     case 0x19:
@@ -518,7 +520,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     // 0x20 - 0x2f
     case 0x20:
         /// NOP
-        UnimplementedInstruction();
+        InvalidInstruction(opcode, pc);
         break;
     case 0x21:
         // LXI H, #$
@@ -593,7 +595,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         }
         break;
     case 0x28:
-        UnimplementedInstruction();
+        InvalidInstruction(opcode, pc);
         break;
     case 0x29:
         // DAD H
@@ -663,7 +665,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
 
     // 0x30 - 0x3f
     case 0x30:
-        UnimplementedInstruction();
+        InvalidInstruction(opcode, pc);
         break;
     case 0x31:
         // LXI SP,word
@@ -720,7 +722,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         }
         break;
     case 0x38:
-        UnimplementedInstruction();
+        InvalidInstruction(opcode, pc);
         break;
     case 0x39:
         // DAD SP
@@ -1988,7 +1990,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xcb:
         // NOP
         {
-            pc++;
+            InvalidInstruction(opcode, pc);
         }
         break;
 
@@ -2145,7 +2147,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xd9:
         // NOP
         {
-            pc++;
+            InvalidInstruction(opcode, pc);
         }
         break;
     case 0xda:
@@ -2190,7 +2192,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xdd:
         // NOP
         {
-            pc++;
+            InvalidInstruction(opcode, pc);
         }
         break;
     case 0xde:
@@ -2361,13 +2363,9 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         }
         break;
     case 0xed:
-        // CALL $
+        // No instruction
         {
-            uint16_t ret = pc + 2;
-            WriteToMem(sp - 1, (ret >> 8) & 0xff);
-            WriteToMem(sp - 2, (ret & 0xff));
-            sp -= 2;
-            pc = (operand2 << 8) | operand1;
+            InvalidInstruction(opcode, pc);
         }
         break;
     case 0xee:
@@ -2523,7 +2521,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xfd:
         // no instruction
         {
-            UnimplementedInstruction();
+            InvalidInstruction(opcode, pc);
         }
         break;
     case 0xfe:

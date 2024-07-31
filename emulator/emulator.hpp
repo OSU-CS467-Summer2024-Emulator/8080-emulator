@@ -51,7 +51,7 @@ public:
     void Push(uint8_t high, uint8_t low);
     void Pop(uint8_t *high, uint8_t *low);
 
-    void UnimplementedInstruction();
+    void InvalidInstruction(uint8_t, uint16_t);
 
     void Emulate();
     void EmulateOpcode(uint8_t, uint8_t operand1 = 0x00, uint8_t operand2 = 0x00);

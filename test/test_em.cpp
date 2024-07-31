@@ -94,7 +94,7 @@ TEST_CASE("Flag functions", "[flag]")
     }
 }
 
-TEST_CASE("0x00 NOP", "[opcode]")
+TEST_CASE("0x00 NOP", "[opcode][nop]")
 {
     Emulator e;
     Registers registers_before = e.GetRegisters();
@@ -108,6 +108,116 @@ TEST_CASE("0x00 NOP", "[opcode]")
     REQUIRE(e.GetFlags() == flags_before);
     REQUIRE(e.GetPC() == pc_before + 1);
     REQUIRE(e.GetSP() == sp_before);
+}
+
+// Other opcodes that don't have instructions
+TEST_CASE("Invalid opcodes", "[opcode][nop][invalid][.]")
+{
+    Emulator e;
+    Registers registers_before = e.GetRegisters();
+    Flags flags_before = e.GetFlags();
+    int pc_before = e.GetPC();
+    int sp_before = e.GetSP();
+
+    SECTION("0x08")
+    {
+        e.EmulateOpcode(0x08);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0x10")
+    {
+        e.EmulateOpcode(0x10);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0x18")
+    {
+        e.EmulateOpcode(0x18);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0x20")
+    {
+        e.EmulateOpcode(0x20);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0x28")
+    {
+        e.EmulateOpcode(0x28);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0x30")
+    {
+        e.EmulateOpcode(0x30);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0x38")
+    {
+        e.EmulateOpcode(0x38);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0xcb")
+    {
+        e.EmulateOpcode(0xcb);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0xdd")
+    {
+        e.EmulateOpcode(0xdd);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0xed")
+    {
+        e.EmulateOpcode(0xed);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0xfd")
+    {
+        e.EmulateOpcode(0xfd);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
 }
 
 TEST_CASE("Set and complement carry flag", "[opcode][flag]")
