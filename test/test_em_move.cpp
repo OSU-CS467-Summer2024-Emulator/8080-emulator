@@ -1271,7 +1271,7 @@ TEST_CASE("LXI - load immediate register pair", "[opcode][load][move][immediate]
     {
         REQUIRE(e.GetRegisters().B == 0x00);
         REQUIRE(e.GetRegisters().C == 0x00);
-        
+
         // LXI B
         e.EmulateOpcode(0x01, 0xcc, 0xbb);
 
@@ -1283,7 +1283,7 @@ TEST_CASE("LXI - load immediate register pair", "[opcode][load][move][immediate]
     {
         REQUIRE(e.GetRegisters().D == 0x00);
         REQUIRE(e.GetRegisters().E == 0x00);
-        
+
         // LXI D
         e.EmulateOpcode(0x11, 0xee, 0xdd);
 
@@ -1295,7 +1295,7 @@ TEST_CASE("LXI - load immediate register pair", "[opcode][load][move][immediate]
     {
         REQUIRE(e.GetRegisters().H == 0x00);
         REQUIRE(e.GetRegisters().L == 0x00);
-        
+
         // LXI H
         e.EmulateOpcode(0x21, 0x34, 0x12);
 
@@ -1306,11 +1306,87 @@ TEST_CASE("LXI - load immediate register pair", "[opcode][load][move][immediate]
     SECTION("LXI SP")
     {
         REQUIRE(e.GetSP() == 0x00);
-        
+
         // LXI SP
         e.EmulateOpcode(0x31, 0x34, 0x12);
 
         CHECK(e.GetSP() == 0x1234);
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+}
+
+TEST_CASE("Direct Addressing Instructions", "[opcode][store][load]")
+{
+    Emulator e;
+    e.AllocateMemory(0x3000);
+
+    uint16_t pc_before = e.GetPC();
+
+    SECTION("STA - store accumulator direct")
+    {
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xaa);
+
+        REQUIRE(e.GetRegisters().A == 0xaa);
+        REQUIRE(e.ReadFromMem(0x2500) == 0x00);
+
+        pc_before = e.GetPC();
+
+        // STA
+        e.EmulateOpcode(0x32, 0x00, 0x25);
+
+        CHECK(e.ReadFromMem(0x2500) == 0xaa);
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+    SECTION("LDA - load accumulator direct")
+    {
+        e.WriteToMem(0x2500, 0xaa);
+
+        REQUIRE(e.GetRegisters().A == 0x00);
+        REQUIRE(e.ReadFromMem(0x2500) == 0xaa);
+
+        // LDA
+        e.EmulateOpcode(0x3a, 0x00, 0x25);
+
+        CHECK(e.GetRegisters().A == 0xaa);
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+    SECTION("SHLD - store HL direct")
+    {
+        // MVI H and L
+        e.EmulateOpcode(0x26, 0x88);
+        e.EmulateOpcode(0x2e, 0x99);
+
+        REQUIRE(e.GetRegisters().H == 0x88);
+        REQUIRE(e.GetRegisters().L == 0x99);
+        REQUIRE(e.ReadFromMem(0x2500) == 0x00);
+        REQUIRE(e.ReadFromMem(0x2501) == 0x00);
+
+        pc_before = e.GetPC();
+
+        // SHLD
+        e.EmulateOpcode(0x22, 0x00, 0x25);
+
+        CHECK(e.ReadFromMem(0x2500) == 0x99);
+        CHECK(e.ReadFromMem(0x2501) == 0x88);
+        CHECK(e.GetPC() == pc_before + 3);
+    }
+    SECTION("LHLD - load HL direct")
+    {
+        // MVI H and L
+        e.WriteToMem(0x2500, 0x11);
+        e.WriteToMem(0x2501, 0x22);
+
+        REQUIRE(e.GetRegisters().H == 0x00);
+        REQUIRE(e.GetRegisters().L == 0x00);
+        REQUIRE(e.ReadFromMem(0x2500) == 0x11);
+        REQUIRE(e.ReadFromMem(0x2501) == 0x22);
+
+        // LHLD
+        e.EmulateOpcode(0x2a, 0x00, 0x25);
+
+        CHECK(e.GetRegisters().H == 0x22);
+        CHECK(e.GetRegisters().L == 0x11);
         CHECK(e.GetPC() == pc_before + 3);
     }
 }
