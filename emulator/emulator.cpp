@@ -98,12 +98,14 @@ void Emulator::ZSPFlags(uint8_t value)
     flags.p = parity(value);
 }
 
-void Emulator::UnimplementedInstruction()
+void Emulator::InvalidInstruction(uint8_t byte, uint16_t addr)
 {
-    cout << "Instruction not implemented" << endl;
-    Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
-    cout << endl;
-    exit(1);
+    cout << "Invalid instruction:" << endl;
+    cout << "opcode 0x" << hex << setfill('0') << setw(2)
+         << static_cast<unsigned>(byte) << endl;
+    cout << "at memory location 0x" << hex << setfill('0') << setw(4)
+         << static_cast<unsigned>(addr) << endl;
+    pc++;
 }
 
 void Emulator::WriteToMem(uint16_t address, uint8_t value)
@@ -175,8 +177,6 @@ void Emulator::SubtractFromA(uint8_t operand)
     flags.s = (registers.A & 0x80);
     flags.p = parity(registers.A);
     flags.cy = !(result & 0x0100);
-
-    pc++;
 }
 
 void Emulator::Emulate()
@@ -276,7 +276,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x08:
         // NOP
         {
-            pc++;
+            InvalidInstruction(opcode, pc);
         }
         break;
 
@@ -305,11 +305,10 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x0b:
         // DCX B
         {
-            registers.C--;
-            if (registers.C == 0xff)
-            {
-                registers.B--;
-            }
+            uint16_t BC = ((uint16_t)registers.B << 8) | registers.C;
+            BC--;
+            registers.B = (uint8_t)(BC >> 8);
+            registers.C = (uint8_t)BC;
             pc++;
         }
         break;
@@ -357,7 +356,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x10:
         // no instruction
         {
-            pc++;
+            InvalidInstruction(opcode, pc);
         }
         break;
     case 0x11:
@@ -435,7 +434,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x18:
         // no instruction
         {
-            pc++;
+            InvalidInstruction(opcode, pc);
         }
         break;
     case 0x19:
@@ -466,11 +465,10 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // DCX D
         // Decrement registers D and E as a 16 bit number, no flags affected
         {
-            registers.E--;
-            if (registers.E == 0xff)
-            {
-                registers.D--;
-            }
+            uint16_t DE = ((uint16_t)registers.D << 8) | registers.E;
+            DE--;
+            registers.D = (uint8_t)(DE >> 8);
+            registers.E = (uint8_t)DE;
             pc++;
         }
         break;
@@ -518,7 +516,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     // 0x20 - 0x2f
     case 0x20:
         /// NOP
-        UnimplementedInstruction();
+        InvalidInstruction(opcode, pc);
         break;
     case 0x21:
         // LXI H, #$
@@ -593,7 +591,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         }
         break;
     case 0x28:
-        UnimplementedInstruction();
+        InvalidInstruction(opcode, pc);
         break;
     case 0x29:
         // DAD H
@@ -663,7 +661,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
 
     // 0x30 - 0x3f
     case 0x30:
-        UnimplementedInstruction();
+        InvalidInstruction(opcode, pc);
         break;
     case 0x31:
         // LXI SP,word
@@ -720,7 +718,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         }
         break;
     case 0x38:
-        UnimplementedInstruction();
+        InvalidInstruction(opcode, pc);
         break;
     case 0x39:
         // DAD SP
@@ -1467,7 +1465,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SUB M
         // Subtract byte from memory at address stored in HL from register A and store result in A
         {
-            uint8_t operand = memory[registers.H << 8 | registers.L];
+            uint8_t operand = ReadFromHL();
             SubtractFromA(operand);
             pc++;
         }
@@ -1484,14 +1482,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB B
         // Subtract register B (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.B + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.B);
-            }
+            SubtractFromA(registers.B + flags.cy);
             pc++;
         }
         break;
@@ -1499,14 +1490,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB C
         // Subtract register C (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.C + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.C);
-            }
+            SubtractFromA(registers.C + flags.cy);
             pc++;
         }
         break;
@@ -1514,14 +1498,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB D
         // Subtract register D (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.D + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.D);
-            }
+            SubtractFromA(registers.D + flags.cy);
             pc++;
         }
         break;
@@ -1529,14 +1506,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB E
         // Subtract register E (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.E + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.E);
-            }
+            SubtractFromA(registers.E + flags.cy);
             pc++;
         }
         break;
@@ -1544,14 +1514,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB H
         // Subtract register H (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.H + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.H);
-            }
+            SubtractFromA(registers.H + flags.cy);
             pc++;
         }
         break;
@@ -1559,14 +1522,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB L
         // Subtract register L (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.L + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.L);
-            }
+            SubtractFromA(registers.L + flags.cy);
             pc++;
         }
         break;
@@ -1574,15 +1530,8 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB M
         // Subtract byte in memory (location in HL) from register A and store result in A
         {
-            uint8_t operand = memory[registers.H << 8 | registers.L];
-            if (flags.cy)
-            {
-                SubtractFromA(operand + 0x01);
-            }
-            else
-            {
-                SubtractFromA(operand);
-            }
+            uint8_t operand = ReadFromHL();
+            SubtractFromA(operand + flags.cy);
             pc++;
         }
         break;
@@ -1590,14 +1539,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // SBB A
         // Subtract register A (plus carry) from register A and store result in A
         {
-            if (flags.cy)
-            {
-                SubtractFromA(registers.A + 0x01);
-            }
-            else
-            {
-                SubtractFromA(registers.A);
-            }
+            SubtractFromA(registers.A + flags.cy);
             pc++;
         }
         break;
@@ -1939,10 +1881,10 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xc7:
         // RST 0
         {
-            // reference uses return address as pc+3, but I think it should
-            // be pc + 1 since it is a 1 byte operation
-            uint16_t ret = pc + 1;
-            Push((ret >> 8) & 0xff, ret & 0xff);
+            uint16_t ret_addr = pc + 1;
+            uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+            uint8_t ret_low = ret_addr & 0x00ff;
+            Push(ret_high, ret_low);
             pc = 0x0000;
         }
         break;
@@ -1985,7 +1927,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xcb:
         // NOP
         {
-            pc++;
+            InvalidInstruction(opcode, pc);
         }
         break;
 
@@ -2024,15 +1966,11 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xcf:
         // RST 1
         {
-            // reference uses return address as pc+3, but I think it should
-            // be pc + 1 since it is a 1 byte operation
-            uint16_t ret = pc + 1;
-            Push((ret >> 8) & 0xff, ret & 0xff);
+            uint16_t ret_addr = pc + 1;
+            uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+            uint8_t ret_low = ret_addr & 0x00ff;
+            Push(ret_high, ret_low);
             pc = 0x0008;
-
-            registers.A = registers.A | registers.A;
-            LogicFlagsA();
-            pc++;
         }
         break;
 
@@ -2142,7 +2080,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xd9:
         // NOP
         {
-            pc++;
+            InvalidInstruction(opcode, pc);
         }
         break;
     case 0xda:
@@ -2187,19 +2125,14 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xdd:
         // NOP
         {
-            pc++;
+            InvalidInstruction(opcode, pc);
         }
         break;
     case 0xde:
         // SBI
         // Subtract immediate from accumulator with borrow
         {
-            uint8_t operand = operand1;
-            if (flags.cy)
-            {
-                operand++;
-            }
-            SubtractFromA(operand);
+            SubtractFromA(operand1 + flags.cy);
             pc += 2;
         }
         break;
@@ -2295,11 +2228,11 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xe7:
         // RST 4
         {
-            uint16_t ret = pc + 2;
-            WriteToMem(sp - 1, (ret >> 8) & 0xff);
-            WriteToMem(sp - 2, (ret & 0xff));
-            sp -= 2;
-            pc = 0x20;
+            uint16_t ret_addr = pc + 1;
+            uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+            uint8_t ret_low = ret_addr & 0x00ff;
+            Push(ret_high, ret_low);
+            pc = 0x0020;
         }
         break;
     case 0xe8:
@@ -2358,13 +2291,9 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         }
         break;
     case 0xed:
-        // CALL $
+        // No instruction
         {
-            uint16_t ret = pc + 2;
-            WriteToMem(sp - 1, (ret >> 8) & 0xff);
-            WriteToMem(sp - 2, (ret & 0xff));
-            sp -= 2;
-            pc = (operand2 << 8) | operand1;
+            InvalidInstruction(opcode, pc);
         }
         break;
     case 0xee:
@@ -2378,11 +2307,11 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xef:
         // RST 5
         {
-            uint16_t ret = pc + 2;
-            WriteToMem(sp - 1, (ret >> 8) & 0xff);
-            WriteToMem(sp - 2, (ret & 0xff));
-            sp -= 2;
-            pc = 0x28;
+            uint16_t ret_addr = pc + 1;
+            uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+            uint8_t ret_low = ret_addr & 0x00ff;
+            Push(ret_high, ret_low);
+            pc = 0x0028;
         }
         break;
 
@@ -2463,11 +2392,11 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xf7:
         // RST 6
         {
-            uint16_t ret = pc + 2;
-            WriteToMem(sp - 1, (ret >> 8) & 0xff);
-            WriteToMem(sp - 2, (ret & 0xff));
-            sp -= 2;
-            pc = 0x30;
+            uint16_t ret_addr = pc + 1;
+            uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+            uint8_t ret_low = ret_addr & 0x00ff;
+            Push(ret_high, ret_low);
+            pc = 0x0030;
         }
         break;
     case 0xf8:
@@ -2520,7 +2449,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xfd:
         // no instruction
         {
-            UnimplementedInstruction();
+            InvalidInstruction(opcode, pc);
         }
         break;
     case 0xfe:
@@ -2534,11 +2463,11 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xff:
         // RST 7
         {
-            uint16_t ret = pc + 2;
-            WriteToMem(sp - 1, (ret >> 8) & 0xff);
-            WriteToMem(sp - 2, (ret & 0xff));
-            sp -= 2;
-            pc = 0x38;
+            uint16_t ret_addr = pc + 1;
+            uint8_t ret_high = (ret_addr >> 8) & 0x00ff;
+            uint8_t ret_low = ret_addr & 0x00ff;
+            Push(ret_high, ret_low);
+            pc = 0x0038;
         }
         break;
     default:

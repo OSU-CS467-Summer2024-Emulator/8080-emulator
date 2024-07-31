@@ -94,7 +94,7 @@ TEST_CASE("Flag functions", "[flag]")
     }
 }
 
-TEST_CASE("0x00 NOP", "[opcode]")
+TEST_CASE("0x00 NOP", "[opcode][nop]")
 {
     Emulator e;
     Registers registers_before = e.GetRegisters();
@@ -108,6 +108,116 @@ TEST_CASE("0x00 NOP", "[opcode]")
     REQUIRE(e.GetFlags() == flags_before);
     REQUIRE(e.GetPC() == pc_before + 1);
     REQUIRE(e.GetSP() == sp_before);
+}
+
+// Other opcodes that don't have instructions
+TEST_CASE("Invalid opcodes", "[opcode][nop][invalid][.]")
+{
+    Emulator e;
+    Registers registers_before = e.GetRegisters();
+    Flags flags_before = e.GetFlags();
+    int pc_before = e.GetPC();
+    int sp_before = e.GetSP();
+
+    SECTION("0x08")
+    {
+        e.EmulateOpcode(0x08);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0x10")
+    {
+        e.EmulateOpcode(0x10);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0x18")
+    {
+        e.EmulateOpcode(0x18);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0x20")
+    {
+        e.EmulateOpcode(0x20);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0x28")
+    {
+        e.EmulateOpcode(0x28);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0x30")
+    {
+        e.EmulateOpcode(0x30);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0x38")
+    {
+        e.EmulateOpcode(0x38);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0xcb")
+    {
+        e.EmulateOpcode(0xcb);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0xdd")
+    {
+        e.EmulateOpcode(0xdd);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0xed")
+    {
+        e.EmulateOpcode(0xed);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
+    SECTION("0xfd")
+    {
+        e.EmulateOpcode(0xfd);
+
+        REQUIRE(e.GetRegisters() == registers_before);
+        REQUIRE(e.GetFlags() == flags_before);
+        REQUIRE(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetSP() == sp_before);
+    }
 }
 
 TEST_CASE("Set and complement carry flag", "[opcode][flag]")
@@ -1126,5 +1236,205 @@ TEST_CASE("Jump", "[jump][opcode]")
         e.EmulateOpcode(0xe2, 0x34, 0x12);
 
         // No jump
+    }
+}
+
+TEST_CASE("Restart", "[stack][subroutine][restart][opcode]")
+{
+    Emulator e;
+    e.AllocateMemory(0x3000);
+
+    // Increase PC to 0x0102
+    for (int i = 0; i < 0x0102; i++)
+        e.EmulateOpcode(0x00);
+
+    uint16_t pc_before = e.GetPC();
+    REQUIRE(pc_before == 0x0102);
+
+    uint8_t ret_high = (pc_before + 1) >> 8;
+    uint8_t ret_low = (pc_before + 1) & 0x00ff;
+
+    uint16_t sp_before = 0x2500;
+    e.SetSP(sp_before);
+
+    SECTION("RST 0")
+    {
+        e.EmulateOpcode(0xc7);
+
+        CHECK(e.GetPC() == 0x0000);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 1")
+    {
+        e.EmulateOpcode(0xcf);
+
+        CHECK(e.GetPC() == 0x0008);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 2")
+    {
+        e.EmulateOpcode(0xd7);
+
+        CHECK(e.GetPC() == 0x0010);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 3")
+    {
+        e.EmulateOpcode(0xdf);
+
+        CHECK(e.GetPC() == 0x0018);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 4")
+    {
+        e.EmulateOpcode(0xe7);
+
+        CHECK(e.GetPC() == 0x0020);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 5")
+    {
+        e.EmulateOpcode(0xef);
+
+        CHECK(e.GetPC() == 0x0028);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 6")
+    {
+        e.EmulateOpcode(0xf7);
+
+        CHECK(e.GetPC() == 0x0030);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+    SECTION("RST 7")
+    {
+        e.EmulateOpcode(0xff);
+
+        CHECK(e.GetPC() == 0x0038);
+        CHECK(e.ReadFromMem(sp_before - 1) == ret_high);
+        CHECK(e.ReadFromMem(sp_before - 2) == ret_low);
+        CHECK(e.GetSP() == sp_before - 2);
+    }
+}
+
+TEST_CASE("Rotate", "[opcode][rotate]")
+{
+    Emulator e;
+
+    // MVI A
+    e.EmulateOpcode(0x3e, 0x7e);
+
+    // Set carry
+    e.EmulateOpcode(0x37);
+
+    // before
+    // A = 7e = 0111 1110
+    // cy = 1
+    REQUIRE(e.GetRegisters().A == 0x7e);
+    REQUIRE(e.GetFlags().cy == 1);
+
+    uint16_t pc_before = e.GetPC();
+
+    SECTION("RLC - rotate A left")
+    {
+        e.EmulateOpcode(0x07);
+
+        // A: 7e = 0111 1110 -> 1111 1100 = fc
+        // cy: set to 0
+        CHECK(e.GetRegisters().A == 0xfc);
+        CHECK(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetFlags().cy == 0);
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xf2);
+
+        // RLC
+        e.EmulateOpcode(0x07);
+
+        // A: f2 = 1111 0010 -> 1110 0101 = e5
+        // cy: set to 1
+        CHECK(e.GetRegisters().A == 0xe5);
+        CHECK(e.GetFlags().cy == 1);
+    }
+    SECTION("RRC - rotate A right")
+    {
+        e.EmulateOpcode(0x0f);
+
+        // A: 7e = 0111 1110 -> 0011 1111 = 3f
+        // cy: set to 0
+        CHECK(e.GetRegisters().A == 0x3f);
+        CHECK(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetFlags().cy == 0);
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xf2);
+
+        // RRC
+        e.EmulateOpcode(0x0f);
+
+        // A: f2 = 1111 0010 -> 0111 1001 = 79
+        // cy: set to 0
+        CHECK(e.GetRegisters().A == 0x79);
+        CHECK(e.GetFlags().cy == 0);
+    }
+    SECTION("RAL - rotate A left through carry")
+    {
+        e.EmulateOpcode(0x17);
+
+        // A: 7e = 0111 1110 -> 1111 1101 = fd
+        // cy: set to 0
+        CHECK(e.GetRegisters().A == 0xfd);
+        CHECK(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetFlags().cy == 0);
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xb5);
+
+        // RAL
+        e.EmulateOpcode(0x17);
+
+        // A: b5 = 1011 0101 -> 0110 1010= 6a
+        // cy: set to 1
+        CHECK(e.GetRegisters().A == 0x6a);
+        CHECK(e.GetFlags().cy == 1);
+    }
+    SECTION("RAR - rotate A right through carry")
+    {
+        e.EmulateOpcode(0x1f);
+
+        // A: 7e = 0111 1110 -> 1011 1111 = bf
+        // cy: set to 0
+        CHECK(e.GetRegisters().A == 0xbf);
+        CHECK(e.GetPC() == pc_before + 1);
+        CHECK(e.GetFlags().cy == 0);
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x6a);
+
+        // Set Carry
+        e.EmulateOpcode(0x37);
+        REQUIRE(e.GetFlags().cy == 1);
+
+        // RAR
+        e.EmulateOpcode(0x1f);
+
+        // A: 6a = 0110 1010 -> 1011 0101 = b5
+        // cy: set to 0
+        CHECK(e.GetRegisters().A == 0xb5);
+        CHECK(e.GetFlags().cy == 0);
     }
 }
