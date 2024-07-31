@@ -13,7 +13,7 @@ bool operator==(const Flags &lhs, const Flags &rhs)
            lhs.cy == rhs.cy && lhs.ac == rhs.ac;
 }
 
-TEST_CASE("MOV B", "[opcode][dest][src]")
+TEST_CASE("MOV B", "[opcode][store][load]")
 {
     Emulator e;
     int pc = e.GetPC();
@@ -147,7 +147,7 @@ TEST_CASE("MOV B", "[opcode][dest][src]")
     }
 }
 
-TEST_CASE("MOV C", "[opcode][dest][src]")
+TEST_CASE("MOV C", "[opcode][store][load]")
 {
     Emulator e;
     int pc = e.GetPC();
@@ -281,7 +281,7 @@ TEST_CASE("MOV C", "[opcode][dest][src]")
     }
 }
 
-TEST_CASE("MOV D", "[opcode][dest][src]")
+TEST_CASE("MOV D", "[opcode][store][load]")
 {
     Emulator e;
     int pc = e.GetPC();
@@ -415,7 +415,7 @@ TEST_CASE("MOV D", "[opcode][dest][src]")
     }
 }
 
-TEST_CASE("MOV E", "[opcode][dest][src]")
+TEST_CASE("MOV E", "[opcode][store][load]")
 {
     Emulator e;
     int pc = e.GetPC();
@@ -549,7 +549,7 @@ TEST_CASE("MOV E", "[opcode][dest][src]")
     }
 }
 
-TEST_CASE("MOV H", "[opcode][dest][src]")
+TEST_CASE("MOV H", "[opcode][store][load]")
 {
     Emulator e;
     int pc = e.GetPC();
@@ -681,7 +681,7 @@ TEST_CASE("MOV H", "[opcode][dest][src]")
     }
 }
 
-TEST_CASE("MOV L", "[opcode][dest][src]")
+TEST_CASE("MOV L", "[opcode][store][load]")
 {
     Emulator e;
     int pc = e.GetPC();
@@ -813,17 +813,17 @@ TEST_CASE("MOV L", "[opcode][dest][src]")
     }
 }
 
-TEST_CASE("MOV M", "[opcode][dest][src]")
+TEST_CASE("MOV M", "[opcode][store][load]")
 {
     Emulator e;
     int pc = e.GetPC();
     Registers registers_before = e.GetRegisters();
 
+    // Allocate memory for writing
+    e.AllocateMemory(0x3000);
+
     SECTION("MOV M, B")
     {
-        // Allocate memory for writing
-        e.AllocateMemory(0x3000);
-
         // MVI into registers H, L, and B
         e.EmulateOpcode(0x26, 0x28);
         e.EmulateOpcode(0x2e, 0x5f);
@@ -843,9 +843,6 @@ TEST_CASE("MOV M", "[opcode][dest][src]")
 
     SECTION("MOV M, C")
     {
-        // Allocate memory for writing
-        e.AllocateMemory(0x3000);
-
         // MVI into registers H, L, and C
         e.EmulateOpcode(0x26, 0x20);
         e.EmulateOpcode(0x2e, 0x04);
@@ -865,9 +862,6 @@ TEST_CASE("MOV M", "[opcode][dest][src]")
 
     SECTION("MOV M, D")
     {
-        // Allocate memory for writing
-        e.AllocateMemory(0x3000);
-
         // MVI into registers H, L, and D
         e.EmulateOpcode(0x26, 0x20);
         e.EmulateOpcode(0x2e, 0x04);
@@ -887,9 +881,6 @@ TEST_CASE("MOV M", "[opcode][dest][src]")
 
     SECTION("MOV M, E")
     {
-        // Allocate memory for writing
-        e.AllocateMemory(0x3000);
-
         // MVI into registers H, L, and E
         e.EmulateOpcode(0x26, 0x20);
         e.EmulateOpcode(0x2e, 0x04);
@@ -909,9 +900,6 @@ TEST_CASE("MOV M", "[opcode][dest][src]")
 
     SECTION("MOV M, H")
     {
-        // Allocate memory for writing
-        e.AllocateMemory(0x3000);
-
         // MVI into registers H and L
         e.EmulateOpcode(0x26, 0x20);
         e.EmulateOpcode(0x2e, 0x04);
@@ -929,9 +917,6 @@ TEST_CASE("MOV M", "[opcode][dest][src]")
 
     SECTION("MOV M, L")
     {
-        // Allocate memory for writing
-        e.AllocateMemory(0x3000);
-
         // MVI into registers H and L
         e.EmulateOpcode(0x26, 0x20);
         e.EmulateOpcode(0x2e, 0x04);
@@ -949,9 +934,6 @@ TEST_CASE("MOV M", "[opcode][dest][src]")
 
     SECTION("MOV M, A")
     {
-        // Allocate memory for writing
-        e.AllocateMemory(0x3000);
-
         // MVI into registers H, L, and A
         e.EmulateOpcode(0x26, 0x28);
         e.EmulateOpcode(0x2e, 0x5f);
@@ -970,7 +952,7 @@ TEST_CASE("MOV M", "[opcode][dest][src]")
     }
 }
 
-TEST_CASE("MOV A", "[opcode][dest][src]")
+TEST_CASE("MOV A", "[opcode][store][load]")
 {
     Emulator e;
     int pc = e.GetPC();
@@ -1104,7 +1086,77 @@ TEST_CASE("MOV A", "[opcode][dest][src]")
     }
 }
 
-TEST_CASE("STAX", "[opcode][dest]")
+TEST_CASE("Move Immediate", "[opcode][move][immediate]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("MVI B")
+    {
+        e.EmulateOpcode(0x06, 0xbb);
+        CHECK((uint8_t)e.GetRegisters().B == 0xbb);
+        CHECK(e.GetPC() == pc + 2);
+    }
+    SECTION("MVI C")
+    {
+        e.EmulateOpcode(0x0e, 0xcc);
+        CHECK((uint8_t)e.GetRegisters().C == 0xcc);
+        CHECK(e.GetPC() == pc + 2);
+    }
+    SECTION("MVI D")
+    {
+        e.EmulateOpcode(0x16, 0xdd);
+        CHECK((uint8_t)e.GetRegisters().D == 0xdd);
+        CHECK(e.GetPC() == pc + 2);
+    }
+    SECTION("MVI E")
+    {
+        e.EmulateOpcode(0x1e, 0xee);
+        CHECK((uint8_t)e.GetRegisters().E == 0xee);
+        CHECK(e.GetPC() == pc + 2);
+    }
+    SECTION("MVI H")
+    {
+        e.EmulateOpcode(0x26, 0x11);
+        CHECK((uint8_t)e.GetRegisters().H == 0x11);
+        CHECK(e.GetPC() == pc + 2);
+    }
+    SECTION("MVI L")
+    {
+        e.EmulateOpcode(0x2e, 0x22);
+        CHECK((uint8_t)e.GetRegisters().L == 0x22);
+        CHECK(e.GetPC() == pc + 2);
+    }
+    SECTION("MVI M")
+    {
+        e.AllocateMemory(0x3000);
+
+        // Write address to HL registers
+        e.EmulateOpcode(0x26, 0x25);
+        e.EmulateOpcode(0x2e, 0x00);
+        REQUIRE((uint8_t)e.GetRegisters().H == 0x25);
+        REQUIRE((uint8_t)e.GetRegisters().L == 0x00);
+
+        // move 0x33 to memory at (HL)
+        e.EmulateOpcode(0x36, 0x33);
+
+        CHECK(e.ReadFromMem(0x2500) == 0x33);
+    }
+    SECTION("MVI A")
+    {
+        e.EmulateOpcode(0x3e, 0xaa);
+        CHECK((uint8_t)e.GetRegisters().A == 0xaa);
+        CHECK(e.GetPC() == pc + 2);
+    }
+    SECTION("MVI A - Max value")
+    {
+        e.EmulateOpcode(0x3e, 0xff);
+        CHECK((uint8_t)e.GetRegisters().A == 0xff);
+        CHECK(e.GetPC() == pc + 2);
+    }
+}
+
+TEST_CASE("STAX", "[opcode][store]")
 {
     Emulator e;
     int pc = e.GetPC();
@@ -1154,7 +1206,7 @@ TEST_CASE("STAX", "[opcode][dest]")
     }
 }
 
-TEST_CASE("LDAX", "[opcode][src]")
+TEST_CASE("LDAX", "[opcode][load]")
 {
     Emulator e;
     int pc = e.GetPC();
