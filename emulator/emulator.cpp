@@ -303,11 +303,10 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x0b:
         // DCX B
         {
-            registers.C--;
-            if (registers.C == 0xff)
-            {
-                registers.B--;
-            }
+            uint16_t BC = ((uint16_t)registers.B << 8) | registers.C;
+            BC--;
+            registers.B = (uint8_t)(BC >> 8);
+            registers.C = (uint8_t)BC;
             pc++;
         }
         break;
@@ -464,11 +463,10 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // DCX D
         // Decrement registers D and E as a 16 bit number, no flags affected
         {
-            registers.E--;
-            if (registers.E == 0xff)
-            {
-                registers.D--;
-            }
+            uint16_t DE = ((uint16_t)registers.D << 8) | registers.E;
+            DE--;
+            registers.D = (uint8_t)(DE >> 8);
+            registers.E = (uint8_t)DE;
             pc++;
         }
         break;

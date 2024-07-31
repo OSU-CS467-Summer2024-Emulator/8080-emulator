@@ -1687,3 +1687,140 @@ TEST_CASE("Decrement register", "[opcode][dcr][math]")
         CHECK(e.GetPC() == test_pc + 1);
     }
 }
+
+TEST_CASE("DCX", "[opcode][dcx][math]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("DCX B")
+    {
+        int test_pc = pc;
+
+        // MVI B, 0x01
+        // MVI C, 0x00
+        e.EmulateOpcode(0x06, 0x01);
+        e.EmulateOpcode(0x0e, 0x00);
+        REQUIRE(e.GetRegisters().B == 0x01);
+        REQUIRE(e.GetRegisters().C == 0x00);
+        test_pc = e.GetPC();
+
+        // DCX B
+        e.EmulateOpcode(0x0b);
+        CHECK(e.GetRegisters().B == 0x00);
+        CHECK(e.GetRegisters().C == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCX B - Underflow")
+    {
+        int test_pc = pc;
+
+        // MVI B, 0x00
+        // MVI C, 0x00
+        e.EmulateOpcode(0x06, 0x00);
+        e.EmulateOpcode(0x0e, 0x00);
+        REQUIRE(e.GetRegisters().B == 0x00);
+        REQUIRE(e.GetRegisters().C == 0x00);
+        test_pc = e.GetPC();
+
+        // DCX B
+        e.EmulateOpcode(0x0b);
+        CHECK(e.GetRegisters().B == 0xff);
+        CHECK(e.GetRegisters().C == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCX D")
+    {
+        int test_pc = pc;
+
+        // MVI D, 0x01
+        // MVI E, 0x00
+        e.EmulateOpcode(0x16, 0x01);
+        e.EmulateOpcode(0x1e, 0x00);
+        REQUIRE(e.GetRegisters().D == 0x01);
+        REQUIRE(e.GetRegisters().E == 0x00);
+        test_pc = e.GetPC();
+
+        // DCX D
+        e.EmulateOpcode(0x1b);
+        CHECK(e.GetRegisters().D == 0x00);
+        CHECK(e.GetRegisters().E == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCX D - Underflow")
+    {
+        int test_pc = pc;
+
+        // MVI D, 0x00
+        // MVI E, 0x00
+        e.EmulateOpcode(0x16, 0x00);
+        e.EmulateOpcode(0x1e, 0x00);
+        REQUIRE(e.GetRegisters().D == 0x00);
+        REQUIRE(e.GetRegisters().E == 0x00);
+        test_pc = e.GetPC();
+
+        // DCX D
+        e.EmulateOpcode(0x1b);
+        CHECK(e.GetRegisters().D == 0xff);
+        CHECK(e.GetRegisters().E == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCX H")
+    {
+        int test_pc = pc;
+
+        // MVI H, 0x01
+        // MVI L, 0x00
+        e.EmulateOpcode(0x26, 0x01);
+        e.EmulateOpcode(0x2e, 0x00);
+        REQUIRE(e.GetRegisters().H == 0x01);
+        REQUIRE(e.GetRegisters().L == 0x00);
+        test_pc = e.GetPC();
+
+        // DCX H
+        e.EmulateOpcode(0x2b);
+        CHECK(e.GetRegisters().H == 0x00);
+        CHECK(e.GetRegisters().L == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCX H - Underflow")
+    {
+        int test_pc = pc;
+
+        // MVI H, 0x00
+        // MVI L, 0x00
+        e.EmulateOpcode(0x26, 0x00);
+        e.EmulateOpcode(0x2e, 0x00);
+        REQUIRE(e.GetRegisters().H == 0x00);
+        REQUIRE(e.GetRegisters().L == 0x00);
+        test_pc = e.GetPC();
+
+        // DCX H
+        e.EmulateOpcode(0x2b);
+        CHECK(e.GetRegisters().H == 0xff);
+        CHECK(e.GetRegisters().L == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCX SP")
+    {
+        int test_pc = pc;
+
+        REQUIRE(e.GetSP() == 0x00);
+
+        // INX SP
+        e.EmulateOpcode(0x33);
+        REQUIRE(e.GetSP() == 0x01);
+        test_pc = e.GetPC();
+
+        // DCX SP
+        e.EmulateOpcode(0x3b);
+        REQUIRE(e.GetSP() == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+}
