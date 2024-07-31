@@ -671,3 +671,229 @@ TEST_CASE("Increment register", "[opcode][inr][math]")
         CHECK(e.GetPC() == test_pc + 1);
     }
 }
+
+TEST_CASE("Decrement register", "[opcode][dcr][math]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("DCR A")
+    {
+        int test_pc = pc;
+
+        // INR A
+        e.EmulateOpcode(0x3c);
+        REQUIRE(e.GetRegisters().A == 0x01);
+        test_pc = e.GetPC();
+
+        // DCR A
+        e.EmulateOpcode(0x3d);
+        CHECK(e.GetRegisters().A == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR A - Already zero")
+    {
+        int test_pc = pc;
+
+        // DCR A
+        e.EmulateOpcode(0x3d);
+        CHECK(e.GetRegisters().A == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR B")
+    {
+        int test_pc = pc;
+
+        // INR B
+        e.EmulateOpcode(0x04);
+        REQUIRE(e.GetRegisters().B == 0x01);
+        test_pc = e.GetPC();
+
+        // DCR B
+        e.EmulateOpcode(0x05);
+        CHECK(e.GetRegisters().B == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR B - Already zero")
+    {
+        int test_pc = pc;
+
+        // DCR B
+        e.EmulateOpcode(0x05);
+        CHECK(e.GetRegisters().B == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR C")
+    {
+        int test_pc = pc;
+
+        // INR C
+        e.EmulateOpcode(0x0c);
+        REQUIRE(e.GetRegisters().C == 0x01);
+        test_pc = e.GetPC();
+
+        // DCR C
+        e.EmulateOpcode(0x0d);
+        CHECK(e.GetRegisters().C == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR C - Already zero")
+    {
+        int test_pc = pc;
+
+        // DCR C
+        e.EmulateOpcode(0x0d);
+        CHECK(e.GetRegisters().C == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR D")
+    {
+        int test_pc = pc;
+
+        // INR D
+        e.EmulateOpcode(0x14);
+        REQUIRE(e.GetRegisters().D == 0x01);
+        test_pc = e.GetPC();
+
+        // DCR D
+        e.EmulateOpcode(0x15);
+        CHECK(e.GetRegisters().D == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR D - Already zero")
+    {
+        int test_pc = pc;
+
+        // DCR D
+        e.EmulateOpcode(0x15);
+        CHECK(e.GetRegisters().D == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR E")
+    {
+        int test_pc = pc;
+
+        // INR E
+        e.EmulateOpcode(0x1c);
+        REQUIRE(e.GetRegisters().E == 0x01);
+        test_pc = e.GetPC();
+
+        // DCR E
+        e.EmulateOpcode(0x1d);
+        CHECK(e.GetRegisters().E == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR E - Already zero")
+    {
+        int test_pc = pc;
+
+        // DCR E
+        e.EmulateOpcode(0x1d);
+        CHECK(e.GetRegisters().E == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR H")
+    {
+        int test_pc = pc;
+
+        // INR H
+        e.EmulateOpcode(0x24);
+        REQUIRE(e.GetRegisters().H == 0x01);
+        test_pc = e.GetPC();
+
+        // DCR H
+        e.EmulateOpcode(0x25);
+        CHECK(e.GetRegisters().H == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR H - Already zero")
+    {
+        int test_pc = pc;
+
+        // DCR H
+        e.EmulateOpcode(0x25);
+        CHECK(e.GetRegisters().H == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR L")
+    {
+        int test_pc = pc;
+
+        // INR L
+        e.EmulateOpcode(0x2c);
+        REQUIRE(e.GetRegisters().L == 0x01);
+        test_pc = e.GetPC();
+
+        // DCR L
+        e.EmulateOpcode(0x2d);
+        CHECK(e.GetRegisters().L == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR L - Already zero")
+    {
+        int test_pc = pc;
+
+        // DCR L
+        e.EmulateOpcode(0x2d);
+        CHECK(e.GetRegisters().L == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR M")
+    {
+        int test_pc = pc;
+        e.AllocateMemory(0x3000);
+
+        // Write address to HL registers
+        // MVI H, 0x25
+        // MVI L, 0x00
+        e.EmulateOpcode(0x26, 0x25);
+        e.EmulateOpcode(0x2e, 0x00);
+        REQUIRE((uint8_t)e.GetRegisters().H == 0x25);
+        REQUIRE((uint8_t)e.GetRegisters().L == 0x00);
+        test_pc = e.GetPC();
+
+        // INR M
+        e.EmulateOpcode(0x34);
+        REQUIRE(e.ReadFromHL() == 0x01);
+        test_pc = e.GetPC();
+
+        // DCR M
+        e.EmulateOpcode(0x35);
+        REQUIRE(e.ReadFromHL() == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DCR M - Already zero")
+    {
+        int test_pc = pc;
+        e.AllocateMemory(0x3000);
+
+        // Write address to HL registers
+        // MVI H, 0x25
+        // MVI L, 0x00
+        e.EmulateOpcode(0x26, 0x25);
+        e.EmulateOpcode(0x2e, 0x00);
+        REQUIRE((uint8_t)e.GetRegisters().H == 0x25);
+        REQUIRE((uint8_t)e.GetRegisters().L == 0x00);
+        test_pc = e.GetPC();
+
+        // DCR M
+        e.EmulateOpcode(0x35);
+        REQUIRE(e.ReadFromHL() == 0xff);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+}
