@@ -44,7 +44,11 @@ int Emulator::LoadRom(string file_path)
     if (file.is_open())
     {
         size = file.tellg();
-        AllocateMemory(size);
+
+        // allocate extra memory for RAM
+        int ram_size = 0x2000;
+
+        AllocateMemory(static_cast<int>(size) + ram_size);
 
         file.seekg(0, ios::beg);
         file.read(reinterpret_cast<char *>(memory), size);
