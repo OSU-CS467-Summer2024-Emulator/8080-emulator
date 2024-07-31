@@ -1330,3 +1330,111 @@ TEST_CASE("Restart", "[stack][subroutine][restart][opcode]")
         CHECK(e.GetSP() == sp_before - 2);
     }
 }
+
+TEST_CASE("Rotate", "[opcode][rotate]")
+{
+    Emulator e;
+
+    // MVI A
+    e.EmulateOpcode(0x3e, 0x7e);
+
+    // Set carry
+    e.EmulateOpcode(0x37);
+
+    // before
+    // A = 7e = 0111 1110
+    // cy = 1
+    REQUIRE(e.GetRegisters().A == 0x7e);
+    REQUIRE(e.GetFlags().cy == 1);
+
+    uint16_t pc_before = e.GetPC();
+
+    SECTION("RLC - rotate A left")
+    {
+        e.EmulateOpcode(0x07);
+
+        // A: 7e = 0111 1110 -> 1111 1100 = fc
+        // cy: set to 0
+        CHECK(e.GetRegisters().A == 0xfc);
+        CHECK(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetFlags().cy == 0);
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xf2);
+
+        // RLC
+        e.EmulateOpcode(0x07);
+
+        // A: f2 = 1111 0010 -> 1110 0101 = e5
+        // cy: set to 1
+        CHECK(e.GetRegisters().A == 0xe5);
+        CHECK(e.GetFlags().cy == 1);
+    }
+    SECTION("RRC - rotate A right")
+    {
+        e.EmulateOpcode(0x0f);
+
+        // A: 7e = 0111 1110 -> 0011 1111 = 3f
+        // cy: set to 0
+        CHECK(e.GetRegisters().A == 0x3f);
+        CHECK(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetFlags().cy == 0);
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xf2);
+
+        // RLC
+        e.EmulateOpcode(0x0f);
+
+        // A: f2 = 1111 0010 -> 0111 1001 = 79
+        // cy: set to 0
+        CHECK(e.GetRegisters().A == 0x79);
+        CHECK(e.GetFlags().cy == 0);
+    }
+    SECTION("RAL - rotate A left through carry")
+    {
+        e.EmulateOpcode(0x17);
+
+        // A: 7e = 0111 1110 -> 1111 1101 = fd
+        // cy: set to 0
+        CHECK(e.GetRegisters().A == 0xfd);
+        CHECK(e.GetPC() == pc_before + 1);
+        REQUIRE(e.GetFlags().cy == 0);
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xb5);
+
+        // RAL
+        e.EmulateOpcode(0x17);
+
+        // A: b5 = 1011 0101 -> 0110 1010= 6a
+        // cy: set to 1
+        CHECK(e.GetRegisters().A == 0x6a);
+        CHECK(e.GetFlags().cy == 1);
+    }
+    SECTION("RAR - rotate A right through carry")
+    {
+        e.EmulateOpcode(0x1f);
+
+        // A: 7e = 0111 1110 -> 1011 1111 = bf
+        // cy: set to 0
+        CHECK(e.GetRegisters().A == 0xbf);
+        CHECK(e.GetPC() == pc_before + 1);
+        CHECK(e.GetFlags().cy == 0);
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x6a);
+
+        // Set Carry
+        e.EmulateOpcode(0x37);
+        REQUIRE(e.GetFlags().cy == 1);
+
+        // RAR
+        e.EmulateOpcode(0x1f);
+
+        // A: 6a = 0110 1010 -> 1011 0101 = b5
+        // cy: set to 0
+        CHECK(e.GetRegisters().A == 0xb5);
+        CHECK(e.GetFlags().cy == 0);
+    }
+}
