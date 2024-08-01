@@ -14,7 +14,7 @@ SDL::SDL(Emulator& i8080) : this_cpu(i8080)
     SDL_CreateWindowAndRenderer(224 * 3, 256 * 3, 0, &window, &renderer);
     SDL_RenderSetScale(renderer, 3, 3);
     SDL_RenderSetLogicalSize(renderer, 224, 256);
-    cout << 'SDL INITIALIZED' << endl;
+    cout << "SDL INITIALIZED" << endl;
 }
 
 void SDL::DrawGraphic()
@@ -33,7 +33,7 @@ void SDL::DrawGraphic()
                                 + horizontal_offset;
             uint8_t current_bit = (h % 8);
 
-            bool thisPixel = (this_cpu.ReadMem(current_byte) & (1 << current_bit)) != 0;
+            bool thisPixel = (this_cpu.ReadFromMem(current_byte) & (1 << current_bit)) != 0;
 
             // retrieve the current pixel color
             if(thisPixel)
@@ -83,15 +83,41 @@ void SDL::GetInput()
 }
 
 void SDL::RunGame()
-{   int counter = 0;
+{   
+    int counter = 0;
     while(true)
     {
         this_cpu.Emulate();
         if (!(++counter % 500))
         {
+            printf("------------DRAW GRAPHIC HERE----------------\n");
+            // cin.get();
             DrawGraphic();
         }
-        GetInput();
+        // Interrupt 1
+        this_cpu.Interrupt(1);
+
+        while (!(this_cpu.interrupt_enable))
+        {
+            this_cpu.Emulate();
+        }
         
+        this_cpu.Emulate();
+
+        // Interrupt 2
+        this_cpu.Interrupt(2);
+        
+        while (!(this_cpu.interrupt_enable))
+        {
+            this_cpu.Emulate();
+        }
+        
+        this_cpu.Emulate();
+
+        GetInput();
+        // if(counter % 20 == 0)
+        // {
+        //     cin.get();
+        // }
     }
 }

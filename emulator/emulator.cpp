@@ -8,13 +8,14 @@
 using namespace std;
 
 // Constructor
-Emulator::Emulator(char* rom_path)
+Emulator::Emulator()
 {
     pc = 0;
     sp = 0;
+    interrupt_enable = false;
     memory = nullptr;
     mem_size = 0;
-    LoadRom(rom_path);
+    LoadRom("./space_invaders_rom/invaders");
 }
 
 // Destructor
@@ -123,7 +124,7 @@ void Emulator::WriteToMem(uint16_t address, uint8_t value)
 
     if (address >= 0x2400)
     {
-        // printf("VIDEO MEM WRITE -------- %04x %04x\n", address, value);
+        printf("VIDEO MEM WRITE -------- %04x %04x\n", address, value);
     }
     
     memory[address] = value;
@@ -191,19 +192,24 @@ void Emulator::SubtractFromA(uint8_t operand)
 
 void Emulator::Emulate()
 {
-    // while (count < 110)
     {
+        
         uint8_t opcode = memory[pc];
 
         Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
+        // cin.get();
         EmulateOpcode(opcode, memory[pc + 1], memory[pc + 2]);
 
-        count++;
     }
 }
 
 void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
 {
+    // printf("############# EMULATE HERE\n");
+    // if (registers.B == 0x00)
+    // {
+    //     cin.get();
+    // }
     switch (opcode)
     {
     // 0x00 - 0x0f
@@ -2362,7 +2368,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xf3:
         // DI
         {
-            // interupt_enable = 0;
+            interrupt_enable = false;
             pc++;
         }
         break;
@@ -2437,7 +2443,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xfb:
         // EI
         {
-            // interupt_enable = 1; Interupt enable variable not established in Emulator class yet
+            interrupt_enable = true;
             pc++;
         }
         break;
@@ -2537,4 +2543,16 @@ int Emulator::GetSP()
 void Emulator::SetSP(uint16_t new_sp)
 {
     sp = new_sp;
+}
+
+void Emulator::Interrupt(int interrupt_num)
+{
+    //perform "PUSH PC"
+    Push((pc & 0xFF00) >> 8, (pc & 0xff));
+
+    //Set the PC to the low memory vector
+    pc = 8 * interrupt_num;
+    
+    //"DI"
+    interrupt_enable = false;
 }

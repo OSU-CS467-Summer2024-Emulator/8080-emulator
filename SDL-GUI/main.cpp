@@ -6,15 +6,8 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-  Emulator e("./space_invaders_rom/invaders");
+  Emulator e;
   SDL s(e);
-  // Emulator e;
-  // e.LoadRom("./space_invaders_rom/invaders");
-  // e.Emulate();
   
-  // s.Initialize(&e);
   s.RunGame();
-
-  // s.DrawGraphic(&e);
-  // s.GetInput();
 }
