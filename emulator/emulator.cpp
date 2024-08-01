@@ -588,9 +588,10 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             if (highNibble > 9 || flags.cy)
             {
                 registers.A += 0x60; // Increment most significant bits by 6
+                flags.cy = 1;
             }
 
-            LogicFlagsA();
+            flags.p = parity(registers.A);
             pc++;
         }
         break;

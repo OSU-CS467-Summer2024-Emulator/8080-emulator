@@ -1999,3 +1999,71 @@ TEST_CASE("Double Addition", "[opcode][dad][math]")
         CHECK(e.GetPC() == test_pc + 1);
     }
 }
+
+TEST_CASE("Decimal Adjust Accumulator", "[opcode][daa]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("DAA - No adjustment")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x32);
+        REQUIRE(e.GetRegisters().A == 0x32);
+        test_pc = e.GetPC();
+
+        // DAA
+        e.EmulateOpcode(0x27);
+        CHECK(e.GetRegisters().A == 0x32);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DAA - Lower nibble adjustment")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0x3a);
+        REQUIRE(e.GetRegisters().A == 0x3a);
+        test_pc = e.GetPC();
+
+        // DAA
+        e.EmulateOpcode(0x27);
+        CHECK(e.GetRegisters().A == 0x40);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DAA - Upper nibble adjustment")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xa0);
+        REQUIRE(e.GetRegisters().A == 0xa0);
+        test_pc = e.GetPC();
+
+        // DAA
+        e.EmulateOpcode(0x27);
+        CHECK(e.GetRegisters().A == 0x00);
+        CHECK(e.GetFlags().cy == 1);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DAA - Both nibbles adjusted")
+    {
+        int test_pc = pc;
+
+        // MVI A
+        e.EmulateOpcode(0x3e, 0xaa);
+        REQUIRE(e.GetRegisters().A == 0xaa);
+        test_pc = e.GetPC();
+
+        // DAA
+        e.EmulateOpcode(0x27);
+        CHECK(e.GetRegisters().A == 0x10);
+        CHECK(e.GetFlags().cy == 1);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+}
