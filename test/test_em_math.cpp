@@ -2000,7 +2000,7 @@ TEST_CASE("Double Addition", "[opcode][dad][math]")
     }
 }
 
-TEST_CASE("Decimal Adjust Accumulator", "[opcode][daa]")
+TEST_CASE("Decimal Adjust Accumulator", "[opcode][daa][math]")
 {
     Emulator e;
     int pc = e.GetPC();
