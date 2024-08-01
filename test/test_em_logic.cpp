@@ -13,7 +13,7 @@ bool operator==(const Flags &lhs, const Flags &rhs)
            lhs.cy == rhs.cy && lhs.ac == rhs.ac;
 }
 
-TEST_CASE("AND Register with A", "[opcode][and]")
+TEST_CASE("AND Register with A", "[opcode][and][register]")
 {
     Emulator e;
 
@@ -189,7 +189,7 @@ TEST_CASE("AND Register with A", "[opcode][and]")
     }
 }
 
-TEST_CASE("XOR Register with A", "[opcode][xor]")
+TEST_CASE("XOR Register with A", "[opcode][xor][register]")
 {
     Emulator e;
 
@@ -365,7 +365,7 @@ TEST_CASE("XOR Register with A", "[opcode][xor]")
     }
 }
 
-TEST_CASE("OR Register with A", "[opcode][xor]")
+TEST_CASE("OR Register with A", "[opcode][xor][register]")
 {
     Emulator e;
 
@@ -519,7 +519,7 @@ TEST_CASE("OR Register with A", "[opcode][xor]")
         e.EmulateOpcode(0x36, 0xd3);
         REQUIRE(e.ReadFromHL() == 0xd3);
         REQUIRE(e.GetPC() == pc_before + 2);
-        
+
         pc_before = e.GetPC();
 
         // OR A with M, store in A
@@ -539,7 +539,7 @@ TEST_CASE("OR Register with A", "[opcode][xor]")
     }
 }
 
-TEST_CASE("CMP Register with A", "[opcode][cmp]")
+TEST_CASE("CMP Register with A", "[opcode][cmp][register]")
 {
     Emulator e;
 
@@ -724,7 +724,7 @@ TEST_CASE("CMP Register with A", "[opcode][cmp]")
     }
 }
 
-TEST_CASE("AND Immediate with A", "[opcode][and]")
+TEST_CASE("AND Immediate with A", "[opcode][and][immediate]")
 {
     Emulator e;
 
@@ -771,7 +771,7 @@ TEST_CASE("AND Immediate with A", "[opcode][and]")
     }
 }
 
-TEST_CASE("XOR Immediate with A", "[opcode][xor]")
+TEST_CASE("XOR Immediate with A", "[opcode][xor][immediate]")
 {
     Emulator e;
 
@@ -818,7 +818,7 @@ TEST_CASE("XOR Immediate with A", "[opcode][xor]")
     }
 }
 
-TEST_CASE("OR Immediate with A", "[opcode][or]")
+TEST_CASE("OR Immediate with A", "[opcode][or][immediate]")
 {
     Emulator e;
 
@@ -872,7 +872,7 @@ TEST_CASE("OR Immediate with A", "[opcode][or]")
     }
 }
 
-TEST_CASE("CMP Immediate with A", "[opcode][cmp]")
+TEST_CASE("CMP Immediate with A", "[opcode][cmp][immediate]")
 {
     Emulator e;
 
