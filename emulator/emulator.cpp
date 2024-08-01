@@ -287,12 +287,12 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x09:
         // DAD B
         {
-            uint32_t bc = (registers.B << 8) | registers.C;
-            uint32_t hl = (registers.H << 8) | registers.L;
-            uint32_t ans = bc + hl;
-            registers.H = (ans & 0xff00) >> 8;
-            registers.L = (ans & 0xff);
-            flags.cy = ((ans & 0xffff0000) != 0);
+            uint32_t BC = (registers.B << 8) | registers.C;
+            uint32_t HL = (registers.H << 8) | registers.L;
+            uint32_t sum = BC + HL;
+            registers.H = (sum & 0xff00) >> 8;
+            registers.L = (sum & 0xff);
+            flags.cy = (sum & 0x00010000);
             pc++;
         }
         break;
@@ -443,13 +443,12 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         break;
     case 0x19:
         // DAD D
-        // 16 bit addition DE + HL is stored in HL, cy set accordingly
         {
-            uint32_t num1 = (registers.D << 8) | registers.E;
-            uint32_t num2 = (registers.H << 8) | registers.L;
-            uint32_t sum = num1 + num2;
-            registers.H = (sum >> 8) & 0x000000FF;
-            registers.L = sum & 0x000000FF;
+            uint32_t DE = (registers.D << 8) | registers.E;
+            uint32_t HL = (registers.H << 8) | registers.L;
+            uint32_t sum = DE + HL;
+            registers.H = (sum & 0xff00) >> 8;
+            registers.L = (sum & 0xff);
             flags.cy = (sum & 0x00010000);
 
             pc++;
@@ -589,9 +588,10 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             if (highNibble > 9 || flags.cy)
             {
                 registers.A += 0x60; // Increment most significant bits by 6
+                flags.cy = 1;
             }
 
-            LogicFlagsA();
+            flags.p = parity(registers.A);
             pc++;
         }
         break;
@@ -605,11 +605,10 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint32_t HL = (registers.H << 8) | registers.L;
             // Double HL
             HL <<= 1;
-            // Set carry flag if necessary
-            flags.cy = ((HL & 0xffff0000) != 0);
-            // Save to registers
             registers.H = (HL & 0xff00) >> 8;
             registers.L = (HL & 0xff);
+            // Set carry flag if necessary
+            flags.cy = (HL & 0x00010000);
             pc++;
         }
         break;
@@ -728,11 +727,11 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x39:
         // DAD SP
         {
-            uint32_t hl = (registers.H << 8) | registers.L;
-            uint32_t res = hl + sp;
-            registers.H = (res & 0xff00) >> 8;
-            registers.L = res & 0xff;
-            flags.cy = ((res & 0xffff0000) > 0);
+            uint32_t HL = (registers.H << 8) | registers.L;
+            uint32_t sum = HL + sp;
+            registers.H = (sum & 0xff00) >> 8;
+            registers.L = (sum & 0xff);
+            flags.cy = (sum & 0x00010000);
             pc++;
         }
         break;

@@ -1460,3 +1460,14 @@ TEST_CASE("SPHL - Load SP from H and L", "[opcode][stack][load]")
     CHECK(e.GetPC() == pc_before + 1);
     CHECK(e.GetSP() == 0x250a);
 }
+
+TEST_CASE("Halt instruction", "[opcode][hlt]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    // HLT
+    e.EmulateOpcode(0x76);
+    // Should do nothing but halt the instruction and increment PC
+    CHECK(e.GetPC() == pc + 1);
+}
