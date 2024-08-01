@@ -1955,11 +1955,6 @@ void Emulator::Emulate()
         case 0xc9:
             // RET
             {
-                printf("STACK POINTER --- %04x\n", sp);
-                // if (sp > 0x2400)
-                // {
-                //     exit(1);
-                // }
                 pc = memory[sp] | (memory[sp + 1] << 8);
                 sp += 2;
             }
@@ -2459,7 +2454,7 @@ void Emulator::Emulate()
         case 0xf3:
             // DI
             {
-                // interupt_enable = 0;
+                registers.interupt_enable = 0;
                 pc++;
             }
             break;
@@ -2538,7 +2533,7 @@ void Emulator::Emulate()
         case 0xfb:
             // EI
             {
-                // interupt_enable = 1; Interupt enable variable not established in Emulator class yet
+                registers.interupt_enable = 1; //Interupt enable variable not established in Emulator class yet
                 pc++;
             }
             break;
@@ -2590,10 +2585,10 @@ void Emulator::Emulate()
         }
     }
     printf("STACK POINTER --- %04x\n", sp);
-    // if (sp > 0x2400)
-    // {
-    //     exit(1);
-    // }
+    if (sp > 0x2400)
+    {
+        exit(1);
+    }
 
 }
 
@@ -2624,4 +2619,9 @@ void Emulator::PrintFlags()
     cout << "Parity Flag:    " << flags.p << endl;
     cout << "Carry Flag:     " << flags.cy << endl;
     cout << "Aux Carry Flag: " << flags.ac << endl;
+}
+
+void Emulator::GenerateInterrupt(int interrupt_state)
+{
+    
 }

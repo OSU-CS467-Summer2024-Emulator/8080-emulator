@@ -34,6 +34,8 @@ class Emulator
 
         void SubtractFromA(uint8_t);
 
+        void GenerateInterrupt(int interrupt_num);
+
         // array for memory
         // unsigned char* memory;
         
@@ -48,6 +50,7 @@ class Emulator
             unsigned char E = 0;
             unsigned char H = 0;
             unsigned char L = 0;
+           
         } registers;
 
         struct Flags
@@ -67,6 +70,9 @@ class Emulator
 
         // array for memory
         unsigned char* memory;
+
+         uint8_t interrupt_enable = 0;
+        
 };
 
 #endif // EMULATOR_EMULATOR_HPP_
