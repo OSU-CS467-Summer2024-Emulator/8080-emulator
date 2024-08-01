@@ -44,7 +44,11 @@ int Emulator::LoadRom(string file_path)
     if (file.is_open())
     {
         size = file.tellg();
-        AllocateMemory(size);
+
+        // allocate extra memory for RAM
+        int ram_size = 0x2000;
+
+        AllocateMemory(static_cast<int>(size) + ram_size);
 
         file.seekg(0, ios::beg);
         file.read(reinterpret_cast<char *>(memory), size);
@@ -521,7 +525,8 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x21:
         // LXI H, #$
         {
-            registers.H = (operand2 << 8) | operand1;
+            registers.H = operand2;
+            registers.L = operand1;
             pc += 3;
         }
         break;
@@ -2275,6 +2280,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.L = registers.E;
             registers.D = tempH;
             registers.E = tempL;
+            pc++;
         }
         break;
     case 0xec:
