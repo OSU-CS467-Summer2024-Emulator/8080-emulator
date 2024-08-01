@@ -2454,7 +2454,7 @@ void Emulator::Emulate()
         case 0xf3:
             // DI
             {
-                registers.interupt_enable = 0;
+                interrupt_enable = 0;
                 pc++;
             }
             break;
@@ -2533,7 +2533,7 @@ void Emulator::Emulate()
         case 0xfb:
             // EI
             {
-                registers.interupt_enable = 1; //Interupt enable variable not established in Emulator class yet
+                interrupt_enable = 1; //Interupt enable variable not established in Emulator class yet
                 pc++;
             }
             break;
@@ -2584,11 +2584,11 @@ void Emulator::Emulate()
             break;
         }
     }
-    printf("STACK POINTER --- %04x\n", sp);
-    if (sp > 0x2400)
-    {
-        exit(1);
-    }
+    // printf("STACK POINTER --- %04x\n", sp);
+    // if (sp > 0x2400)
+    // {
+    //     exit(1);
+    // }
 
 }
 
