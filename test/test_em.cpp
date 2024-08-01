@@ -1461,7 +1461,7 @@ TEST_CASE("SPHL - Load SP from H and L", "[opcode][stack][load]")
     CHECK(e.GetSP() == 0x250a);
 }
 
-TEST_CASE("HLT", "[opcode]")
+TEST_CASE("Halt instruction", "[opcode][hlt]")
 {
     Emulator e;
     int pc = e.GetPC();
@@ -1470,4 +1470,58 @@ TEST_CASE("HLT", "[opcode]")
     e.EmulateOpcode(0x76);
     // Should do nothing but halt the instruction and increment PC
     CHECK(e.GetPC() == pc + 1);
+}
+
+TEST_CASE("Complement accumulator", "[opcode][logic][cma]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("CMA 0x00 to 0xff")
+    {
+        // CMA
+        e.EmulateOpcode(0x2f);
+        CHECK(e.GetRegisters().A == 0xff);
+        CHECK(e.GetPC() == pc + 1);
+    }
+
+    SECTION("CMA 0x01 to 0xfe")
+    {
+        int test_pc = pc;
+
+        uint8_t test = 0x01;
+
+        // MVI A
+        // 0x01 = 00000001
+        e.EmulateOpcode(0x3e, 0x01);
+        REQUIRE(e.GetRegisters().A == 0x01);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // CMA
+        // 00000001 -> 11111110
+        e.EmulateOpcode(0x2f);
+        CHECK(e.GetRegisters().A == 0xfe);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("CMA 0xff to 0x00")
+    {
+        int test_pc = pc;
+
+        uint8_t test = 0x01;
+
+        // MVI A
+        // 0xff = 11111111
+        e.EmulateOpcode(0x3e, 0xff);
+        REQUIRE(e.GetRegisters().A == 0xff);
+        REQUIRE(e.GetPC() == test_pc + 2);
+        test_pc = e.GetPC();
+
+        // CMA
+        // 11111111 -> 00000000
+        e.EmulateOpcode(0x2f);
+        CHECK(e.GetRegisters().A == 0x00);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
 }
