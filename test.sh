@@ -3,4 +3,4 @@
 mkdir build
 cmake -S . -B build
 cmake --build build
-./build/emulator/Main
+ctest --test-dir ./build --output-on-failure
