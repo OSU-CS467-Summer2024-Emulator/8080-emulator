@@ -1,2 +1,4 @@
 add_library(Emulator emulator.cpp emulator.hpp)
-target_link_libraries(Emulator Disassembler) 
+add_executable(Main main.cpp)
+target_link_libraries(Emulator Disassembler)
+target_link_libraries(Main Emulator Disassembler) 
