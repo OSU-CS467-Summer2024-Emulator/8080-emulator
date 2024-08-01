@@ -85,39 +85,32 @@ void SDL::GetInput()
 void SDL::RunGame()
 {   
     int counter = 0;
+
+    uint32_t lastFrameTime = SDL_GetTicks();
+    uint32_t currentTime = SDL_GetTicks();
+    int emu_cycles = 500;
+
     while(true)
     {
-        this_cpu.Emulate();
-        if (!(++counter % 500))
+        currentTime = SDL_GetTicks();
+        if ( (currentTime - lastFrameTime) > 17)
         {
-            printf("------------DRAW GRAPHIC HERE----------------\n");
+            lastFrameTime = currentTime;
+
+            this_cpu.Emulate(emu_cycles);
+            
+            // Interrupt 1
             // cin.get();
+            printf("INTERRUPT 1----------------------------------------------\n");
+            this_cpu.Interrupt(1);          
+            this_cpu.Emulate(emu_cycles);
+                 
+            // Interrupt 2
+            printf("INTERRUPT 2----------------------------------------------\n");
+            this_cpu.Interrupt(2);       
+            
             DrawGraphic();
         }
-        // Interrupt 1
-        this_cpu.Interrupt(1);
-
-        while (!(this_cpu.interrupt_enable))
-        {
-            this_cpu.Emulate();
-        }
-        
-        this_cpu.Emulate();
-
-        // Interrupt 2
-        this_cpu.Interrupt(2);
-        
-        while (!(this_cpu.interrupt_enable))
-        {
-            this_cpu.Emulate();
-        }
-        
-        this_cpu.Emulate();
-
         GetInput();
-        // if(counter % 20 == 0)
-        // {
-        //     cin.get();
-        // }
     }
 }

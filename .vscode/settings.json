@@ -16,6 +16,7 @@
     "tuple": "cpp",
     "vector": "cpp",
     "istream": "cpp",
-    "iomanip": "cpp"
+    "iomanip": "cpp",
+    "iostream": "cpp"
   }
 }

@@ -55,7 +55,7 @@ public:
 
     void InvalidInstruction(uint8_t, uint16_t);
 
-    void Emulate();
+    void Emulate(int cycles);
     void EmulateOpcode(uint8_t, uint8_t operand1 = 0x00, uint8_t operand2 = 0x00);
 
     void PrintRegisters();

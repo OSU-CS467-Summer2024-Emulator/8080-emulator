@@ -119,6 +119,7 @@ void Emulator::WriteToMem(uint16_t address, uint8_t value)
     if (address < 0x2000 || address >= 0x4000)
     {
         cout << "Invalid write location " << address << endl;
+        // cin.get();
         return;
     }
 
@@ -190,14 +191,14 @@ void Emulator::SubtractFromA(uint8_t operand)
     flags.cy = !(result & 0x0100);
 }
 
-void Emulator::Emulate()
+void Emulator::Emulate(int cycles)
 {
+    for (int ii = 0; ii < cycles; ii++)
     {
         
         uint8_t opcode = memory[pc];
 
         Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
-        // cin.get();
         EmulateOpcode(opcode, memory[pc + 1], memory[pc + 2]);
 
     }
@@ -205,11 +206,6 @@ void Emulator::Emulate()
 
 void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
 {
-    // printf("############# EMULATE HERE\n");
-    // if (registers.B == 0x00)
-    // {
-    //     cin.get();
-    // }
     switch (opcode)
     {
     // 0x00 - 0x0f
@@ -1252,7 +1248,6 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x7f:
         // MOV A, A
         {
-            registers.A = registers.A;
             pc++;
         }
         break;
@@ -2389,6 +2384,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             memory[sp - 1] = registers.A;
             uint8_t psw = (flags.z | flags.s << 1 | flags.p << 2 | flags.cy << 3 | flags.ac << 4);
             memory[sp - 2] = psw;
+            printf("PSW %d\n", (int)psw);
             sp -= 2;
             pc++;
         }
@@ -2547,12 +2543,16 @@ void Emulator::SetSP(uint16_t new_sp)
 
 void Emulator::Interrupt(int interrupt_num)
 {
-    //perform "PUSH PC"
-    Push((pc & 0xFF00) >> 8, (pc & 0xff));
+    if (interrupt_enable)
+    {
+        //perform "PUSH PC"
+        Push((pc & 0xff00) >> 8, (pc & 0x00ff));
 
-    //Set the PC to the low memory vector
-    pc = 8 * interrupt_num;
+        //Set the PC to the low memory vector
+        pc = 8 * interrupt_num;
+        
+        //"DI"
+        interrupt_enable = false;
+    }
     
-    //"DI"
-    interrupt_enable = false;
 }
