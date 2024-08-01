@@ -2382,11 +2382,9 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xf6:
         // ORI byte
         {
-            uint8_t x = registers.A | operand1;
-            ZSPFlags(x);
-            flags.cy = 0;
-            registers.A = x;
-            pc++;
+            registers.A |= operand1;
+            LogicFlagsA();
+            pc += 2;
         }
         break;
     case 0xf7:
@@ -2455,11 +2453,11 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0xfe:
         // CPI byte
         {
-            uint8_t mem = registers.A - operand1;
-            ZSPFlags(mem);
-            flags.cy = registers.A < operand1;
-            pc++;
+            uint16_t res = (uint16_t)registers.A - operand1;
+            ArithFlagsA(res);
+            pc += 2;
         }
+        break;
     case 0xff:
         // RST 7
         {
