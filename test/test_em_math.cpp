@@ -1824,3 +1824,178 @@ TEST_CASE("DCX", "[opcode][dcx][math]")
         CHECK(e.GetPC() == test_pc + 1);
     }
 }
+
+TEST_CASE("Double Addition", "[opcode][dad][math]")
+{
+    Emulator e;
+    int pc = e.GetPC();
+
+    SECTION("DAD B - Empty HL")
+    {
+        int test_pc = pc;
+
+        // MVI B
+        // MVI C
+        e.EmulateOpcode(0x06, 0x30);
+        e.EmulateOpcode(0x0e, 0x30);
+        REQUIRE(e.GetRegisters().B == 0x30);
+        REQUIRE(e.GetRegisters().C == 0x30);
+        REQUIRE(e.GetRegisters().H == 0x00);
+        REQUIRE(e.GetRegisters().L == 0x00);
+        test_pc = e.GetPC();
+
+        // DAD B
+        e.EmulateOpcode(0x09);
+        CHECK(e.GetRegisters().B == 0x30);
+        CHECK(e.GetRegisters().C == 0x30);
+        CHECK(e.GetRegisters().H == 0x30);
+        CHECK(e.GetRegisters().L == 0x30);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DAD B")
+    {
+        int test_pc = pc;
+
+        // MVI B
+        // MVI C
+        // MVI H
+        // MVI L
+        e.EmulateOpcode(0x06, 0x30);
+        e.EmulateOpcode(0x0e, 0x30);
+        e.EmulateOpcode(0x26, 0x30);
+        e.EmulateOpcode(0x2e, 0x30);
+        REQUIRE(e.GetRegisters().B == 0x30);
+        REQUIRE(e.GetRegisters().C == 0x30);
+        REQUIRE(e.GetRegisters().H == 0x30);
+        REQUIRE(e.GetRegisters().L == 0x30);
+        test_pc = e.GetPC();
+
+        // DAD B
+        e.EmulateOpcode(0x09);
+        CHECK(e.GetRegisters().B == 0x30);
+        CHECK(e.GetRegisters().C == 0x30);
+        CHECK(e.GetRegisters().H == 0x60);
+        CHECK(e.GetRegisters().L == 0x60);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DAD B - Trigger carry")
+    {
+        int test_pc = pc;
+
+        // MVI B
+        // MVI C
+        // MVI H
+        // MVI L
+        e.EmulateOpcode(0x06, 0x30);
+        e.EmulateOpcode(0x0e, 0x30);
+        e.EmulateOpcode(0x26, 0xff);
+        e.EmulateOpcode(0x2e, 0xff);
+        REQUIRE(e.GetRegisters().B == 0x30);
+        REQUIRE(e.GetRegisters().C == 0x30);
+        REQUIRE(e.GetRegisters().H == 0xff);
+        REQUIRE(e.GetRegisters().L == 0xff);
+        test_pc = e.GetPC();
+
+        // DAD B
+        e.EmulateOpcode(0x09);
+        CHECK(e.GetRegisters().B == 0x30);
+        CHECK(e.GetRegisters().C == 0x30);
+        CHECK(e.GetRegisters().H == 0x30);
+        CHECK(e.GetRegisters().L == 0x2f);
+        CHECK(e.GetFlags().cy == 1);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DAD D - Empty HL")
+    {
+        int test_pc = pc;
+
+        // MVI D
+        // MVI E
+        e.EmulateOpcode(0x16, 0x30);
+        e.EmulateOpcode(0x1e, 0x30);
+        REQUIRE(e.GetRegisters().D == 0x30);
+        REQUIRE(e.GetRegisters().E == 0x30);
+        REQUIRE(e.GetRegisters().H == 0x00);
+        REQUIRE(e.GetRegisters().L == 0x00);
+        test_pc = e.GetPC();
+
+        // DAD D
+        e.EmulateOpcode(0x19);
+        CHECK(e.GetRegisters().D == 0x30);
+        CHECK(e.GetRegisters().E == 0x30);
+        CHECK(e.GetRegisters().H == 0x30);
+        CHECK(e.GetRegisters().L == 0x30);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DAD D")
+    {
+        int test_pc = pc;
+
+        // MVI D
+        // MVI E
+        // MVI H
+        // MVI L
+        e.EmulateOpcode(0x16, 0x30);
+        e.EmulateOpcode(0x1e, 0x30);
+        e.EmulateOpcode(0x26, 0x30);
+        e.EmulateOpcode(0x2e, 0x30);
+        REQUIRE(e.GetRegisters().D == 0x30);
+        REQUIRE(e.GetRegisters().E == 0x30);
+        REQUIRE(e.GetRegisters().H == 0x30);
+        REQUIRE(e.GetRegisters().L == 0x30);
+        test_pc = e.GetPC();
+
+        // DAD D
+        e.EmulateOpcode(0x19);
+        CHECK(e.GetRegisters().D == 0x30);
+        CHECK(e.GetRegisters().E == 0x30);
+        CHECK(e.GetRegisters().H == 0x60);
+        CHECK(e.GetRegisters().L == 0x60);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DAD H")
+    {
+        int test_pc = pc;
+
+        // MVI H
+        // MVI L
+        e.EmulateOpcode(0x26, 0x30);
+        e.EmulateOpcode(0x2e, 0x30);
+        REQUIRE(e.GetRegisters().H == 0x30);
+        REQUIRE(e.GetRegisters().L == 0x30);
+        test_pc = e.GetPC();
+
+        // DAD H
+        e.EmulateOpcode(0x29);
+        CHECK(e.GetRegisters().H == 0x60);
+        CHECK(e.GetRegisters().L == 0x60);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+
+    SECTION("DAD SP")
+    {
+        int test_pc = pc;
+
+        // MVI H
+        // MVI L
+        // INX SP
+        e.EmulateOpcode(0x26, 0x30);
+        e.EmulateOpcode(0x2e, 0x30);
+        e.EmulateOpcode(0x33);
+        REQUIRE(e.GetRegisters().H == 0x30);
+        REQUIRE(e.GetRegisters().L == 0x30);
+        REQUIRE(e.GetSP() == 1);
+        test_pc = e.GetPC();
+
+        // DAD SP
+        e.EmulateOpcode(0x39);
+        CHECK(e.GetRegisters().H == 0x30);
+        CHECK(e.GetRegisters().L == 0x31);
+        CHECK(e.GetPC() == test_pc + 1);
+    }
+}
