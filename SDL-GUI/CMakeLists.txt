@@ -21,16 +21,18 @@ if (WIN32)
   target_link_libraries(
     Main PRIVATE SDL2main
   )
+
   target_link_libraries(
-    Main PRIVATE SDL2Main
-    )
+    SDLPlatform PRIVATE SDL2main
+  )
 endif()
 
 add_custom_command(
   TARGET Main POST_BUILD COMMAND
   ${CMAKE_COMMAND} -E copy_if_different
     "$<TARGET_FILE:SDL2>"
-    "$<TARGET_FILE:SDL2_image>" 
+    "$<TARGET_FILE:SDL2_image>"
+    "$<TARGET_FILE:SDLPlatform>" 
     "$<TARGET_FILE_DIR:Main>"
   VERBATIM
 )

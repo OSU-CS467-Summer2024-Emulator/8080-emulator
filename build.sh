@@ -3,4 +3,4 @@
 mkdir build
 cmake -S . -B build
 cmake --build build
-./build/SDL-GUI/Main
+# ./build/SDL-GUI/Main

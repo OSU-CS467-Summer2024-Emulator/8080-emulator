@@ -84,7 +84,7 @@ private:
     uint8_t *memory;
     int mem_size;
 
-    
+    long int num_cycles;    
 };
 
 #endif // EMULATOR_EMULATOR_HPP_

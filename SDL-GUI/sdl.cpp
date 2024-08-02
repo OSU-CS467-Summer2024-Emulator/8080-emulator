@@ -88,7 +88,7 @@ void SDL::RunGame()
 
     uint32_t lastFrameTime = SDL_GetTicks();
     uint32_t currentTime = SDL_GetTicks();
-    int emu_cycles = 500;
+    int emu_cycles = 16666;
 
     while(true)
     {
