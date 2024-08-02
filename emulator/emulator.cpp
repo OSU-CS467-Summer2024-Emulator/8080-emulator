@@ -2026,7 +2026,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Send contents of register A to output device determined by next byte
         {
             // special
-            pc++;
+            pc+=2;
         }
         break;
     case 0xd4:
@@ -2113,7 +2113,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // and stored in register A
         {
             // special
-            pc++;
+            pc+=2;
         }
         break;
     case 0xdc:
