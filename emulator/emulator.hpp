@@ -27,7 +27,6 @@ typedef struct Flags
 class Emulator
 {
 public:
-
     bool interrupt_enable;
     Emulator();
     ~Emulator();
@@ -62,6 +61,7 @@ public:
     void PrintFlags();
 
     void Interrupt(int interrupt);
+    void SetPort1(uint8_t, bool);
 
     Registers GetRegisters();
     Flags GetFlags();
@@ -84,7 +84,9 @@ private:
     uint8_t *memory;
     int mem_size;
 
-    long int num_cycles;    
+    long int num_cycles;
+    
+    uint8_t port1;
 };
 
 #endif // EMULATOR_EMULATOR_HPP_

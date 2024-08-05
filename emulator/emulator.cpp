@@ -126,9 +126,9 @@ void Emulator::WriteToMem(uint16_t address, uint8_t value)
 
     if (address >= 0x2400)
     {
-        printf("VIDEO MEM WRITE -------- %04x %04x\n", address, value);
+        // printf("VIDEO MEM WRITE -------- %04x %04x\n", address, value);
     }
-    
+
     memory[address] = value;
 }
 
@@ -199,12 +199,11 @@ void Emulator::Emulate(int cycles)
     num_cycles = 0;
     while (num_cycles < cycles)
     {
-        
+
         uint8_t opcode = memory[pc];
 
-        Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
+        // Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
         EmulateOpcode(opcode, memory[pc + 1], memory[pc + 2]);
-
     }
 }
 
@@ -2241,7 +2240,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // Send contents of register A to output device determined by next byte
         {
             // special
-            pc+=2;
+            pc += 2;
             num_cycles += 10;
         }
         break;
@@ -2336,8 +2335,13 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // One byte of input is read from the input device specified by next byte
         // and stored in register A
         {
-            // special
-            pc+=2;
+            if (operand1 == 0x01)
+            {
+                // Read port 1 into register A
+                registers.A = port1;
+            }
+
+            pc += 2;
             num_cycles += 10;
         }
         break;
@@ -2637,7 +2641,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             memory[sp - 1] = registers.A;
             uint8_t psw = (flags.z | flags.s << 1 | flags.p << 2 | flags.cy << 3 | flags.ac << 4);
             memory[sp - 2] = psw;
-            printf("PSW %d\n", (int)psw);
+            // printf("PSW %d\n", (int)psw);
             sp -= 2;
             pc++;
             num_cycles += 11;
@@ -2810,14 +2814,27 @@ void Emulator::Interrupt(int interrupt_num)
 {
     if (interrupt_enable)
     {
-        //perform "PUSH PC"
+        // perform "PUSH PC"
         Push((pc & 0xff00) >> 8, (pc & 0x00ff));
 
-        //Set the PC to the low memory vector
+        // Set the PC to the low memory vector
         pc = 8 * interrupt_num;
-        
+
         //"DI"
         interrupt_enable = false;
     }
-    
+}
+
+void Emulator::SetPort1(uint8_t bit, bool value)
+{
+    if (value)
+    {
+        // set a bit
+        port1 = port1 | (value << bit);
+    }
+    else
+    {
+        // reset a bit
+        port1 = port1 & (value << bit);
+    }
 }
