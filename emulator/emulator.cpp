@@ -17,6 +17,7 @@ Emulator::Emulator()
     mem_size = 0;
     LoadRom("./space_invaders_rom/invaders");
     num_cycles = 0;
+    port[2] = 0x00; // initialize to avoid a tilt
 }
 
 // Destructor
@@ -2335,10 +2336,10 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // One byte of input is read from the input device specified by next byte
         // and stored in register A
         {
-            if (operand1 == 0x01)
+            if (operand1 < 0x03)
             {
-                // Read port 1 into register A
-                registers.A = port1;
+                // Read input from port into register A
+                registers.A = port[operand1];
             }
 
             pc += 2;
@@ -2825,16 +2826,16 @@ void Emulator::Interrupt(int interrupt_num)
     }
 }
 
-void Emulator::SetPort1(uint8_t bit, bool value)
+void Emulator::SetPort(int port_num, uint8_t bit, bool value)
 {
     if (value)
     {
         // set a bit
-        port1 = port1 | (value << bit);
+        port[port_num] = port[port_num]| (value << bit);
     }
     else
     {
         // reset a bit
-        port1 = port1 & (value << bit);
+        port[port_num] = port[port_num] & (value << bit);
     }
 }

@@ -61,7 +61,7 @@ public:
     void PrintFlags();
 
     void Interrupt(int interrupt);
-    void SetPort1(uint8_t, bool);
+    void SetPort(int, uint8_t, bool);
 
     Registers GetRegisters();
     Flags GetFlags();
@@ -86,7 +86,10 @@ private:
 
     long int num_cycles;
     
-    uint8_t port1;
+    // I/O ports - techincally there are 8 ports
+    // 1, 2, 3 (and maybe 0) are used for input
+    // 2, 3, 5 (and maybe 6) are used for output
+    uint8_t port[8];
 };
 
 #endif // EMULATOR_EMULATOR_HPP_
