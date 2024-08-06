@@ -118,9 +118,46 @@ void SDL::GetInput()
     }
 }
 
+SDL_AudioSpec m_audioSpec;
+Uint8 *m_data;
+Uint32 m_waveLength;
+SDL_AudioDeviceID m_device;
+uint8_t last_out_port3 = 0;
+char *path = "./collide.wav";
+
+void SDL::LoadSound()
+{
+    if (SDL_LoadWAV(path, &m_audioSpec, &m_data, &m_waveLength) == NULL)
+    {
+        cout << "sound loading error: " << SDL_GetError() << endl;
+        // exit(1);
+    }
+    m_device = SDL_OpenAudioDevice(nullptr, 0, &m_audioSpec, nullptr, SDL_AUDIO_ALLOW_ANY_CHANGE);
+}
+
+void SDL::PlaySound()
+{
+    cout << "Play sound" << endl;
+    SDL_QueueAudio(m_device, m_data, m_waveLength);
+    SDL_PauseAudioDevice(m_device, 0);
+}
+
+void SDL::GetSound()
+{
+    if (this_cpu.GetPorts().port3 != last_out_port3)
+    {
+        if ((this_cpu.GetPorts().port3 & 0x2) && !(last_out_port3 & 0x2))
+        {
+            PlaySound();
+        }
+    }
+}
+
 void SDL::RunGame()
 {
     int counter = 0;
+
+    LoadSound();
 
     uint32_t lastFrameTime = SDL_GetTicks();
     uint32_t currentTime = SDL_GetTicks();
@@ -137,18 +174,19 @@ void SDL::RunGame()
 
             // Interrupt 1
             // cin.get();
-            //printf("INTERRUPT 1----------------------------------------------\n");
+            // printf("INTERRUPT 1----------------------------------------------\n");
             GetInput();
             this_cpu.Interrupt(1);
             this_cpu.Emulate(emu_cycles);
 
             // Interrupt 2
-            //printf("INTERRUPT 2----------------------------------------------\n");
+            // printf("INTERRUPT 2----------------------------------------------\n");
             GetInput();
             this_cpu.Interrupt(2);
 
             DrawGraphic();
         }
         GetInput();
+        GetSound();
     }
 }
