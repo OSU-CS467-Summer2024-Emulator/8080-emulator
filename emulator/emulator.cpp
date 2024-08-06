@@ -2240,7 +2240,15 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // OUT
         // Send contents of register A to output device determined by next byte
         {
-            // special
+            switch (operand1)
+            {
+            case 0x03:
+                ports.port3 = registers.A;
+                break;
+            case 0x05:
+                ports.port5 = registers.A;
+                break;
+            }
             pc += 2;
             num_cycles += 10;
         }
@@ -2338,8 +2346,8 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             if (operand1 < 0x03)
             {
-                // Read input from port into register A
-                registers.A = port[operand1];
+                // Read port 1 into register A
+                registers.A = ports.port1;
             }
 
             pc += 2;
@@ -2796,6 +2804,11 @@ Flags Emulator::GetFlags()
     return flags;
 }
 
+Ports Emulator::GetPorts()
+{
+    return ports;
+}
+
 int Emulator::GetPC()
 {
     return pc;
@@ -2831,11 +2844,11 @@ void Emulator::SetPort(int port_num, uint8_t bit, bool value)
     if (value)
     {
         // set a bit
-        port[port_num] = port[port_num]| (value << bit);
+        ports.port1 = ports.port1 | (value << bit);
     }
     else
     {
         // reset a bit
-        port[port_num] = port[port_num] & (value << bit);
+        ports.port1 = ports.port1 & (value << bit);
     }
 }

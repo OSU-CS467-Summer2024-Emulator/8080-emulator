@@ -13,17 +13,19 @@ class Emulator;
 class SDL
 {
 public:
-    SDL(Emulator& i8080);
+    SDL(Emulator &i8080);
     // void Initialize(Emulator* i8080);
     void DrawGraphic();
     void GetInput();
     void RunGame();
+    void GetSound();
+    void LoadSound();
+    void PlaySound();
 
 public:
     SDL_Window *window;
     SDL_Renderer *renderer;
-    Emulator& this_cpu;
-
+    Emulator &this_cpu;
 };
 
 #endif // SDLPLATFORM_SDLPLATFORM_HPP_
