@@ -27,6 +27,7 @@ typedef struct Flags
 typedef struct Ports
 {
     uint8_t port1;
+    uint8_t port2;
     uint8_t port3;
     uint8_t port5;
 } Ports;
@@ -68,11 +69,11 @@ public:
     void PrintFlags();
 
     void Interrupt(int interrupt);
-    void SetPort(int, uint8_t, bool);
 
     Registers GetRegisters();
     Flags GetFlags();
     Ports GetPorts();
+    void SetPort(int, uint8_t, bool);
     int GetPC();
     int GetSP();
     void SetSP(uint16_t);

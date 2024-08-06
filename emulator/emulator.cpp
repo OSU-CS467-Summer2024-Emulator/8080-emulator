@@ -17,7 +17,15 @@ Emulator::Emulator()
     mem_size = 0;
     LoadRom("./space_invaders_rom/invaders");
     num_cycles = 0;
-    port[2] = 0x00; // initialize to avoid a tilt
+
+    ports.port2 = 0x00; // reset tilt
+
+    // GAME SETTINGS:
+    // number of lives - 0x00:3 lives, 0x01:4 lives, 0x02:5 lives, 0x03:6 lives
+    // ports.port2 |= 0x03;
+
+    // extra life at 1000 points instead of 1500
+    // ports.port2 |= 0x08;
 }
 
 // Destructor
@@ -2344,10 +2352,14 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // One byte of input is read from the input device specified by next byte
         // and stored in register A
         {
-            if (operand1 < 0x03)
+            switch (operand1)
             {
-                // Read port 1 into register A
+            case (0x01):
                 registers.A = ports.port1;
+                break;
+            case (0x02):
+                registers.A = ports.port2;
+                break;
             }
 
             pc += 2;
@@ -2809,6 +2821,31 @@ Ports Emulator::GetPorts()
     return ports;
 }
 
+void Emulator::SetPort(int port_num, uint8_t bit, bool value)
+{
+    uint8_t *port;
+    switch (port_num)
+    {
+    case (1):
+        port = &ports.port1;
+        break;
+    case (2):
+        port = &ports.port2;
+        break;
+    case (3):
+        port = &ports.port3;
+        break;
+    case (5):
+        port = &ports.port5;
+        break;
+    }
+
+    if (value)
+        *port = *port | (value << bit);
+    else
+        *port = *port & (value << bit);
+}
+
 int Emulator::GetPC()
 {
     return pc;
@@ -2836,19 +2873,5 @@ void Emulator::Interrupt(int interrupt_num)
 
         //"DI"
         interrupt_enable = false;
-    }
-}
-
-void Emulator::SetPort(int port_num, uint8_t bit, bool value)
-{
-    if (value)
-    {
-        // set a bit
-        ports.port1 = ports.port1 | (value << bit);
-    }
-    else
-    {
-        // reset a bit
-        ports.port1 = ports.port1 & (value << bit);
     }
 }
