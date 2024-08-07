@@ -20,7 +20,7 @@ public:
     void RunGame();
     void GetSound();
     void LoadSound();
-    void PlaySound();
+    void PlaySound(uint8_t last_sound);
 
 public:
     SDL_Window *window;

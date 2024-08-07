@@ -123,7 +123,7 @@ Uint8 *m_data;
 Uint32 m_waveLength;
 SDL_AudioDeviceID m_device;
 uint8_t last_out_port3 = 0;
-char *path = "./collide.wav";
+char *path = "./audio/1.wav";
 
 void SDL::LoadSound()
 {
@@ -135,11 +135,12 @@ void SDL::LoadSound()
     m_device = SDL_OpenAudioDevice(nullptr, 0, &m_audioSpec, nullptr, SDL_AUDIO_ALLOW_ANY_CHANGE);
 }
 
-void SDL::PlaySound()
+void SDL::PlaySound(uint8_t last_sound)
 {
     cout << "Play sound" << endl;
     SDL_QueueAudio(m_device, m_data, m_waveLength);
     SDL_PauseAudioDevice(m_device, 0);
+    last_out_port3 = last_sound;
 }
 
 void SDL::GetSound()
@@ -148,7 +149,11 @@ void SDL::GetSound()
     {
         if ((this_cpu.GetPorts().port3 & 0x2) && !(last_out_port3 & 0x2))
         {
-            PlaySound();
+            PlaySound(0x2);
+        }
+        else
+        {
+            last_out_port3 = this_cpu.GetPorts().port3;
         }
     }
 }
