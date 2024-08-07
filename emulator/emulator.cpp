@@ -129,7 +129,6 @@ void Emulator::WriteToMem(uint16_t address, uint8_t value)
     if (address < 0x2000 || address >= 0x4000)
     {
         cout << "Invalid write location " << address << endl;
-        // cin.get();
         return;
     }
 
@@ -211,6 +210,7 @@ void Emulator::Emulate(int cycles)
 
         uint8_t opcode = memory[pc];
 
+        // uncomment to print each instruction as it is executed
         // Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
         EmulateOpcode(opcode, memory[pc + 1], memory[pc + 2]);
     }
@@ -253,8 +253,8 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             if (registers.C == 0)
             {
                 registers.B++;
-                num_cycles += 5;
             }
+            num_cycles += 5;
             pc++;
         }
         break;
@@ -867,6 +867,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // MOV B,B
         {
             pc++;
+            num_cycles += 5;
         }
         break;
 

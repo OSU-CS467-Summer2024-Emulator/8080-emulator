@@ -14,7 +14,6 @@ SDL::SDL(Emulator &i8080) : this_cpu(i8080)
     SDL_CreateWindowAndRenderer(224 * 3, 256 * 3, 0, &window, &renderer);
     SDL_RenderSetScale(renderer, 3, 3);
     SDL_RenderSetLogicalSize(renderer, 224, 256);
-    cout << "SDL INITIALIZED" << endl;
 }
 
 void SDL::DrawGraphic()
@@ -36,7 +35,21 @@ void SDL::DrawGraphic()
             // retrieve the current pixel color
             if (thisPixel)
             {
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                if (h < 64 && (h >= 16 || (v >= 16 && v < 128)))
+                {
+                    // green in player area
+                    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                }
+                else if (h >= 192 && h < 224)
+                {
+                    // red for UFO area
+                    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+                }
+                else
+                {
+                    // white everywhere else
+                    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+                }
             }
             else
             {
@@ -60,90 +73,72 @@ void SDL::GetInput()
     if (e.type == SDL_QUIT)
     {
         quit = true;
-        this_cpu.PrintRegisters();
         exit(0);
     }
-
-    else if (e.type == SDL_KEYDOWN) // key pressed
+    else if (e.type == SDL_KEYDOWN)
     {
+        // key pressed
         switch (e.key.keysym.sym)
         {
         case SDLK_UP:
-            cout << "UP ARROW KEY PRESSED (Credit)" << endl;
             this_cpu.SetPort(1, 0, 1);
             break;
         case SDLK_2:
-            cout << "2 PRESSED (Player 2 start)" << endl;
             this_cpu.SetPort(1, 1, 1);
             break;
         case SDLK_RETURN:
-            cout << "ENTER PRESSED (Player 1 start)" << endl;
             this_cpu.SetPort(1, 2, 1);
             break;
         case SDLK_SPACE:
-            cout << "SPACE PRESSED (Player 1 fire)" << endl;
             this_cpu.SetPort(1, 4, 1);
             break;
         case SDLK_LEFT:
-            cout << "LEFT PRESSED (Player 1 left)" << endl;
             this_cpu.SetPort(1, 5, 1);
             break;
         case SDLK_RIGHT:
-            cout << "RIGHT PRESSED (Player 1 right)" << endl;
             this_cpu.SetPort(1, 6, 1);
             break;
         case SDLK_w:
-            cout << "W PRESSED (Player 2 fire)" << endl;
             this_cpu.SetPort(2, 4, 1);
             break;
         case SDLK_a:
-            cout << "A PRESSED (Player 2 left)" << endl;
             this_cpu.SetPort(2, 5, 1);
             break;
         case SDLK_d:
-            cout << "D PRESSED (Player 2 right)" << endl;
             this_cpu.SetPort(2, 6, 1);
             break;
         }
     }
-    else if (e.type == SDL_KEYUP) // key released
+    else if (e.type == SDL_KEYUP)
     {
+        // key released
         switch (e.key.keysym.sym)
         {
         case SDLK_UP:
-            cout << "UP ARROW KEY RELEASED" << endl;
             this_cpu.SetPort(1, 0, 0);
             break;
         case SDLK_2:
-            cout << "2 RELEASED" << endl;
             this_cpu.SetPort(1, 1, 0);
             break;
         case SDLK_RETURN:
-            cout << "ENTER RELEASED" << endl;
             this_cpu.SetPort(1, 2, 0);
             break;
         case SDLK_SPACE:
-            cout << "SPACE RELEASED" << endl;
             this_cpu.SetPort(1, 4, 0);
             break;
         case SDLK_LEFT:
-            cout << "LEFT RELEASED" << endl;
             this_cpu.SetPort(1, 5, 0);
             break;
         case SDLK_RIGHT:
-            cout << "RIGHT RELEASED" << endl;
             this_cpu.SetPort(1, 6, 0);
             break;
         case SDLK_w:
-            cout << "W RELEASED" << endl;
             this_cpu.SetPort(2, 4, 0);
             break;
         case SDLK_a:
-            cout << "A RELEASED" << endl;
             this_cpu.SetPort(2, 5, 0);
             break;
         case SDLK_d:
-            cout << "D RELEASED" << endl;
             this_cpu.SetPort(2, 6, 0);
             break;
         }
@@ -189,7 +184,7 @@ void SDL::RunGame()
 {
     int counter = 0;
 
-    LoadSound();
+    //LoadSound();
 
     uint32_t lastFrameTime = SDL_GetTicks();
     uint32_t currentTime = SDL_GetTicks();
@@ -205,20 +200,17 @@ void SDL::RunGame()
             this_cpu.Emulate(emu_cycles);
 
             // Interrupt 1
-            // cin.get();
-            // printf("INTERRUPT 1----------------------------------------------\n");
             GetInput();
             this_cpu.Interrupt(1);
             this_cpu.Emulate(emu_cycles);
 
             // Interrupt 2
-            // printf("INTERRUPT 2----------------------------------------------\n");
             GetInput();
             this_cpu.Interrupt(2);
 
             DrawGraphic();
         }
         GetInput();
-        GetSound();
+        //GetSound();
     }
 }
