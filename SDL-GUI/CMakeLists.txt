@@ -1,7 +1,7 @@
 add_subdirectory(external/SDL-release-2.30.5)
 add_subdirectory(external/SDL_image-release-2.8.2)
 
-add_library(SDLPlatform sdl.cpp sdl.hpp)
+add_library(SDLPlatform sdl.cpp sdl.hpp sound.cpp sound.hpp)
 add_executable(Main main.cpp)
 
 target_link_libraries(Main PRIVATE 
