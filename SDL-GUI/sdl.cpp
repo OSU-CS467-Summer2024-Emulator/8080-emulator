@@ -118,28 +118,28 @@ void SDL::GetInput()
     }
 }
 
-SDL_AudioSpec m_audioSpec;
-Uint8 *m_data;
-Uint32 m_waveLength;
-SDL_AudioDeviceID m_device;
 uint8_t last_out_port3 = 0;
-char *path = "./audio/1.wav";
+uint8_t last_out_port5 = 0;
 
-void SDL::LoadSound()
+void SDL::LoadSounds()
 {
-    if (SDL_LoadWAV(path, &m_audioSpec, &m_data, &m_waveLength) == NULL)
-    {
-        cout << "sound loading error: " << SDL_GetError() << endl;
-        exit(1);
-    }
-    m_device = SDL_OpenAudioDevice(nullptr, 0, &m_audioSpec, nullptr, SDL_AUDIO_ALLOW_ANY_CHANGE);
+    // load all sounds for use
+    sounds.shoot.LoadSound();
+    sounds.invaderHit.LoadSound();
+    sounds.playerHit.LoadSound();
+    sounds.ufo.LoadSound();
+    sounds.fleetMv1.LoadSound();
+    sounds.fleetMv2.LoadSound();
+    sounds.fleetMv3.LoadSound();
+    sounds.fleetMv4.LoadSound();
+    sounds.ufoHit.LoadSound();
 }
 
-void SDL::PlaySound(uint8_t last_sound)
+void SDL::PlaySound(uint8_t last_sound, Sound& s)
 {
     cout << "Play sound" << endl;
-    SDL_QueueAudio(m_device, m_data, m_waveLength);
-    SDL_PauseAudioDevice(m_device, 0);
+    SDL_QueueAudio(s.m_device, s.m_data, s.m_waveLength);
+    SDL_PauseAudioDevice(s.m_device, 0);
     last_out_port3 = last_sound;
 }
 
@@ -147,14 +147,48 @@ void SDL::GetSound()
 {
     if (this_cpu.GetPorts().port3 != last_out_port3)
     {
+        if ((this_cpu.GetPorts().port3 & 0x1) && !(last_out_port3 & 0x1))
+        {
+            PlaySound(0x1, sounds.ufo);
+        }
         if ((this_cpu.GetPorts().port3 & 0x2) && !(last_out_port3 & 0x2))
         {
-            PlaySound(0x2);
+            PlaySound(0x2, sounds.shoot);
         }
-        else
+        if((this_cpu.GetPorts().port3 & 0x4) && !(last_out_port3 & 0x4))
         {
-            last_out_port3 = this_cpu.GetPorts().port3;
+            PlaySound(0x4, sounds.playerHit);
         }
+        if ((this_cpu.GetPorts().port3 & 0x8) && !(last_out_port3 & 0x8))
+        {
+            PlaySound(0x8, sounds.invaderHit);
+        }
+        last_out_port3 = this_cpu.GetPorts().port3;
+    }
+
+    if (this_cpu.GetPorts().port5 != last_out_port5)
+    {
+        if ((this_cpu.GetPorts().port5 & 0x1) && !(last_out_port5 & 0x1))
+        {
+            PlaySound(0x1, sounds.fleetMv1);
+        }
+        if ((this_cpu.GetPorts().port5 & 0x2) && !(last_out_port5 & 0x2))
+        {
+            PlaySound(0x2, sounds.fleetMv2);
+        }
+        if((this_cpu.GetPorts().port5 & 0x4) && !(last_out_port5 & 0x4))
+        {
+            PlaySound(0x4, sounds.fleetMv3);
+        }
+        if ((this_cpu.GetPorts().port5 & 0x8) && !(last_out_port5 & 0x8))
+        {
+            PlaySound(0x8, sounds.fleetMv4);
+        }
+        if ((this_cpu.GetPorts().port5 & 0x10) && !(last_out_port5 & 0x10))
+        {
+            PlaySound(0x8, sounds.ufoHit);
+        }
+        last_out_port5 = this_cpu.GetPorts().port5;
     }
 }
 
@@ -162,7 +196,8 @@ void SDL::RunGame()
 {
     int counter = 0;
 
-    LoadSound();
+    // load all sounds for use
+    LoadSounds();
 
     uint32_t lastFrameTime = SDL_GetTicks();
     uint32_t currentTime = SDL_GetTicks();
