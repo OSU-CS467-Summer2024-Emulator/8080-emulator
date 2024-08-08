@@ -140,8 +140,8 @@ void SDL::PlaySound(uint8_t last_sound, Sound& s)
     cout << "Play sound" << endl;
     SDL_QueueAudio(s.m_device, s.m_data, s.m_waveLength);
     SDL_PauseAudioDevice(s.m_device, 0);
-    last_out_port3 = last_sound;
 }
+
 
 void SDL::GetSound()
 {
