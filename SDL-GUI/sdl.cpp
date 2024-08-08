@@ -135,24 +135,11 @@ void SDL::LoadSounds()
     sounds.ufoHit.LoadSound();
 }
 
-void SDL::PlaySound(Sound& s)
+void SDL::PlaySound(Sound& s, int pause)
 {
     // cout << "Play sound" << endl;
     SDL_QueueAudio(s.m_device, s.m_data, s.m_waveLength);
-    SDL_PauseAudioDevice(s.m_device, 0);
-}
-
-void SDL::PlayUFOSound(Sound& s)
-{
-    if (ufo_playing)
-    {
-        SDL_QueueAudio(s.m_device, s.m_data, s.m_waveLength);
-        SDL_PauseAudioDevice(s.m_device, 0);
-    }
-    else
-    {
-        SDL_PauseAudioDevice(s.m_device, 1);
-    }
+    SDL_PauseAudioDevice(s.m_device, pause);
 }
 
 void SDL::GetSound()
@@ -161,13 +148,13 @@ void SDL::GetSound()
         {
             cout << "Play UFO sound" << endl;
             ufo_playing = true;
-            PlayUFOSound(sounds.ufo);
+            PlaySound(sounds.ufo);
         }
     else if (!(this_cpu.GetPorts().port3 & 0x1) && ufo_playing)
         {
             cout << "Stop playing UFO sound" << endl;
             ufo_playing = false;
-            PlayUFOSound(sounds.ufo);
+            PlaySound(sounds.ufo, 1);
         }
     if (this_cpu.GetPorts().port3 != last_out_port3)
     {   

@@ -36,8 +36,7 @@ public:
     void GetInput();
     void RunGame();
     void GetSound();
-    void PlaySound(Sound& sound);
-    void PlayUFOSound(Sound& s);
+    void PlaySound(Sound& sound, int pause = 0);
     void LoadSounds();
 
 public:
