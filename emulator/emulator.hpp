@@ -24,9 +24,18 @@ typedef struct Flags
     bool ac = 0; // auxiliary carry - not needed for space invaders
 } Flags;
 
+typedef struct Ports
+{
+    uint8_t port1;
+    uint8_t port2;
+    uint8_t port3;
+    uint8_t port5;
+} Ports;
+
 class Emulator
 {
 public:
+    bool interrupt_enable;
     Emulator();
     ~Emulator();
 
@@ -53,14 +62,18 @@ public:
 
     void InvalidInstruction(uint8_t, uint16_t);
 
-    void Emulate();
+    void Emulate(int cycles);
     void EmulateOpcode(uint8_t, uint8_t operand1 = 0x00, uint8_t operand2 = 0x00);
 
     void PrintRegisters();
     void PrintFlags();
 
+    void Interrupt(int interrupt);
+
     Registers GetRegisters();
     Flags GetFlags();
+    Ports GetPorts();
+    void SetPort(int, uint8_t, bool);
     int GetPC();
     int GetSP();
     void SetSP(uint16_t);
@@ -79,6 +92,10 @@ private:
     // array for memory
     uint8_t *memory;
     int mem_size;
+
+    long int num_cycles;
+
+    Ports ports;
 };
 
 #endif // EMULATOR_EMULATOR_HPP_
