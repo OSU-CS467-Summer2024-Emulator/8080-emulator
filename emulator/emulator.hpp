@@ -26,9 +26,9 @@ typedef struct Flags
 
 typedef struct Ports
 {
-    uint8_t port1;
-    uint8_t port3;
-    uint8_t port5;
+    uint8_t port1 = 0;
+    uint8_t port3 = 0;
+    uint8_t port5 = 0;
 } Ports;
 
 class Emulator

@@ -135,33 +135,53 @@ void SDL::LoadSounds()
     sounds.ufoHit.LoadSound();
 }
 
-void SDL::PlaySound(uint8_t last_sound, Sound& s)
+void SDL::PlaySound(Sound& s)
 {
-    cout << "Play sound" << endl;
+    // cout << "Play sound" << endl;
     SDL_QueueAudio(s.m_device, s.m_data, s.m_waveLength);
     SDL_PauseAudioDevice(s.m_device, 0);
 }
 
+void SDL::PlayUFOSound(Sound& s)
+{
+    if (ufo_playing)
+    {
+        SDL_QueueAudio(s.m_device, s.m_data, s.m_waveLength);
+        SDL_PauseAudioDevice(s.m_device, 0);
+    }
+    else
+    {
+        SDL_PauseAudioDevice(s.m_device, 1);
+    }
+}
 
 void SDL::GetSound()
 {
-    if (this_cpu.GetPorts().port3 != last_out_port3)
-    {
-        if ((this_cpu.GetPorts().port3 & 0x1) && !(last_out_port3 & 0x1))
+    if ((this_cpu.GetPorts().port3 & 0x1))
         {
-            PlaySound(0x1, sounds.ufo);
+            cout << "Play UFO sound" << endl;
+            ufo_playing = true;
+            PlayUFOSound(sounds.ufo);
         }
+    else if (!(this_cpu.GetPorts().port3 & 0x1) && ufo_playing)
+        {
+            cout << "Stop playing UFO sound" << endl;
+            ufo_playing = false;
+            PlayUFOSound(sounds.ufo);
+        }
+    if (this_cpu.GetPorts().port3 != last_out_port3)
+    {   
         if ((this_cpu.GetPorts().port3 & 0x2) && !(last_out_port3 & 0x2))
         {
-            PlaySound(0x2, sounds.shoot);
+            PlaySound(sounds.shoot);
         }
         if((this_cpu.GetPorts().port3 & 0x4) && !(last_out_port3 & 0x4))
         {
-            PlaySound(0x4, sounds.playerHit);
+            PlaySound(sounds.playerHit);
         }
         if ((this_cpu.GetPorts().port3 & 0x8) && !(last_out_port3 & 0x8))
         {
-            PlaySound(0x8, sounds.invaderHit);
+            PlaySound(sounds.invaderHit);
         }
         last_out_port3 = this_cpu.GetPorts().port3;
     }
@@ -170,23 +190,23 @@ void SDL::GetSound()
     {
         if ((this_cpu.GetPorts().port5 & 0x1) && !(last_out_port5 & 0x1))
         {
-            PlaySound(0x1, sounds.fleetMv1);
+            PlaySound(sounds.fleetMv1);
         }
         if ((this_cpu.GetPorts().port5 & 0x2) && !(last_out_port5 & 0x2))
         {
-            PlaySound(0x2, sounds.fleetMv2);
+            PlaySound(sounds.fleetMv2);
         }
         if((this_cpu.GetPorts().port5 & 0x4) && !(last_out_port5 & 0x4))
         {
-            PlaySound(0x4, sounds.fleetMv3);
+            PlaySound(sounds.fleetMv3);
         }
         if ((this_cpu.GetPorts().port5 & 0x8) && !(last_out_port5 & 0x8))
         {
-            PlaySound(0x8, sounds.fleetMv4);
+            PlaySound(sounds.fleetMv4);
         }
         if ((this_cpu.GetPorts().port5 & 0x10) && !(last_out_port5 & 0x10))
         {
-            PlaySound(0x8, sounds.ufoHit);
+            PlaySound(sounds.ufoHit);
         }
         last_out_port5 = this_cpu.GetPorts().port5;
     }

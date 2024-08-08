@@ -36,7 +36,8 @@ public:
     void GetInput();
     void RunGame();
     void GetSound();
-    void PlaySound(uint8_t last_sound, Sound& sound);
+    void PlaySound(Sound& sound);
+    void PlayUFOSound(Sound& s);
     void LoadSounds();
 
 public:
@@ -44,6 +45,7 @@ public:
     SDL_Renderer *renderer;
     Emulator &this_cpu;
     Sounds sounds;
+    bool ufo_playing = false;
 };
 
 #endif // SDLPLATFORM_SDLPLATFORM_HPP_
