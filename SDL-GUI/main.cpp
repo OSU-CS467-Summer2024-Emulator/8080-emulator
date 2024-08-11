@@ -1,4 +1,4 @@
-#include "./sdl.hpp"
+#include "sdl.hpp"
 #include "emulator/emulator.hpp"
 #include <SDL2/SDL.h>
 #include <iostream>
