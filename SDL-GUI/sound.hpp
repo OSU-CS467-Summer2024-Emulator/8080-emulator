@@ -1,5 +1,5 @@
-#ifndef SOUND_SOUND_HPP_
-#define SOUND_SOUND_HPP_
+#ifndef SDL_GUI_SOUND_HPP_
+#define SDL_GUI_SOUND_HPP_
 
 #include <SDL2/SDL.h>
 #include <fstream>
@@ -17,9 +17,9 @@ public:
     SDL_AudioDeviceID m_device;
     const char *path;
 
-    Sound(const char *path);
+    explicit Sound(const char *path);
     void LoadSound();
     ~Sound();
 };
 
-#endif // SDLSOUND_SDLSOUND_HPP_
+#endif // SDL_GUI_SOUND_HPP_

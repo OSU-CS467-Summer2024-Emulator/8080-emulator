@@ -2,8 +2,8 @@
 #include <iomanip>
 #include <fstream>
 #include <cstdint>
-#include "./emulator.hpp"
-#include "../disassembler/disassembler.hpp"
+#include "emulator.hpp"
+#include "disassembler/disassembler.hpp"
 
 using namespace std;
 
@@ -226,7 +226,6 @@ void Emulator::Emulate(int cycles)
     num_cycles = 0;
     while (num_cycles < cycles)
     {
-
         uint8_t opcode = memory[pc];
 
         // uncomment to print each instruction as it is executed

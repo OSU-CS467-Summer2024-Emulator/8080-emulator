@@ -1,12 +1,11 @@
-#include <iostream>
+#include "sound.hpp"
 #include <SDL2/SDL.h>
-#include "./sound.hpp"
 #include <fstream>
 #include <string>
+#include <iostream>
 
 // Sound class constructor
 Sound::Sound(const char *arg) : path(arg), m_data(nullptr){
-    
 }
 
 // Destructor
