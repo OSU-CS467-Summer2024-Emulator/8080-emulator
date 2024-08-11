@@ -22,8 +22,9 @@ struct Sounds {
     Sound fleetMv3;
     Sound fleetMv4;
     Sound ufoHit;
-    Sounds() : ufo("./audio/0.wav"), shoot("./audio/1.wav"), playerHit("./audio/2.wav"), invaderHit("./audio/3.wav"),
-               fleetMv1("./audio/4.wav"), fleetMv2("./audio/5.wav"), fleetMv3("./audio/6.wav"), fleetMv4("./audio/7.wav"),
+    Sounds() : ufo("./audio/0.wav"), shoot("./audio/1.wav"), playerHit("./audio/2.wav"), 
+               invaderHit("./audio/3.wav"), fleetMv1("./audio/4.wav"), 
+               fleetMv2("./audio/5.wav"), fleetMv3("./audio/6.wav"), fleetMv4("./audio/7.wav"),
                ufoHit("./audio/8.wav") {}
 };
 
@@ -31,7 +32,6 @@ class SDL
 {
 public:
     SDL(Emulator &i8080);
-    // void Initialize(Emulator* i8080);
     void DrawGraphic();
     void GetInput();
     void RunGame();

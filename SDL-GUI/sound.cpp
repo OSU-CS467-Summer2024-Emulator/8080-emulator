@@ -4,15 +4,18 @@
 #include <fstream>
 #include <string>
 
-Sound::Sound(const char *arg) : path(arg){
+// Sound class constructor
+Sound::Sound(const char *arg) : path(arg), m_data(nullptr){
     
 }
 
+// Destructor
 Sound::~Sound() {
     SDL_CloseAudioDevice(m_device);
     SDL_FreeWAV(m_data);
 }
 
+// Load audio files
 void Sound::LoadSound()
 {
     if (SDL_LoadWAV(path, &m_audioSpec, &m_data, &m_waveLength) == NULL)

@@ -5,6 +5,7 @@
 #include "disassembler/disassembler.hpp"
 using namespace std;
 
+// Disassemble opcodes from Space Invaders ROM to human readable instructions
 int Disassembler::Disassemble(char *codebuffer, int pc)
 {
     char *code = &codebuffer[pc];

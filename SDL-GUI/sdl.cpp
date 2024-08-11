@@ -16,6 +16,7 @@ SDL::SDL(Emulator &i8080) : this_cpu(i8080)
     SDL_RenderSetLogicalSize(renderer, 224, 256);
 }
 
+// Draw pixels to screen from Space Invaders video RAM
 void SDL::DrawGraphic()
 {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
@@ -63,16 +64,15 @@ void SDL::DrawGraphic()
     SDL_RenderPresent(renderer);
 }
 
+// Handle user input by setting input ports
 void SDL::GetInput()
 {
     SDL_Event e;
-    bool quit = false;
 
     SDL_PollEvent(&e);
 
     if (e.type == SDL_QUIT)
     {
-        quit = true;
         exit(0);
     }
     else if (e.type == SDL_KEYDOWN)
@@ -145,12 +145,9 @@ void SDL::GetInput()
     }
 }
 
-uint8_t last_out_port3 = 0;
-uint8_t last_out_port5 = 0;
-
+// load all sounds for use
 void SDL::LoadSounds()
 {
-    // load all sounds for use
     sounds.shoot.LoadSound();
     sounds.invaderHit.LoadSound();
     sounds.playerHit.LoadSound();
@@ -162,15 +159,21 @@ void SDL::LoadSounds()
     sounds.ufoHit.LoadSound();
 }
 
+// Play video game sounds
 void SDL::PlaySound(Sound& s, int pause)
 {
-    // cout << "Play sound" << endl;
     SDL_QueueAudio(s.m_device, s.m_data, s.m_waveLength);
     SDL_PauseAudioDevice(s.m_device, pause);
 }
 
+// Initialize ports for handlin game audio
+uint8_t last_out_port3 = 0;
+uint8_t last_out_port5 = 0;
+
+// Determine if output ports are set to play sounds
 void SDL::GetSound()
 {
+    // UFO sound repeats while it is flying across screen
     if ((this_cpu.GetPorts().port3 & 0x1))
         {
             ufo_playing = true;
@@ -181,6 +184,8 @@ void SDL::GetSound()
             ufo_playing = false;
             PlaySound(sounds.ufo, 1);
         }
+
+    // All other sounds play one time when called
     if (this_cpu.GetPorts().port3 != last_out_port3)
     {   
         if ((this_cpu.GetPorts().port3 & 0x2) && !(last_out_port3 & 0x2))
@@ -224,15 +229,19 @@ void SDL::GetSound()
     }
 }
 
+// Handle interrupts for displaying screen, call emulator,
+// get user input, and sound for game
 void SDL::RunGame()
 {
-    int counter = 0;
-
     // load all sounds for use
     LoadSounds();
 
+
+    // Used to determine time between display updates
     uint32_t lastFrameTime = SDL_GetTicks();
     uint32_t currentTime = SDL_GetTicks();
+
+    // 16666 cycles allows for the 60 Hz refresh rate
     int emu_cycles = 16666;
 
     while (true)
@@ -244,12 +253,12 @@ void SDL::RunGame()
 
             this_cpu.Emulate(emu_cycles);
 
-            // Interrupt 1
+            // Interrupt 1 to update top half of screen
             GetInput();
             this_cpu.Interrupt(1);
             this_cpu.Emulate(emu_cycles);
 
-            // Interrupt 2
+            // Interrupt 2 to update bottom half of screen
             GetInput();
             this_cpu.Interrupt(2);
 

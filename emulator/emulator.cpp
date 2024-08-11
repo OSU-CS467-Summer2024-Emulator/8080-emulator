@@ -38,8 +38,13 @@ Emulator::~Emulator()
     }
 }
 
+// Allocate memory for reading in ROM
 void Emulator::AllocateMemory(int size)
 {
+    if (memory != nullptr)
+    {
+        delete[] memory;
+    }
     memory = new uint8_t[size];
     for (int i = 0; i < size; i++)
         memory[i] = 0;
@@ -91,6 +96,7 @@ bool Emulator::parity(int x, int size = 8)
     return (0 == (p & 0x1));
 }
 
+// Update flags after logic operation
 void Emulator::LogicFlagsA()
 {
     flags.cy = (flags.ac = 0);
@@ -99,6 +105,7 @@ void Emulator::LogicFlagsA()
     flags.p = parity(registers.A);
 }
 
+// Update flags after arithmetic operation
 void Emulator::ArithFlagsA(uint16_t res)
 {
     flags.cy = (res > 0xff);
@@ -107,6 +114,7 @@ void Emulator::ArithFlagsA(uint16_t res)
     flags.p = parity(res & 0xff);
 }
 
+// Update zero/sign/parity flags after operation
 void Emulator::ZSPFlags(uint8_t value)
 {
     flags.z = (value == 0);
@@ -114,6 +122,7 @@ void Emulator::ZSPFlags(uint8_t value)
     flags.p = parity(value);
 }
 
+// Handle invalid instruction input
 void Emulator::InvalidInstruction(uint8_t byte, uint16_t addr)
 {
     cout << "Invalid instruction:" << endl;
@@ -124,6 +133,7 @@ void Emulator::InvalidInstruction(uint8_t byte, uint16_t addr)
     pc++;
 }
 
+// Write value to memory address
 void Emulator::WriteToMem(uint16_t address, uint8_t value)
 {
     if (address < 0x2000 || address >= 0x4000)
@@ -140,23 +150,27 @@ void Emulator::WriteToMem(uint16_t address, uint8_t value)
     memory[address] = value;
 }
 
+// Read value from memory address
 uint8_t Emulator::ReadFromMem(uint16_t address)
 {
     return memory[address];
 }
 
+// Write to memory address pointed to by H and L registers
 void Emulator::WriteToHL(uint8_t value)
 {
     uint16_t offset = (registers.H << 8) | registers.L;
     WriteToMem(offset, value);
 }
 
+// Read from memory address pointed to by H and L registers
 uint8_t Emulator::ReadFromHL()
 {
     uint16_t offset = (registers.H << 8) | registers.L;
     return ReadFromMem(offset);
 }
 
+// Call address, store return address and update SP
 void Emulator::Call(uint8_t addr_high, uint8_t addr_low)
 {
     uint16_t ret = pc + 3;
@@ -165,6 +179,7 @@ void Emulator::Call(uint8_t addr_high, uint8_t addr_low)
     num_cycles += 17;
 }
 
+// Return from call to address stored on stack
 void Emulator::Return()
 {
     uint8_t addr_high;
@@ -174,6 +189,7 @@ void Emulator::Return()
     num_cycles += 10;
 }
 
+// Push to stack
 void Emulator::Push(uint8_t high, uint8_t low)
 {
     WriteToMem(sp - 1, high);
@@ -181,6 +197,7 @@ void Emulator::Push(uint8_t high, uint8_t low)
     sp -= 2;
 }
 
+// Pop from stack
 void Emulator::Pop(uint8_t *high, uint8_t *low)
 {
     *low = memory[sp];
@@ -188,6 +205,7 @@ void Emulator::Pop(uint8_t *high, uint8_t *low)
     sp += 2;
 }
 
+// Subtract value from accummulator
 void Emulator::SubtractFromA(uint8_t operand)
 {
     uint16_t num1 = registers.A;
@@ -202,6 +220,7 @@ void Emulator::SubtractFromA(uint8_t operand)
     flags.cy = !(result & 0x0100);
 }
 
+// Emulate opcodes for designated number of cycles
 void Emulator::Emulate(int cycles)
 {
     num_cycles = 0;
@@ -216,6 +235,7 @@ void Emulator::Emulate(int cycles)
     }
 }
 
+// Emulate opcodes determined by parameters
 void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
 {
     switch (opcode)
@@ -2807,21 +2827,25 @@ void Emulator::PrintFlags()
     cout << "Aux Carry Flag: " << flags.ac << endl;
 }
 
+// Return state of all registers
 Registers Emulator::GetRegisters()
 {
     return registers;
 }
 
+// Return state of all flags
 Flags Emulator::GetFlags()
 {
     return flags;
 }
 
+// Return state of all ports
 Ports Emulator::GetPorts()
 {
     return ports;
 }
 
+// Set I/O port values
 void Emulator::SetPort(int port_num, uint8_t bit, bool value)
 {
     uint8_t *port;
@@ -2847,21 +2871,25 @@ void Emulator::SetPort(int port_num, uint8_t bit, bool value)
         *port = *port & (value << bit);
 }
 
+// Return value of program counter
 int Emulator::GetPC()
 {
     return pc;
 }
 
+// Return value of stack pointer
 int Emulator::GetSP()
 {
     return sp;
 }
 
+// Set stack pointer
 void Emulator::SetSP(uint16_t new_sp)
 {
     sp = new_sp;
 }
 
+// Set interrupt for screen display
 void Emulator::Interrupt(int interrupt_num)
 {
     if (interrupt_enable)
