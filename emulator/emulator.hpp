@@ -93,7 +93,7 @@ private:
     uint8_t *memory;
     int mem_size;
 
-    long int num_cycles;
+    uint16_t num_cycles;
 
     Ports ports;
 };
