@@ -9,7 +9,7 @@ using namespace std;
 
 /*
 
-General framework and opcode functon of the following SDL code was adapted from
+General framework of the following SDL code was adapted from
 https://github.com/JoseLGF/SpaceIvaders
 
 Additional SDL reference from
