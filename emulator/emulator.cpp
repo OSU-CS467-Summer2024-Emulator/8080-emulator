@@ -7,6 +7,16 @@
 
 using namespace std;
 
+/*
+
+General framework and opcode functon of the following Emulator code was adapted from
+http://emulator101.com/ and https://github.com/kpmiller/emulator101
+
+Additional opcode function referenced from
+Intel, “8080 Assembly Language Programming Manual”, 1975
+
+*/
+
 // Constructor
 Emulator::Emulator()
 {
