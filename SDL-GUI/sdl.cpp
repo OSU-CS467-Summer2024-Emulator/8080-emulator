@@ -7,9 +7,18 @@
 
 using namespace std;
 
+/*
+
+General framework of the following SDL code was adapted from
+https://github.com/JoseLGF/SpaceIvaders
+
+Additional SDL reference from
+https://wiki.libsdl.org/SDL2/FrontPage
+
+*/
+
 SDL::SDL(Emulator* i8080) : this_cpu(i8080)
 {
-    // this_cpu = i8080;
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     SDL_CreateWindowAndRenderer(224 * 3, 256 * 3, 0, &window, &renderer);
     SDL_RenderSetScale(renderer, 3, 3);
