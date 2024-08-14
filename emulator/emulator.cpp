@@ -2,18 +2,40 @@
 #include <iomanip>
 #include <fstream>
 #include <cstdint>
-#include "emulator/emulator.hpp"
+#include "emulator.hpp"
 #include "disassembler/disassembler.hpp"
 
 using namespace std;
+
+/*
+
+General framework and opcode functon of the following Emulator code was adapted from
+http://emulator101.com/ and https://github.com/kpmiller/emulator101
+
+Additional opcode function referenced from
+Intel, “8080 Assembly Language Programming Manual”, 1975
+
+*/
 
 // Constructor
 Emulator::Emulator()
 {
     pc = 0;
     sp = 0;
+    interrupt_enable = false;
     memory = nullptr;
     mem_size = 0;
+    LoadRom("./space_invaders_rom/invaders");
+    num_cycles = 0;
+
+    ports.port2 = 0x00; // reset tilt
+
+    // GAME SETTINGS:
+    // number of lives - 0x00:3 lives, 0x01:4 lives, 0x02:5 lives, 0x03:6 lives
+    // ports.port2 |= 0x03;
+
+    // extra life at 1000 points instead of 1500
+    // ports.port2 |= 0x08;
 }
 
 // Destructor
@@ -26,8 +48,13 @@ Emulator::~Emulator()
     }
 }
 
+// Allocate memory for reading in ROM
 void Emulator::AllocateMemory(int size)
 {
+    if (memory != nullptr)
+    {
+        delete[] memory;
+    }
     memory = new uint8_t[size];
     for (int i = 0; i < size; i++)
         memory[i] = 0;
@@ -79,6 +106,7 @@ bool Emulator::parity(int x, int size = 8)
     return (0 == (p & 0x1));
 }
 
+// Update flags after logic operation
 void Emulator::LogicFlagsA()
 {
     flags.cy = (flags.ac = 0);
@@ -87,6 +115,7 @@ void Emulator::LogicFlagsA()
     flags.p = parity(registers.A);
 }
 
+// Update flags after arithmetic operation
 void Emulator::ArithFlagsA(uint16_t res)
 {
     flags.cy = (res > 0xff);
@@ -95,6 +124,7 @@ void Emulator::ArithFlagsA(uint16_t res)
     flags.p = parity(res & 0xff);
 }
 
+// Update zero/sign/parity flags after operation
 void Emulator::ZSPFlags(uint8_t value)
 {
     flags.z = (value == 0);
@@ -102,6 +132,7 @@ void Emulator::ZSPFlags(uint8_t value)
     flags.p = parity(value);
 }
 
+// Handle invalid instruction input
 void Emulator::InvalidInstruction(uint8_t byte, uint16_t addr)
 {
     cout << "Invalid instruction:" << endl;
@@ -112,6 +143,7 @@ void Emulator::InvalidInstruction(uint8_t byte, uint16_t addr)
     pc++;
 }
 
+// Write value to memory address
 void Emulator::WriteToMem(uint16_t address, uint8_t value)
 {
     if (address < 0x2000 || address >= 0x4000)
@@ -120,41 +152,54 @@ void Emulator::WriteToMem(uint16_t address, uint8_t value)
         return;
     }
 
+    if (address >= 0x2400)
+    {
+        // printf("VIDEO MEM WRITE -------- %04x %04x\n", address, value);
+    }
+
     memory[address] = value;
 }
 
+// Read value from memory address
 uint8_t Emulator::ReadFromMem(uint16_t address)
 {
     return memory[address];
 }
 
+// Write to memory address pointed to by H and L registers
 void Emulator::WriteToHL(uint8_t value)
 {
     uint16_t offset = (registers.H << 8) | registers.L;
     WriteToMem(offset, value);
 }
 
+// Read from memory address pointed to by H and L registers
 uint8_t Emulator::ReadFromHL()
 {
     uint16_t offset = (registers.H << 8) | registers.L;
     return ReadFromMem(offset);
 }
 
+// Call address, store return address and update SP
 void Emulator::Call(uint8_t addr_high, uint8_t addr_low)
 {
     uint16_t ret = pc + 3;
     Push((ret >> 8) & 0xff, (ret & 0xff));
     pc = (addr_high << 8) | addr_low;
+    num_cycles += 17;
 }
 
+// Return from call to address stored on stack
 void Emulator::Return()
 {
     uint8_t addr_high;
     uint8_t addr_low;
     Pop(&addr_high, &addr_low);
     pc = (addr_high << 8) | addr_low;
+    num_cycles += 10;
 }
 
+// Push to stack
 void Emulator::Push(uint8_t high, uint8_t low)
 {
     WriteToMem(sp - 1, high);
@@ -162,6 +207,7 @@ void Emulator::Push(uint8_t high, uint8_t low)
     sp -= 2;
 }
 
+// Pop from stack
 void Emulator::Pop(uint8_t *high, uint8_t *low)
 {
     *low = memory[sp];
@@ -169,6 +215,7 @@ void Emulator::Pop(uint8_t *high, uint8_t *low)
     sp += 2;
 }
 
+// Subtract value from accummulator
 void Emulator::SubtractFromA(uint8_t operand)
 {
     uint16_t num1 = registers.A;
@@ -183,22 +230,21 @@ void Emulator::SubtractFromA(uint8_t operand)
     flags.cy = !(result & 0x0100);
 }
 
-void Emulator::Emulate()
+// Emulate opcodes for designated number of cycles
+void Emulator::Emulate(int cycles)
 {
-    int count = 0;
-    pc = 0;
-
-    while (count < 110)
+    num_cycles = 0;
+    while (num_cycles < cycles)
     {
         uint8_t opcode = memory[pc];
 
-        Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
+        // uncomment to print each instruction as it is executed
+        // Disassembler::Disassemble(reinterpret_cast<char *>(memory), pc);
         EmulateOpcode(opcode, memory[pc + 1], memory[pc + 2]);
-
-        count++;
     }
 }
 
+// Emulate opcodes determined by parameters
 void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
 {
     switch (opcode)
@@ -208,6 +254,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // NOP
         {
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x01:
@@ -216,6 +263,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.B = operand2;
             registers.C = operand1;
             pc += 3;
+            num_cycles += 10;
         }
         break;
     case 0x02:
@@ -224,6 +272,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t offset = (registers.B << 8) | registers.C;
             WriteToMem(offset, registers.A);
             pc += 1;
+            num_cycles += 7;
         }
         break;
     case 0x03:
@@ -234,6 +283,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 registers.B++;
             }
+            num_cycles += 5;
             pc++;
         }
         break;
@@ -244,6 +294,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.B++;
             ZSPFlags(registers.B);
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -253,6 +304,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.B--;
             ZSPFlags(registers.B);
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -261,6 +313,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.B = operand1;
             pc += 2;
+            num_cycles += 7;
         }
         break;
 
@@ -274,6 +327,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
                 registers.A++;
             }
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -281,6 +335,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // NOP
         {
             InvalidInstruction(opcode, pc);
+            num_cycles += 4;
         }
         break;
 
@@ -294,6 +349,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.L = (sum & 0xff);
             flags.cy = (sum & 0x00010000);
             pc++;
+            num_cycles += 10;
         }
         break;
 
@@ -303,6 +359,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t offset = (registers.B << 8) | registers.C;
             registers.A = memory[offset];
             pc++;
+            num_cycles += 7;
         }
         break;
 
@@ -314,6 +371,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.B = (uint8_t)(BC >> 8);
             registers.C = (uint8_t)BC;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -323,6 +381,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.C++;
             ZSPFlags(registers.C);
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -332,6 +391,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.C--;
             ZSPFlags(registers.C);
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -340,6 +400,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.C = operand1;
             pc += 2;
+            num_cycles += 7;
         }
         break;
 
@@ -353,6 +414,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
                 registers.A = (registers.A | 0x80);
             }
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -361,6 +423,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // no instruction
         {
             InvalidInstruction(opcode, pc);
+            num_cycles += 4;
         }
         break;
     case 0x11:
@@ -370,6 +433,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.D = operand2;
             registers.E = operand1;
             pc += 3;
+            num_cycles += 10;
         }
         break;
     case 0x12:
@@ -379,6 +443,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t mem_addr = (registers.D << 8) | registers.E;
             WriteToMem(mem_addr, registers.A);
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x13:
@@ -391,6 +456,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
                 registers.D++;
             }
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x14:
@@ -400,6 +466,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ZSPFlags(registers.D);
 
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x15:
@@ -410,6 +477,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ZSPFlags(registers.D);
 
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x16:
@@ -418,6 +486,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.D = operand1;
             pc += 2;
+            num_cycles += 7;
         }
         break;
     case 0x17:
@@ -433,12 +502,14 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A = temp & 0x00FF;
 
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x18:
         // no instruction
         {
             InvalidInstruction(opcode, pc);
+            num_cycles += 4;
         }
         break;
     case 0x19:
@@ -452,6 +523,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             flags.cy = (sum & 0x00010000);
 
             pc++;
+            num_cycles += 10;
         }
         break;
     case 0x1a:
@@ -462,6 +534,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A = memory[mem_addr];
 
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x1b:
@@ -473,6 +546,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.D = (uint8_t)(DE >> 8);
             registers.E = (uint8_t)DE;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x1c:
@@ -481,6 +555,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.E++;
             ZSPFlags(registers.E);
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x1d:
@@ -490,6 +565,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.E--;
             ZSPFlags(registers.E);
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x1e:
@@ -498,6 +574,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.E = operand1;
             pc += 2;
+            num_cycles += 7;
         }
         break;
     case 0x1f:
@@ -513,6 +590,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A = temp & 0x00FF;
 
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -520,6 +598,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
     case 0x20:
         /// NOP
         InvalidInstruction(opcode, pc);
+        num_cycles += 4;
         break;
     case 0x21:
         // LXI H, #$
@@ -527,6 +606,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.H = operand2;
             registers.L = operand1;
             pc += 3;
+            num_cycles += 10;
         }
         break;
     case 0x22:
@@ -536,6 +616,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             memory[address] = registers.L;
             memory[address + 1] = registers.H;
             pc += 3;
+            num_cycles += 16;
         }
         break;
     case 0x23:
@@ -548,6 +629,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
                 registers.H++;
             }
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x24:
@@ -556,6 +638,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.H++;
             ZSPFlags(registers.H);
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x25:
@@ -564,6 +647,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.H--;
             ZSPFlags(registers.H);
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x26:
@@ -571,6 +655,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.H = operand1;
             pc += 2;
+            num_cycles += 7;
         }
         break;
     case 0x27:
@@ -593,10 +678,12 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
 
             flags.p = parity(registers.A);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x28:
         InvalidInstruction(opcode, pc);
+        num_cycles += 4;
         break;
     case 0x29:
         // DAD H
@@ -610,6 +697,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             // Set carry flag if necessary
             flags.cy = (HL & 0x00010000);
             pc++;
+            num_cycles += 10;
         }
         break;
     case 0x2a:
@@ -619,6 +707,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.L = memory[address];
             registers.H = memory[address + 1];
             pc += 3;
+            num_cycles += 16;
         }
         break;
     case 0x2b:
@@ -629,6 +718,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.H = (uint8_t)(HL >> 8);
             registers.L = (uint8_t)HL;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x2c:
@@ -637,6 +727,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.L++;
             ZSPFlags(registers.L);
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x2d:
@@ -645,6 +736,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.L--;
             ZSPFlags(registers.L);
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x2e:
@@ -652,6 +744,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.L = operand1;
             pc += 2;
+            num_cycles += 7;
         }
         break;
     case 0x2f:
@@ -660,18 +753,21 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             // Bitwise NOT to get the complement of A
             registers.A = ~registers.A;
             pc++;
+            num_cycles += 4;
         }
         break;
 
     // 0x30 - 0x3f
     case 0x30:
         InvalidInstruction(opcode, pc);
+        num_cycles += 4;
         break;
     case 0x31:
         // LXI SP,word
         {
             sp = (operand2 << 8) | operand1;
             pc += 3;
+            num_cycles += 10;
         }
         break;
     case 0x32:
@@ -680,6 +776,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t offset = (operand2 << 8) | operand1;
             WriteToMem(offset, registers.A);
             pc += 3;
+            num_cycles += 13;
         }
         break;
     case 0x33:
@@ -687,6 +784,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             sp++;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x34:
@@ -696,6 +794,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ZSPFlags(res);
             WriteToHL(res);
             pc++;
+            num_cycles += 10;
         }
         break;
     case 0x35:
@@ -705,6 +804,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ZSPFlags(res);
             WriteToHL(res);
             pc++;
+            num_cycles += 10;
         }
         break;
     case 0x36:
@@ -712,6 +812,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             WriteToHL(operand1);
             pc += 2;
+            num_cycles += 10;
         }
         break;
     case 0x37:
@@ -719,10 +820,12 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             flags.cy = 1;
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x38:
         InvalidInstruction(opcode, pc);
+        num_cycles += 4;
         break;
     case 0x39:
         // DAD SP
@@ -733,6 +836,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.L = (sum & 0xff);
             flags.cy = (sum & 0x00010000);
             pc++;
+            num_cycles += 10;
         }
         break;
     case 0x3a:
@@ -741,6 +845,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t offset = (operand2 << 8) | operand1;
             registers.A = memory[offset];
             pc += 3;
+            num_cycles += 13;
         }
         break;
     case 0x3b:
@@ -748,6 +853,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             sp -= 1;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x3c:
@@ -756,6 +862,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A++;
             ZSPFlags(registers.A);
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x3d:
@@ -764,6 +871,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A--;
             ZSPFlags(registers.A);
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x3e:
@@ -771,6 +879,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.A = operand1;
             pc += 2;
+            num_cycles += 7;
         }
         break;
     case 0x3f:
@@ -778,6 +887,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             flags.cy = !flags.cy;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -786,6 +896,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // MOV B,B
         {
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -794,6 +905,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.B = registers.C;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -802,6 +914,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.B = registers.D;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -810,6 +923,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.B = registers.E;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -818,6 +932,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.B = registers.H;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -826,6 +941,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.B = registers.L;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -834,6 +950,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.B = ReadFromHL();
             pc++;
+            num_cycles += 7;
         }
         break;
 
@@ -842,6 +959,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.B = registers.A;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -850,6 +968,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.C = registers.B;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -857,6 +976,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // MOV C,C
         {
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -865,6 +985,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.C = registers.D;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -873,6 +994,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.C = registers.E;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -881,6 +1003,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.C = registers.H;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -889,6 +1012,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.C = registers.L;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -897,6 +1021,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.C = ReadFromHL();
             pc++;
+            num_cycles += 7;
         }
         break;
 
@@ -907,6 +1032,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
 
             flags.cy = 0;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -916,6 +1042,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.D = registers.B;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x51:
@@ -923,12 +1050,14 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.D = registers.C;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x52:
         // MOV D, D
         {
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x53:
@@ -936,6 +1065,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.D = registers.E;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x54:
@@ -943,6 +1073,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.D = registers.H;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x55:
@@ -950,6 +1081,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.D = registers.L;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x56:
@@ -958,6 +1090,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t mem_addr = (registers.H << 8) | (registers.L);
             registers.D = memory[mem_addr];
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x57:
@@ -965,6 +1098,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.D = registers.A;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x58:
@@ -972,6 +1106,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.E = registers.B;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x59:
@@ -979,6 +1114,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.E = registers.C;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x5a:
@@ -986,12 +1122,14 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.E = registers.D;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x5b:
         // MOV E, E
         {
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x5c:
@@ -999,6 +1137,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.E = registers.H;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x5d:
@@ -1006,6 +1145,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.E = registers.L;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x5e:
@@ -1013,6 +1153,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.E = ReadFromHL();
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x5f:
@@ -1020,6 +1161,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.E = registers.A;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -1029,6 +1171,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.H = registers.B;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x61:
@@ -1036,6 +1179,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.H = registers.C;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x62:
@@ -1043,6 +1187,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.H = registers.D;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x63:
@@ -1050,12 +1195,14 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.H = registers.E;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x64:
         // MOV H, H
         {
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x65:
@@ -1063,6 +1210,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.H = registers.L;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x66:
@@ -1070,6 +1218,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.H = ReadFromHL();
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x67:
@@ -1077,6 +1226,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.H = registers.A;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x68:
@@ -1084,6 +1234,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.L = registers.B;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x69:
@@ -1091,6 +1242,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.L = registers.C;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x6a:
@@ -1098,6 +1250,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.L = registers.D;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x6b:
@@ -1105,6 +1258,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.L = registers.E;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x6c:
@@ -1112,12 +1266,14 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.L = registers.H;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x6d:
         // "MOV L, L
         {
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x6e:
@@ -1125,6 +1281,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.L = ReadFromHL();
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x6f:
@@ -1132,6 +1289,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.L = registers.A;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -1141,6 +1299,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             WriteToHL(registers.B);
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x71:
@@ -1148,6 +1307,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             WriteToHL(registers.C);
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x72:
@@ -1155,6 +1315,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             WriteToHL(registers.D);
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x73:
@@ -1162,6 +1323,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             WriteToHL(registers.E);
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x74:
@@ -1169,6 +1331,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             WriteToHL(registers.H);
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x75:
@@ -1176,12 +1339,14 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             WriteToHL(registers.L);
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x76:
         // HLT
         {
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x77:
@@ -1189,6 +1354,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             WriteToHL(registers.A);
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x78:
@@ -1196,6 +1362,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.A = registers.B;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x79:
@@ -1203,6 +1370,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.A = registers.C;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x7a:
@@ -1210,6 +1378,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.A = registers.D;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x7b:
@@ -1217,6 +1386,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.A = registers.E;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x7c:
@@ -1224,6 +1394,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.A = registers.H;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x7d:
@@ -1231,6 +1402,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.A = registers.L;
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0x7e:
@@ -1238,13 +1410,14 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             registers.A = ReadFromHL();
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x7f:
         // MOV A, A
         {
-            registers.A = registers.A;
             pc++;
+            num_cycles += 5;
         }
         break;
 
@@ -1256,6 +1429,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1266,6 +1440,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1276,6 +1451,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1286,6 +1462,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1296,6 +1473,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1306,6 +1484,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1316,6 +1495,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 7;
         }
         break;
 
@@ -1326,6 +1506,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1337,6 +1518,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1348,6 +1530,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1359,6 +1542,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1370,6 +1554,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1381,6 +1566,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1392,6 +1578,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1402,6 +1589,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 7;
         }
         break;
 
@@ -1413,6 +1601,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1423,6 +1612,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.B);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x91:
@@ -1431,6 +1621,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.C);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x92:
@@ -1439,6 +1630,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.D);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x93:
@@ -1447,6 +1639,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.E);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x94:
@@ -1455,6 +1648,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.H);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x95:
@@ -1463,6 +1657,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.L);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x96:
@@ -1472,6 +1667,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint8_t operand = ReadFromHL();
             SubtractFromA(operand);
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x97:
@@ -1480,6 +1676,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.A);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x98:
@@ -1488,6 +1685,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.B + flags.cy);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x99:
@@ -1496,6 +1694,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.C + flags.cy);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x9a:
@@ -1504,6 +1703,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.D + flags.cy);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x9b:
@@ -1512,6 +1712,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.E + flags.cy);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x9c:
@@ -1520,6 +1721,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.H + flags.cy);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x9d:
@@ -1528,6 +1730,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.L + flags.cy);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0x9e:
@@ -1537,6 +1740,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint8_t operand = ReadFromHL();
             SubtractFromA(operand + flags.cy);
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0x9f:
@@ -1545,6 +1749,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(registers.A + flags.cy);
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1555,6 +1760,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A &= registers.B;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xa1:
@@ -1563,6 +1769,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A &= registers.C;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xa2:
@@ -1571,6 +1778,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A &= registers.D;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xa3:
@@ -1579,6 +1787,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A &= registers.E;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xa4:
@@ -1587,6 +1796,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A &= registers.H;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xa5:
@@ -1595,6 +1805,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A &= registers.L;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xa6:
@@ -1603,6 +1814,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A &= ReadFromHL();
             LogicFlagsA();
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0xa7:
@@ -1610,6 +1822,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xa8:
@@ -1618,6 +1831,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A ^= registers.B;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xa9:
@@ -1626,6 +1840,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A ^= registers.C;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xaa:
@@ -1634,6 +1849,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A ^= registers.D;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xab:
@@ -1642,6 +1858,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A ^= registers.E;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xac:
@@ -1650,6 +1867,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A ^= registers.H;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xad:
@@ -1658,6 +1876,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A ^= registers.L;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xae:
@@ -1666,6 +1885,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A ^= ReadFromHL();
             LogicFlagsA();
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0xaf:
@@ -1674,6 +1894,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A = 0x00;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1684,6 +1905,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A = registers.A | registers.B;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xb1:
@@ -1692,6 +1914,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A = registers.A | registers.C;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xb2:
@@ -1700,6 +1923,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A = registers.A | registers.D;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xb3:
@@ -1708,6 +1932,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A = registers.A | registers.E;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xb4:
@@ -1716,6 +1941,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A = registers.A | registers.H;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xb5:
@@ -1724,6 +1950,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A = registers.A | registers.L;
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xb6:
@@ -1732,6 +1959,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A = registers.A | ReadFromHL();
             LogicFlagsA();
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0xb7:
@@ -1739,6 +1967,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             LogicFlagsA();
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xb8:
@@ -1747,6 +1976,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A - (uint16_t)registers.B;
             ArithFlagsA(res);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xb9:
@@ -1755,6 +1985,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A - (uint16_t)registers.C;
             ArithFlagsA(res);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xba:
@@ -1763,6 +1994,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A - (uint16_t)registers.D;
             ArithFlagsA(res);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xbb:
@@ -1771,6 +2003,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A - (uint16_t)registers.E;
             ArithFlagsA(res);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xbc:
@@ -1779,6 +2012,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A - (uint16_t)registers.H;
             ArithFlagsA(res);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xbd:
@@ -1787,6 +2021,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A - (uint16_t)registers.L;
             ArithFlagsA(res);
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xbe:
@@ -1795,6 +2030,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A - (uint16_t)ReadFromHL();
             ArithFlagsA(res);
             pc++;
+            num_cycles += 7;
         }
         break;
     case 0xbf:
@@ -1803,6 +2039,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A - (uint16_t)registers.A;
             ArithFlagsA(res);
             pc++;
+            num_cycles += 4;
         }
         break;
 
@@ -1813,10 +2050,12 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             if (flags.z == 0)
             {
                 Return();
+                num_cycles++; // + 10 in Return() function
             }
             else
             {
                 pc++;
+                num_cycles += 5;
             }
         }
         break;
@@ -1826,6 +2065,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             Pop(&registers.B, &registers.C);
             pc++;
+            num_cycles += 10;
         }
         break;
 
@@ -1840,6 +2080,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 pc += 3;
             }
+            num_cycles += 10;
         }
         break;
 
@@ -1847,6 +2088,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // JMP
         {
             pc = (operand2 << 8) | operand1;
+            num_cycles += 10;
         }
         break;
 
@@ -1860,6 +2102,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             else
             {
                 pc += 3;
+                num_cycles += 11;
             }
         }
         break;
@@ -1869,6 +2112,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             Push(registers.B, registers.C);
             pc++;
+            num_cycles += 11;
         }
         break;
 
@@ -1879,6 +2123,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc += 2;
+            num_cycles += 7;
         }
         break;
 
@@ -1890,6 +2135,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint8_t ret_low = ret_addr & 0x00ff;
             Push(ret_high, ret_low);
             pc = 0x0000;
+            num_cycles += 11;
         }
         break;
 
@@ -1899,10 +2145,12 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             if (flags.z == 1)
             {
                 Return();
+                num_cycles++;
             }
             else
             {
                 pc++;
+                num_cycles += 5;
             }
         }
         break;
@@ -1925,6 +2173,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 pc += 3;
             }
+            num_cycles += 10;
         }
         break;
 
@@ -1932,6 +2181,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // NOP
         {
             InvalidInstruction(opcode, pc);
+            num_cycles += 4;
         }
         break;
 
@@ -1945,6 +2195,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             else
             {
                 pc += 3;
+                num_cycles += 11;
             }
         }
         break;
@@ -1964,6 +2215,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             ArithFlagsA(res);
             registers.A = (uint8_t)res;
             pc += 2;
+            num_cycles += 7;
         }
         break;
 
@@ -1975,6 +2227,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint8_t ret_low = ret_addr & 0x00ff;
             Push(ret_high, ret_low);
             pc = 0x0008;
+            num_cycles += 11;
         }
         break;
 
@@ -1986,10 +2239,12 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             if (!flags.cy)
             {
                 Return();
+                num_cycles++;
             }
             else
             {
                 pc++;
+                num_cycles += 5;
             }
         }
         break;
@@ -1999,6 +2254,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             Pop(&registers.D, &registers.E);
             pc++;
+            num_cycles += 10;
         }
         break;
     case 0xd2:
@@ -2015,14 +2271,24 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 pc += 3;
             }
+            num_cycles += 10;
         }
         break;
     case 0xd3:
         // OUT
         // Send contents of register A to output device determined by next byte
         {
-            // special
-            pc++;
+            switch (operand1)
+            {
+            case 0x03:
+                ports.port3 = registers.A;
+                break;
+            case 0x05:
+                ports.port5 = registers.A;
+                break;
+            }
+            pc += 2;
+            num_cycles += 10;
         }
         break;
     case 0xd4:
@@ -2036,6 +2302,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             else
             {
                 pc += 3;
+                num_cycles += 11;
             }
         }
         break;
@@ -2045,6 +2312,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             Push(registers.D, registers.E);
             pc++;
+            num_cycles += 11;
         }
         break;
     case 0xd6:
@@ -2054,6 +2322,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint8_t operand = operand1;
             SubtractFromA(operand);
             pc += 2;
+            num_cycles += 7;
         }
         break;
     case 0xd7:
@@ -2065,6 +2334,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint8_t ret_low = ret_addr & 0x00ff;
             Push(ret_high, ret_low);
             pc = 0x0010;
+            num_cycles += 11;
         }
         break;
     case 0xd8:
@@ -2074,10 +2344,12 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             if (flags.cy)
             {
                 Return();
+                num_cycles++;
             }
             else
             {
                 pc++;
+                num_cycles += 5;
             }
         }
         break;
@@ -2085,6 +2357,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // NOP
         {
             InvalidInstruction(opcode, pc);
+            num_cycles += 4;
         }
         break;
     case 0xda:
@@ -2101,6 +2374,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 pc += 3;
             }
+            num_cycles += 10;
         }
         break;
     case 0xdb:
@@ -2108,8 +2382,18 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // One byte of input is read from the input device specified by next byte
         // and stored in register A
         {
-            // special
-            pc++;
+            switch (operand1)
+            {
+            case (0x01):
+                registers.A = ports.port1;
+                break;
+            case (0x02):
+                registers.A = ports.port2;
+                break;
+            }
+
+            pc += 2;
+            num_cycles += 10;
         }
         break;
     case 0xdc:
@@ -2123,6 +2407,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             else
             {
                 pc += 3;
+                num_cycles += 11;
             }
         }
         break;
@@ -2130,6 +2415,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // NOP
         {
             InvalidInstruction(opcode, pc);
+            num_cycles += 4;
         }
         break;
     case 0xde:
@@ -2138,6 +2424,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             SubtractFromA(operand1 + flags.cy);
             pc += 2;
+            num_cycles += 7;
         }
         break;
     case 0xdf:
@@ -2149,6 +2436,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint8_t ret_low = ret_addr & 0x00ff;
             Push(ret_high, ret_low);
             pc = 0x0018;
+            num_cycles += 11;
         }
         break;
 
@@ -2158,10 +2446,12 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         if (flags.p == 0)
         {
             Return();
+            num_cycles++;
         }
         else
         {
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0xe1:
@@ -2171,6 +2461,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.H = memory[sp + 1];
             sp += 2;
             pc++;
+            num_cycles += 10;
         }
         break;
     case 0xe2:
@@ -2185,6 +2476,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 pc = (operand2 << 8) | operand1;
             }
+            num_cycles += 10;
         }
         break;
     case 0xe3:
@@ -2197,6 +2489,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             memory[sp] = tempL;
             memory[sp + 1] = tempH;
             pc++;
+            num_cycles += 18;
         }
         break;
     case 0xe4:
@@ -2209,6 +2502,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             else
             {
                 pc += 3; // Skip over the address if parity is not odd
+                num_cycles += 11;
             }
         }
         break;
@@ -2219,6 +2513,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             memory[sp + 1] = registers.H;
             memory[sp] = registers.L;
             pc++;
+            num_cycles += 11;
         }
         break;
     case 0xe6:
@@ -2227,6 +2522,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A &= operand1;
             LogicFlagsA();
             pc += 2;
+            num_cycles += 7;
         }
         break;
     case 0xe7:
@@ -2237,6 +2533,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint8_t ret_low = ret_addr & 0x00ff;
             Push(ret_high, ret_low);
             pc = 0x0020;
+            num_cycles += 11;
         }
         break;
     case 0xe8:
@@ -2244,16 +2541,19 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         if (flags.p == 1)
         {
             Return();
+            num_cycles++;
         }
         else
         {
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0xe9:
         // PCHL
         {
             pc = (registers.H << 8) | registers.L;
+            num_cycles += 5;
         }
         break;
     case 0xea:
@@ -2268,6 +2568,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             {
                 pc = (operand2 << 8) | operand1;
             }
+            num_cycles += 10;
         }
         break;
     case 0xeb:
@@ -2280,6 +2581,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.D = tempH;
             registers.E = tempL;
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xec:
@@ -2292,6 +2594,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             else
             {
                 pc += 3; // Skip over the address if parity is not odd
+                num_cycles += 11;
             }
         }
         break;
@@ -2299,6 +2602,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         // No instruction
         {
             InvalidInstruction(opcode, pc);
+            num_cycles += 4;
         }
         break;
     case 0xee:
@@ -2307,6 +2611,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A ^= operand1;
             LogicFlagsA();
             pc += 2;
+            num_cycles += 7;
         }
         break;
     case 0xef:
@@ -2317,6 +2622,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint8_t ret_low = ret_addr & 0x00ff;
             Push(ret_high, ret_low);
             pc = 0x0028;
+            num_cycles += 11;
         }
         break;
 
@@ -2326,10 +2632,12 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         if (flags.s == 0)
         {
             Return();
+            num_cycles++;
         }
         else
         {
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0xf1:
@@ -2344,6 +2652,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             flags.ac = (0x10 == (psw & 0x10));
             sp += 2;
             pc++;
+            num_cycles += 10;
         }
         break;
     case 0xf2:
@@ -2355,12 +2664,14 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             pc += 3;
         }
+        num_cycles += 10;
         break;
     case 0xf3:
         // DI
         {
-            // interupt_enable = 0;
+            interrupt_enable = false;
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xf4:
@@ -2372,6 +2683,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         else
         {
             pc += 3;
+            num_cycles += 11;
         }
         break;
     case 0xf5:
@@ -2380,8 +2692,10 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             memory[sp - 1] = registers.A;
             uint8_t psw = (flags.z | flags.s << 1 | flags.p << 2 | flags.cy << 3 | flags.ac << 4);
             memory[sp - 2] = psw;
+            // printf("PSW %d\n", (int)psw);
             sp -= 2;
             pc++;
+            num_cycles += 11;
         }
         break;
     case 0xf6:
@@ -2390,6 +2704,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             registers.A |= operand1;
             LogicFlagsA();
             pc += 2;
+            num_cycles += 7;
         }
         break;
     case 0xf7:
@@ -2400,6 +2715,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint8_t ret_low = ret_addr & 0x00ff;
             Push(ret_high, ret_low);
             pc = 0x0030;
+            num_cycles += 11;
         }
         break;
     case 0xf8:
@@ -2407,10 +2723,12 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         if (flags.s != 0)
         {
             Return();
+            num_cycles++;
         }
         else
         {
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0xf9:
@@ -2418,6 +2736,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             sp = registers.L | (registers.H << 8);
             pc++;
+            num_cycles += 5;
         }
         break;
     case 0xfa:
@@ -2430,12 +2749,14 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         {
             pc += 3;
         }
+        num_cycles += 10;
         break;
     case 0xfb:
         // EI
         {
-            // interupt_enable = 1; Interupt enable variable not established in Emulator class yet
+            interrupt_enable = true;
             pc++;
+            num_cycles += 4;
         }
         break;
     case 0xfc:
@@ -2447,12 +2768,14 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
         else
         {
             pc += 3;
+            num_cycles += 11;
         }
         break;
     case 0xfd:
         // no instruction
         {
             InvalidInstruction(opcode, pc);
+            num_cycles += 4;
         }
         break;
     case 0xfe:
@@ -2461,6 +2784,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint16_t res = (uint16_t)registers.A - operand1;
             ArithFlagsA(res);
             pc += 2;
+            num_cycles += 7;
         }
         break;
     case 0xff:
@@ -2471,6 +2795,7 @@ void Emulator::EmulateOpcode(uint8_t opcode, uint8_t operand1, uint8_t operand2)
             uint8_t ret_low = ret_addr & 0x00ff;
             Push(ret_high, ret_low);
             pc = 0x0038;
+            num_cycles += 11;
         }
         break;
     default:
@@ -2511,27 +2836,80 @@ void Emulator::PrintFlags()
     cout << "Aux Carry Flag: " << flags.ac << endl;
 }
 
+// Return state of all registers
 Registers Emulator::GetRegisters()
 {
     return registers;
 }
 
+// Return state of all flags
 Flags Emulator::GetFlags()
 {
     return flags;
 }
 
+// Return state of all ports
+Ports Emulator::GetPorts()
+{
+    return ports;
+}
+
+// Set I/O port values
+void Emulator::SetPort(int port_num, uint8_t bit, bool value)
+{
+    uint8_t *port;
+    switch (port_num)
+    {
+    case (1):
+        port = &ports.port1;
+        break;
+    case (2):
+        port = &ports.port2;
+        break;
+    case (3):
+        port = &ports.port3;
+        break;
+    case (5):
+        port = &ports.port5;
+        break;
+    }
+
+    if (value)
+        *port = *port | (value << bit);
+    else
+        *port = *port & (value << bit);
+}
+
+// Return value of program counter
 int Emulator::GetPC()
 {
     return pc;
 }
 
+// Return value of stack pointer
 int Emulator::GetSP()
 {
     return sp;
 }
 
+// Set stack pointer
 void Emulator::SetSP(uint16_t new_sp)
 {
     sp = new_sp;
+}
+
+// Set interrupt for screen display
+void Emulator::Interrupt(int interrupt_num)
+{
+    if (interrupt_enable)
+    {
+        // perform "PUSH PC"
+        Push((pc & 0xff00) >> 8, (pc & 0x00ff));
+
+        // Set the PC to the low memory vector
+        pc = 8 * interrupt_num;
+
+        //"DI"
+        interrupt_enable = false;
+    }
 }
